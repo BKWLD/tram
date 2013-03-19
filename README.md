@@ -15,7 +15,7 @@ The idea behind transition.js is simple: Take the flexibility and performance of
 
 ```
 
-## Easing functions
+## Easings
 
 ```
 in
@@ -47,7 +47,6 @@ ease-in-out-expo
 ease-in-out-circ
 ease-in-out-back
 ```
-
 
 ## Thanks
 
