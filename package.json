@@ -1,0 +1,16 @@
+{
+    "name": "transition"
+  , "description": "Cross-browser CSS3 transitions in JavaScript"
+  , "version": "0.1.0"
+  , "homepage": "https://github.com/danro/transition"
+  , "author": "Dan Rogers <dan@danro.net>"
+  , "keywords": ["animation", "motion", "css", "tween", "transition", "transform"]
+  , "main": "./transition.js"
+  , "repository": {
+      "type": "git"
+    , "url": "https://github.com/danro/transition.git"
+  }
+  , "devDependencies": {
+    "sink-test": "*"
+  }
+}

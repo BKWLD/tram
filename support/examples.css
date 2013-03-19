@@ -1,0 +1,15 @@
+body {
+	margin: 50px;
+	font-family: 'helvetica neue', helvetica, arial, sans-serif;
+}
+
+h1 {
+	font-weight: normal;
+	color: #888;
+}
+
+#test {
+	width: 100px;
+	height: 100px;
+	background: #68BFB6;
+}
