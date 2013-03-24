@@ -1,9 +1,9 @@
 var tram = (function () {
-	/*global P */
-	
-	function tram(el, fn) {
-		
-	}
-	
-	return tram;
+  /*global P */
+
+  function tram(el, fn) {
+    
+  }
+
+  return tram;
 }());

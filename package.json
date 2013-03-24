@@ -1,18 +1,29 @@
 {
-    "name": "tram"
-  , "description": "Cross-browser CSS3 transitions in JavaScript"
-  , "version": "0.1.0"
-  , "homepage": "https://github.com/danro/tram"
-  , "author": "Dan Rogers <dan@danro.net>"
-  , "keywords": ["animation", "motion", "css", "tween", "transition", "transform"]
-  , "main": "./src/tram.js"
-  , "repository": {
-      "type": "git"
-    , "url": "https://github.com/danro/tram.git"
-  }
-  , "devDependencies": {
+  "name": "tram",
+  "description": "Cross-browser CSS3 transitions in JavaScript.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/danro/tram",
+  "author": "Dan Rogers <dan@danro.net>",
+  "license" : "MIT",
+  "keywords": [
+    "animation",
+    "motion",
+    "css",
+    "tween",
+    "transition",
+    "transform"
+  ],
+  "main": "./src/tram.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danro/tram.git"
+  },
+  "devDependencies": {
     "pjs": "*",
-    "uglify-js": "*",
-    "sink-test": "*"
+    "sink-test": "*",
+    "grunt": "~0.4.1",
+    "grunt-cli": "~0.1.6",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-concat": "~0.1.3"
   }
 }

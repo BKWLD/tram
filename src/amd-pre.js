@@ -1,1 +1,1 @@
-define(['pjs'], function (P) {
+define(['./p'], function (P) {

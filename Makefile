@@ -1,11 +1,21 @@
-# Name phony targets to avoid name conflicts
-.PHONY: build
+# Config
+GRUNTJS = ./node_modules/.bin/grunt
+DIST_DIR = ./dist
 
-# Build minified file w/ license
-build:
-	# TODO cat header, P and footer for global/AMD
-	# @ ./node_modules/.bin/uglifyjs transition.js -m -c --comments 'license' -o transition-min.js
+.PHONY: all
+all: clean minify
+
+# Build minified + combined files
+.PHONY: minify
+minify:
+	$(GRUNTJS)
+
+# Remove dist files
+.PHONY: clean
+clean:
+	rm -rf $(DIST_DIR)/*
 	
 # Update support scripts for examples
+.PHONY: update
 update:
 	cp ./node_modules/pjs/src/p.js support/
