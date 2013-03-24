@@ -1,12 +1,12 @@
-# transition.js
+# tram.js
 
 Cross-browser CSS3 transitions in JavaScript.
 
 ## About
 
-The idea behind transition.js is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
+The idea behind tram.js is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
 
-## Usage
+## How it works
 
 ```js
 
@@ -50,11 +50,12 @@ ease-in-out-back
 
 ## Thanks
 
-Special thanks to the following open source authors + libraries for inspiring many of the ideas behind transition.js.
+Special thanks to the following open source authors + libraries.
 
 @ded - https://github.com/ded/morpheus  
 @visionmedia - https://github.com/visionmedia/move.js  
 @rstacruz - https://github.com/rstacruz/jquery.transit  
+@jayferd - https://github.com/jayferd/pjs
 
 
 ## MIT License 

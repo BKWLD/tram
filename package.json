@@ -11,6 +11,8 @@
     , "url": "https://github.com/danro/transition.git"
   }
   , "devDependencies": {
+    "pjs": "*",
+    "uglify-js": "*",
     "sink-test": "*"
   }
 }

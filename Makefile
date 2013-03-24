@@ -3,4 +3,5 @@
 
 # Build minified file w/ license
 build:
-	@ node_modules/uglify-js/bin/uglifyjs transition.js -m -c --comments 'license' -o transition-min.js
+	# TODO cat header, P and footer
+	# @ ./node_modules/.bin/uglifyjs transition.js -m -c --comments 'license' -o transition-min.js
