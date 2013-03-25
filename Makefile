@@ -1,21 +1,12 @@
 # Config
-GRUNTJS = ./node_modules/.bin/grunt
-DIST_DIR = ./dist
+GRUNT = ./node_modules/.bin/grunt
 
-.PHONY: all
-all: clean minify
+# Watch src files during dev
+.PHONY: dev
+dev:
+	$(GRUNT)
 
 # Build minified + combined files
-.PHONY: minify
-minify:
-	$(GRUNTJS)
-
-# Remove dist files
-.PHONY: clean
-clean:
-	rm -rf $(DIST_DIR)/*
-	
-# Update support scripts for examples
-.PHONY: update
-update:
-	cp ./node_modules/pjs/src/p.js support/
+.PHONY: build
+build:
+	$(GRUNT) build

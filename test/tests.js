@@ -1,5 +1,5 @@
 (function () {
-  /*global transition, sink, start*/
+  /*global tram, sink, start*/
   
   // --------------------------------------------------
   sink('Duration', function(test, ok, before, after) {

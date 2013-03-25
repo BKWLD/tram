@@ -1,11 +1,3 @@
-/*!
-  * tram.js v0.1.0-global
-  * Cross-browser CSS3 transitions in JavaScript.
-  * https://github.com/danro/tram
-  * MIT License
-  */
-var tram = (function () {
-
   /*!
    * P.js
    * http:// github.com/jayferd/pjs
@@ -102,13 +94,3 @@ var tram = (function () {
     // as a minifier optimization, we've closured in a few helper functions
     // and the string 'prototype' (C[p] is much shorter than C.prototype)
   })('prototype', ({}).hasOwnProperty);
-
-  /*global P */
-
-  function tram(el, fn) {
-    
-  }
-  
-  return tram;
-
-}());
