@@ -104,66 +104,46 @@ window.tram = (function () {
   })('prototype', ({}).hasOwnProperty);
 
   // --------------------------------------------------
-  /*
-   *
-   * TERMS OF USE - EASING EQUATIONS
-   * 
-   * Open source under the BSD License. 
-   * 
-   * Copyright © 2001 Robert Penner
-   * All rights reserved.
-   * 
-   * Redistribution and use in source and binary forms, with or without modification, 
-   * are permitted provided that the following conditions are met:
-   * 
-   * Redistributions of source code must retain the above copyright notice, this list of 
-   * conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright notice, this list 
-   * of conditions and the following disclaimer in the documentation and/or other materials 
-   * provided with the distribution.
-   * 
-   * Neither the name of the author nor the names of contributors may be used to endorse 
-   * or promote products derived from this software without specific prior written permission.
-   * 
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY 
-   * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-   * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-   *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-   *  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-   *  GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED 
-   * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-   *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
-   * OF THE POSSIBILITY OF SUCH DAMAGE. 
-   *
-   */
+  // Easing methods { id: [ css, fallback ] }
+  
   var easing = {
     
     // --------------------------------------------------
-    // CSS3 default easings, translated to functions using Timothee Groleau's generator.
+    // CSS default easings, translated to functions using Timothee Groleau's generator:
     // http://www.timotheegroleau.com/Flash/experiments/easing_function_generator.htm
     
-    'ease': ['ease', function(t, b, c, d) {
+    'ease': ['ease', function (t, b, c, d) {
       var ts=(t/=d)*t;
       var tc=ts*t;
       return b+c*(-2.75*tc*ts + 11*ts*ts + -15.5*tc + 8*ts + 0.25*t);
     }],
     
-    'ease-in': ['ease-in', function(t, b, c, d) {
-      
+    'ease-in': ['ease-in', function (t, b, c, d) {
+      var ts=(t/=d)*t;
+      var tc=ts*t;
+      return b+c*(-1*tc*ts + 3*ts*ts + -3*tc + 2*ts);
     }],
     
-    'ease-out': ['ease-out', function(t, b, c, d) {
-      
+    'ease-out': ['ease-out', function (t, b, c, d) {
+      var ts=(t/=d)*t;
+      var tc=ts*t;
+      return b+c*(0.3*tc*ts + -1.6*ts*ts + 2.2*tc + -1.8*ts + 1.9*t);
     }],
     
-    'ease-in-out': ['ease-in-out', function(t, b, c, d) {
-      
+    'ease-in-out': ['ease-in-out', function (t, b, c, d) {
+      var ts=(t/=d)*t;
+      var tc=ts*t;
+      return b+c*(2*tc*ts + -5*ts*ts + 2*tc + 2*ts);
     }],
     
     // --------------------------------------------------
-    // Robert Penner equations
+    // Robert Penner easing equations
+    // http://www.robertpenner.com/easing_terms_of_use.html
     
-    'ease-linear':       'cubic-bezier(0.250, 0.250, 0.750, 0.750)',
+    'ease-linear': ['linear', function (t, b, c, d) {
+      return c*t/d + b;
+    }],
+    
     'ease-in-quad':      'cubic-bezier(0.550, 0.085, 0.680, 0.530)',
     'ease-in-cubic':     'cubic-bezier(0.550, 0.055, 0.675, 0.190)',
     'ease-in-quart':     'cubic-bezier(0.895, 0.030, 0.685, 0.220)',
