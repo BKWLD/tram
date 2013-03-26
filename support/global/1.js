@@ -1,1 +1,1 @@
-var tram = (function () {
+window.tram = (function () {

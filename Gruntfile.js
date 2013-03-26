@@ -29,6 +29,7 @@ module.exports = function(grunt) {
         src: [
           'support/global/1.js',
           'src/p.js',
+          'src/easing.js',
           'src/<%= pkg.name %>.js',
           'support/global/2.js'
         ],
@@ -39,6 +40,7 @@ module.exports = function(grunt) {
         src: [
           'support/amd/1.js',
           'src/p.js',
+          'src/easing.js',
           'src/<%= pkg.name %>.js',
           'support/amd/2.js'
         ],
@@ -49,6 +51,7 @@ module.exports = function(grunt) {
         src: [
           'support/commonjs/1.js',
           'src/p.js',
+          'src/easing.js',
           'src/<%= pkg.name %>.js',
           'support/commonjs/2.js'
         ],
