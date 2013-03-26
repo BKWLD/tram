@@ -18,7 +18,7 @@ The idea behind tram.js is simple: Take the flexibility and performance of CSS3 
 ## Easings
 
 ```js
-// CSS easings
+// Defaults
 'ease'
 'ease-in'
 'ease-out'
