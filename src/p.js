@@ -1,5 +1,6 @@
   /*!
    * P.js
+   * A lightweight class system.  It's just prototypes!
    * http:// github.com/jayferd/pjs
    * MIT license
    */
