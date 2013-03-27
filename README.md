@@ -6,6 +6,10 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind tram.js is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
 
+## jQuery requirement
+
+TODO describe jquery dependency... data API, cross-browser style getters + setters, bugfixes, feature tests, general utils: type tests, extend()
+
 ## How it works
 
 ```js
@@ -74,7 +78,6 @@ Special thanks to the following open source authors + libraries.
 @rstacruz - https://github.com/rstacruz/jquery.transit  
 @visionmedia - https://github.com/visionmedia/move.js  
 @jayferd - https://github.com/jayferd/pjs
-
 
 ## MIT License 
 
