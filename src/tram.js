@@ -4,7 +4,8 @@
   
   var doc = document
     , win = window
-    , store = 'danro-tram-js'
+    , store = 'bkwld-tram-js'
+    , slice = Array.prototype.slice
     , testStyle = doc.createElement('a').style
     , domPrefixes = ['Webkit', 'Moz', 'O', 'ms']
     , cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-']
@@ -64,17 +65,65 @@
     proto.init = function (el) {
       this.el = el;
       this.$el = $(el);
-      console.log(this.el);
     };
     
-    proto.add = function (transition) {
+    chainable('add', function (transition) {
+      console.log('add', this.el, transition);
+    });
+
+    chainable('start', function (options) {
+      console.log('start', this.el, options);
+    });
+    
+    // Define a chainable method that takes children into account
+    function chainable(name, method) {
+      proto[name] = function () {
+        if (this.children) return each.call(this, method, arguments);
+        method.apply(this, arguments);
+        return this;
+      };
+    }
+    
+    // Iterate through children and apply the method
+    function each(method, args) {
+      var i, count = this.children.length;
+      for (i = 0; i < count; i++) {
+        method.apply(this.children[i], args);
+      }
+      return this;
+    }
+  });
+  
+  console.log(Transition.prototype.start);
+  
+  // Tram class - extends Transition + wraps child instances for chaining.
+  var Tram = P(Transition, function (proto, supr) {
+    
+    proto.init = function (args) {
+      var $elems = $(args[0]);
+      var options = args.slice(1);
+      
+      // Invalid selector, do nothing.
+      if (!$elems.length) return this;
+      
+      // Single case - return single Transition instance
+      if ($elems.length === 1) return factory($elems[0], options);
+      
+      // Store multiple instances for chaining
+      var children = [];
+      $elems.each(function (index, el) {
+        children.push(factory(el, options));
+      });
+      this.children = children;
       return this;
     };
     
-    proto.start = function () {
-      return this;
-    };
-    
+    // Retrieve instance from data or store a new one.
+    function factory(el, options) {
+      var t = $.data(el, store) || $.data(el, store, new Transition(el));
+      if (options.length) return t.start(options);
+      return t;
+    }
   });
   
   // --------------------------------------------------
@@ -100,19 +149,11 @@
   });
   
   // --------------------------------------------------
-  // Main wrapper - returns a Transition instance for a single element.
-  function tram(el, fn) {
-    // if an array is passed, only use the first element
-    // TODO should console.warn about single elements?
-    // or create a Tram wrapper for this?
-    if (el.length) el = el[0];
-    
-    // check for existing instance in data
-    var t = $.data(el, store) || $.data(el, store, Transition(el));
-    
-    // TODO deal with fn and varargs here.
-    
-    return t;
+  // Main wrapper - returns a Tram instance with public chaining API.
+  function tram() {
+    // Chain on the result of Tram.init() to optimize single case.
+    var wrap = new Tram.Bare();
+    return wrap.init(slice.call(arguments));
   }
   
   // macro() static method
@@ -126,16 +167,16 @@
   };
   
   // --------------------------------------------------
-  // jQuery plugin method, returns jQuery object.
+  // jQuery plugin method, keeps jQuery chain intact.
   
-  $.fn.tram = function () {
-    var args = arguments;
-    return this.each(function () {
-      // invoke tram for each element
-      tram(this, args);
-    });
+  $.fn.tram = function (args) {
+    // Pass along element as first argument
+    args = [this].concat(slice.call(arguments));
+    // Directly instantiate Tram class, no tram chain!
+    new Tram(args);
+    return this;
   };
   
   // --------------------------------------------------
-  // Export public method + static props.
+  // Export public static method + props.
   return $.tram = tram;
