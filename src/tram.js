@@ -67,16 +67,21 @@
       this.$el = $(el);
     };
     
-    chainable('add', function (transition) {
-      console.log('add', this.el, transition);
-    });
-
-    chainable('start', function (options) {
-      console.log('start', this.el, options);
-    });
+    // Public chainable methods
+    chain('add', add);
+    chain('start', start);
+    
+    function add(transition) {
+    }
+    
+    function start(options) {
+    }
+    
+    function stop() {
+    }
     
     // Define a chainable method that takes children into account
-    function chainable(name, method) {
+    function chain(name, method) {
       proto[name] = function () {
         if (this.children) return each.call(this, method, arguments);
         method.apply(this, arguments);
@@ -93,8 +98,6 @@
       return this;
     }
   });
-  
-  console.log(Transition.prototype.start);
   
   // Tram class - extends Transition + wraps child instances for chaining.
   var Tram = P(Transition, function (proto, supr) {
@@ -120,7 +123,8 @@
     
     // Retrieve instance from data or store a new one.
     function factory(el, options) {
-      var t = $.data(el, store) || $.data(el, store, new Transition(el));
+      var t = $.data(el, store) || $.data(el, store, new Transition.Bare());
+      if (!t.el) t.init(el);
       if (options.length) return t.start(options);
       return t;
     }
@@ -177,6 +181,5 @@
     return this;
   };
   
-  // --------------------------------------------------
-  // Export public static method + props.
+  // Export public module.
   return $.tram = tram;
