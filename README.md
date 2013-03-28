@@ -18,44 +18,58 @@ TODO describe jquery dependency... data API, cross-browser style getters + sette
 
 ## Properties
 
-Browser support for transitioning CSS properties is limited, so *tram.js* attempts to cover the most common *cross-browser* properties. Based on CSS animation spec [here][1] and [here][2].
+Browser support for transitioning CSS properties is limited, so *tram.js* attempts to cover the most common *cross-browser* properties. This list is based on CSS animation specs [here][1] and [here][2].
 
 ### Supported property names / values
 
 ```js
-'color'                   // color
-'background-color'        // color
-'border-color'            // color
-'outline-color'           // color
-
-'font-size'               // length, percentage
-'letter-spacing'          // length
-'line-height'             // number, length, percentage
-'text-indent'             // length, percentage
-'word-spacing'            // length, percentage
-'border-spacing'          // length
-
-'width'                   // length, percentage
-'min-width'               // length, percentage
-'max-width'               // length, percentage
-'height'                  // length, percentage
-'min-height'              // length, percentage
-'max-height'              // length, percentage
-
-'background-position'     // percentage, length
-'margin-left' (etc)       // length
-'padding-left' (etc)      // length
-'opacity'                 // number
-'outline-width'           // length
-'top'                     // length, percentage
-'right'                   // length, percentage
-'bottom'                  // length, percentage
-'left'                    // length, percentage
+'color'                // color
+'background-color'     // color
+'outline-color'        // color
+'border-color'         // color
+'border-top-color'     // color
+'border-right-color'   // color
+'border-bottom-color'  // color
+'border-left-color'    // color
+'border-top-width'     // length
+'border-right-width'   // length
+'border-bottom-width'  // length
+'border-left-width'    // length
+'border-spacing'       // length
+'letter-spacing'       // length
+'top'                  // length, percentage
+'right'                // length, percentage
+'bottom'               // length, percentage
+'left'                 // length, percentage
+'font-size'            // length, percentage
+'text-indent'          // length, percentage
+'word-spacing'         // length, percentage
+'width'                // length, percentage
+'min-width'            // length, percentage
+'max-width'            // length, percentage
+'height'               // length, percentage
+'min-height'           // length, percentage
+'max-height'           // length, percentage
+'background-position'  // length, percentage
+'margin'               // length
+'margin-top'           // length
+'margin-right'         // length
+'margin-bottom'        // length
+'margin-left'          // length
+'padding'              // length
+'padding-top'          // length
+'padding-right'        // length
+'padding-bottom'       // length
+'padding-left'         // length
+'outline-width'        // length
+'opacity'              // number
+'line-height'          // number, length, percentage
+'transform'            // transform-function
+'transform-origin'     // length, percentage
 
 // TODO - planned support
-// 'border-(side)-color'  // color
-// 'clip'                 // rectangle
-// 'crop'                 // rectangle
+// 'clip'              // rectangle
+// 'crop'              // rectangle
 ```
 
 [1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"

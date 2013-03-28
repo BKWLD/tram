@@ -80,7 +80,6 @@
       
       // TODO
       // var prop = this.props[name] || this.props[name] = new Property(parts);
-      
     }
     
     function start(options) {
