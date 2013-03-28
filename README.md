@@ -4,7 +4,7 @@ Cross-browser CSS3 transitions in JavaScript.
 
 ## About
 
-The idea behind tram.js is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
+The idea behind *tram.js* is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
 
 ## jQuery requirement
 
@@ -13,11 +13,53 @@ TODO describe jquery dependency... data API, cross-browser style getters + sette
 ## How it works
 
 ```js
-
-
-
-
+// magic
 ```
+
+## Properties
+
+Browser support for transitioning CSS properties is limited, so *tram.js* attempts to cover the most common *cross-browser* properties. Based on CSS animation spec [here][1] and [here][2].
+
+### Supported property names / values
+
+```js
+'color'                   // color
+'background-color'        // color
+'border-color'            // color
+'outline-color'           // color
+
+'font-size'               // length, percentage
+'letter-spacing'          // length
+'line-height'             // number, length, percentage
+'text-indent'             // length, percentage
+'word-spacing'            // length, percentage
+'border-spacing'          // length
+
+'width'                   // length, percentage
+'min-width'               // length, percentage
+'max-width'               // length, percentage
+'height'                  // length, percentage
+'min-height'              // length, percentage
+'max-height'              // length, percentage
+
+'background-position'     // percentage, length
+'margin-left' (etc)       // length
+'padding-left' (etc)      // length
+'opacity'                 // number
+'outline-width'           // length
+'top'                     // length, percentage
+'right'                   // length, percentage
+'bottom'                  // length, percentage
+'left'                    // length, percentage
+
+// TODO - planned support
+// 'border-(side)-color'  // color
+// 'clip'                 // rectangle
+// 'crop'                 // rectangle
+```
+
+[1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"
+[2]: http://www.w3.org/TR/css3-transitions/#properties-from-css- "w3.org"
 
 ## Easings
 

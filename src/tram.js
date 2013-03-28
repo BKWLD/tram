@@ -2,14 +2,13 @@
   // Private vars
   /*global $, P, easing */
   
-  var doc = document
-    , win = window
-    , store = 'bkwld-tram-js'
-    , slice = Array.prototype.slice
-    , testStyle = doc.createElement('a').style
-    , domPrefixes = ['Webkit', 'Moz', 'O', 'ms']
-    , cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-']
-  ;
+  var doc = document;
+  var win = window;
+  var store = 'bkwld-tram-js';
+  var slice = Array.prototype.slice;
+  var testStyle = doc.createElement('a').style;
+  var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
+  var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
   
   // --------------------------------------------------
   // Private functions
@@ -60,21 +59,37 @@
   
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
+  
   var Transition = P(function(proto) {
     
     proto.init = function (el) {
       this.el = el;
       this.$el = $(el);
+      this.props = {};
     };
     
     // Public chainable methods
     chain('add', add);
     chain('start', start);
+    chain('stop', stop);
     
     function add(transition) {
+      // Parse transition string
+      var parts = compact(('' + transition).split(' '));
+      var name = parts[0];
+      
+      // TODO
+      // var prop = this.props[name] || this.props[name] = new Property(parts);
+      
     }
     
     function start(options) {
+      // TODO
+      // single function
+      // single object
+      // TODO sequence from arguments
+      // obj, function ... (or) function, obj ...
+      console.log('start', this.el, options);
     }
     
     function stop() {
@@ -121,7 +136,7 @@
       return this;
     };
     
-    // Retrieve instance from data or store a new one.
+    // Retrieve instance from data or create a new one.
     function factory(el, options) {
       var t = $.data(el, store) || $.data(el, store, new Transition.Bare());
       if (!t.el) t.init(el);
@@ -138,22 +153,24 @@
   });
   
   // --------------------------------------------------
-  // Property classes - generic and custom setters / getters.
+  // Property class - store transition property values.
   
   var Property = P(function (proto) {
     
-  });
-  
-  var Color = P(Property, function (proto, supr) {
+    proto.init = function (name, duration, ease, delay) {
+      
+    };
     
   });
   
+  // Transform - special combo property
   var Transform = P(Property, function (proto, supr) {
     
   });
   
   // --------------------------------------------------
   // Main wrapper - returns a Tram instance with public chaining API.
+  
   function tram() {
     // Chain on the result of Tram.init() to optimize single case.
     var wrap = new Tram.Bare();
@@ -170,9 +187,7 @@
     // TODO
   };
   
-  // --------------------------------------------------
   // jQuery plugin method, keeps jQuery chain intact.
-  
   $.fn.tram = function (args) {
     // Pass along element as first argument
     args = [this].concat(slice.call(arguments));
@@ -181,5 +196,26 @@
     return this;
   };
   
+  // --------------------------------------------------
+  // Utils
+  
+  // Lo-Dash compact()
+  // Creates an array with all falsey values of `array` removed
+  // MIT license <http://lodash.com/license>
+  function compact(array) {
+    var index = -1,
+        length = array ? array.length : 0,
+        result = [];
+
+    while (++index < length) {
+      var value = array[index];
+      if (value) {
+        result.push(value);
+      }
+    }
+    return result;
+  }
+  
+  // --------------------------------------------------
   // Export public module.
   return $.tram = tram;

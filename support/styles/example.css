@@ -13,3 +13,7 @@ h1 {
 	height: 100px;
 	background: #68BFB6;
 }
+
+.test:nth-child(2n) {
+  background: #57889D;
+}
