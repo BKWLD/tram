@@ -365,12 +365,9 @@ window.tram = (function ($) {
       // Parse transition string
       var parts = compact(('' + transition).split(' '));
       var name = parts[0];
-      var prop = this.props[name] || this.props[name] = new Property(parts);
       
-      // Check for existing property
-      
-      // TODO create property instances
-      
+      // TODO
+      // var prop = this.props[name] || this.props[name] = new Property(parts);
     }
     
     function start(options) {
@@ -439,11 +436,11 @@ window.tram = (function ($) {
   // Tween class - handles timing and fallback animation.
   
   var Tween = P(function (proto) {
-    
+    easing.linear;
   });
   
   // --------------------------------------------------
-  // Property class - store transition property values.
+  // Property class - get/set property values
   
   var Property = P(function (proto) {
     
@@ -452,11 +449,31 @@ window.tram = (function ($) {
     };
     
   });
-  
+      
   // Transform - special combo property
   var Transform = P(Property, function (proto, supr) {
-    
+    // TODO add option for gpu triggers
+    // backface-visibility(hidden);
+    // translate3d(0,0,0);
   });
+  
+  Transform.map = {
+      x: 'translateX' // px
+    , y: 'translateY' // px
+    , z: 'translateZ' // px
+    , rotate: 1  // deg
+    , rotateX: 1 // deg
+    , rotateY: 1 // deg
+    , rotateZ: 1 // deg
+    , scale: 1  // (x,y) number
+    , scaleX: 1 // number
+    , scaleY: 1 // number
+    , scaleZ: 1 // number
+    , skew: 1 // (x,y) deg
+    , skewX: 1 // deg
+    , skewY: 1 // deg
+    , perspective: 1 // px
+  };
   
   // --------------------------------------------------
   // Main wrapper - returns a Tram instance with public chaining API.
@@ -485,6 +502,64 @@ window.tram = (function ($) {
     new Tram(args);
     return this;
   };
+  
+  // --------------------------------------------------
+  // Property map + unit values
+  
+  var propertyMap = (function (Prop) {
+    
+    var color   = 'c';
+    var number  = 'n';
+    var length  = 'l';
+    var percent = 'p';
+    
+    return {
+        'color'                : [ Prop, color ]
+      , 'background-color'     : [ Prop, color ]
+      , 'outline-color'        : [ Prop, color ]
+      , 'border-color'         : [ Prop, color ]
+      , 'border-top-color'     : [ Prop, color ]
+      , 'border-right-color'   : [ Prop, color ]
+      , 'border-bottom-color'  : [ Prop, color ]
+      , 'border-left-color'    : [ Prop, color ]
+      , 'border-width'         : [ Prop, length ]
+      , 'border-top-width'     : [ Prop, length ]
+      , 'border-right-width'   : [ Prop, length ]
+      , 'border-bottom-width'  : [ Prop, length ]
+      , 'border-left-width'    : [ Prop, length ]
+      , 'border-spacing'       : [ Prop, length ]
+      , 'letter-spacing'       : [ Prop, length ]
+      , 'margin'               : [ Prop, length ]
+      , 'margin-top'           : [ Prop, length ]
+      , 'margin-right'         : [ Prop, length ]
+      , 'margin-bottom'        : [ Prop, length ]
+      , 'margin-left'          : [ Prop, length ]
+      , 'padding'              : [ Prop, length ]
+      , 'padding-top'          : [ Prop, length ]
+      , 'padding-right'        : [ Prop, length ]
+      , 'padding-bottom'       : [ Prop, length ]
+      , 'padding-left'         : [ Prop, length ]
+      , 'outline-width'        : [ Prop, length ]
+      , 'opacity'              : [ Prop, number ]
+      , 'top'                  : [ Prop, length, percent ]
+      , 'right'                : [ Prop, length, percent ]
+      , 'bottom'               : [ Prop, length, percent ]
+      , 'left'                 : [ Prop, length, percent ]
+      , 'font-size'            : [ Prop, length, percent ]
+      , 'text-indent'          : [ Prop, length, percent ]
+      , 'word-spacing'         : [ Prop, length, percent ]
+      , 'width'                : [ Prop, length, percent ]
+      , 'min-width'            : [ Prop, length, percent ]
+      , 'max-width'            : [ Prop, length, percent ]
+      , 'height'               : [ Prop, length, percent ]
+      , 'min-height'           : [ Prop, length, percent ]
+      , 'max-height'           : [ Prop, length, percent ]
+      , 'background-position'  : [ Prop, length, percent ]
+      , 'line-height'          : [ Prop, number, length, percent ]
+      , 'transform'            : [ Transform ]
+      , 'transform-origin'     : [ Prop, length, percent ]
+    };
+  }(Property));
   
   // --------------------------------------------------
   // Utils

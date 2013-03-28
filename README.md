@@ -31,12 +31,25 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 'border-right-color'   // color
 'border-bottom-color'  // color
 'border-left-color'    // color
+'border-width'         // length
 'border-top-width'     // length
 'border-right-width'   // length
 'border-bottom-width'  // length
 'border-left-width'    // length
 'border-spacing'       // length
 'letter-spacing'       // length
+'margin'               // length
+'margin-top'           // length
+'margin-right'         // length
+'margin-bottom'        // length
+'margin-left'          // length
+'padding'              // length
+'padding-top'          // length
+'padding-right'        // length
+'padding-bottom'       // length
+'padding-left'         // length
+'outline-width'        // length
+'opacity'              // number
 'top'                  // length, percentage
 'right'                // length, percentage
 'bottom'               // length, percentage
@@ -51,18 +64,6 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 'min-height'           // length, percentage
 'max-height'           // length, percentage
 'background-position'  // length, percentage
-'margin'               // length
-'margin-top'           // length
-'margin-right'         // length
-'margin-bottom'        // length
-'margin-left'          // length
-'padding'              // length
-'padding-top'          // length
-'padding-right'        // length
-'padding-bottom'       // length
-'padding-left'         // length
-'outline-width'        // length
-'opacity'              // number
 'line-height'          // number, length, percentage
 'transform'            // transform-function
 'transform-origin'     // length, percentage
