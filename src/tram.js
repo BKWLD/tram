@@ -10,6 +10,13 @@
   var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
   var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
   
+  var typeNumber = 'n';
+  var typeColor = '# rgb rgba';
+  var typeLength = 'em cm mm in pt pc px';
+  var typePercent = '%';
+  var typeDegrees = 'deg';
+  var typePixels = 'px';
+  
   // --------------------------------------------------
   // Private functions
   
@@ -169,24 +176,6 @@
     // translate3d(0,0,0);
   });
   
-  Transform.map = {
-      x: 'translateX' // px
-    , y: 'translateY' // px
-    , z: 'translateZ' // px
-    , rotate: 1  // deg
-    , rotateX: 1 // deg
-    , rotateY: 1 // deg
-    , rotateZ: 1 // deg
-    , scale: 1  // (x,y) number
-    , scaleX: 1 // number
-    , scaleY: 1 // number
-    , scaleZ: 1 // number
-    , skew: 1 // (x,y) deg
-    , skewX: 1 // deg
-    , skewY: 1 // deg
-    , perspective: 1 // px
-  };
-  
   // --------------------------------------------------
   // Main wrapper - returns a Tram instance with public chaining API.
   
@@ -195,6 +184,13 @@
     var wrap = new Tram.Bare();
     return wrap.init(slice.call(arguments));
   }
+  
+  // Global tram config
+  tram.config = {
+      baseFontSize: 16 // used by remFallback
+    , remFallback: false // TODO add rem fallback for px length values
+    , defaultUnit: typePixels // default unit added to <length> types
+  };
   
   // macro() static method
   tram.macro = function (id, fn) {
@@ -220,11 +216,33 @@
   
   var propertyMap = (function (Prop) {
     
-    var color   = 'c';
-    var number  = 'n';
-    var length  = 'l';
-    var percent = 'p';
+    var color = typeColor;
+    var number = typeNumber;
+    var length = typeLength;
+    var percent = typePercent;
+    var deg = typeDegrees;
+    var px = typePixels;
     
+    // Transform sub-properties { name: [ realName, units ]}
+    Transform.map = {
+        x:            [ 'translateX', px ]
+      , y:            [ 'translateY', px ]
+      , z:            [ 'translateZ', px ]
+      , rotate:       [ '', deg ]
+      , rotateX:      [ '', deg ]
+      , rotateY:      [ '', deg ]
+      , rotateZ:      [ '', deg ]
+      , scale:        [ '', number ]
+      , scaleX:       [ '', number ]
+      , scaleY:       [ '', number ]
+      , scaleZ:       [ '', number ]
+      , skew:         [ '', deg ]
+      , skewX:        [ '', deg ]
+      , skewY:        [ '', deg ]
+      , perspective:  [ '', px ]
+    };
+    
+    // Main Property map { name: [ class, units ]}
     return {
         'color'                : [ Prop, color ]
       , 'background-color'     : [ Prop, color ]

@@ -127,6 +127,16 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 'ease-in-out-back'
 ```
 
+## Options
+
+### REM support
+
+TODO
+
+### GPU acceleration
+
+TODO
+
 ## Thanks
 
 Special thanks to the following open source authors + libraries.
