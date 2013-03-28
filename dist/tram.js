@@ -308,6 +308,25 @@ window.tram = (function ($) {
   // --------------------------------------------------
   // Private functions
   
+  // Simple feature detect, returns both dom + css prefixed names
+  var testFeature = function (prop) {
+    // unprefixed case
+    if (prop in testStyle) return { dom: prop, css: prop };
+    // test all prefixes
+    var i, domProp, domSuffix = prop.charAt(0).toUpperCase() + prop.slice(1);
+    for (i = 0; i < domPrefixes.length; i++) {
+      domProp = domPrefixes[i] + domSuffix;
+      if (domProp in testStyle) return { dom: domProp, css: cssPrefixes[i] + prop };
+    }
+  };
+  
+  // Feature tests
+  var support = $.extend({}, $.support, {
+      bind: Function.prototype.bind
+    , transform: testFeature('transform')
+    , transition: testFeature('transition')
+  });
+  
   // Animation timer shim with setTimeout fallback
   var enterFrame = function () {
     return win.requestAnimationFrame ||
@@ -325,7 +344,7 @@ window.tram = (function ($) {
     // use high-res timer if available
     var perf = win.performance,
       perfNow = perf && (perf.now || perf.webkitNow || perf.msNow || perf.mozNow);
-    if (perfNow && Function.prototype.bind) {
+    if (perfNow && support.bind) {
       return perfNow.bind(perf);
     }
     // fallback to epoch-based timestamp
@@ -333,24 +352,6 @@ window.tram = (function ($) {
       return +(new Date);
     };
   }();
-  
-  // Simple feature detect, returns both dom + css prefixed names
-  var testFeature = function (prop) {
-    // unprefixed case
-    if (prop in testStyle) return { dom: prop, css: prop };
-    // test all prefixes
-    var i, domProp, domSuffix = prop.charAt(0).toUpperCase() + prop.slice(1);
-    for (i = 0; i < domPrefixes.length; i++) {
-      domProp = domPrefixes[i] + domSuffix;
-      if (domProp in testStyle) return { dom: domProp, css: cssPrefixes[i] + prop };
-    }
-  };
-  
-  // Feature tests
-  var support = $.extend({}, $.support, {
-    transform: testFeature('transform'),
-    transition: testFeature('transition')
-  });
   
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
@@ -368,13 +369,23 @@ window.tram = (function ($) {
     chain('start', start);
     chain('stop', stop);
     
-    function add(transition) {
-      // Parse transition string
-      var parts = compact(('' + transition).split(' '));
-      var name = parts[0];
+    function add(transition, options) {
+      // Parse transition settings
+      var settings = compact(('' + transition).split(' '));
+      var name = settings.shift();
       
-      // TODO
-      // var prop = this.props[name] || this.props[name] = new Property(parts);
+      // Get property definition from map
+      var definition = propertyMap[name];
+      if (!definition) return warn('Unsupported property: ' + name);
+      definition = definition.slice();
+      
+      // Init property with settings + definition + options
+      var Class = definition.shift();
+      if (name in this.props) {
+        this.props[name].init(settings, definition, options);
+      } else {
+        this.props[name] = new Class(settings, definition, options);
+      }
     }
     
     function start(options) {
@@ -383,7 +394,7 @@ window.tram = (function ($) {
       // single object
       // TODO sequence from arguments
       // obj, function ... (or) function, obj ...
-      console.log('start', this.el, options);
+      // console.log('start', this.el, options);
     }
     
     function stop() {
@@ -451,8 +462,8 @@ window.tram = (function ($) {
   
   var Property = P(function (proto) {
     
-    proto.init = function (name, duration, ease, delay) {
-      
+    proto.init = function (settings, definition, options) {
+      // TODO
     };
     
   });
@@ -478,6 +489,7 @@ window.tram = (function ($) {
       baseFontSize: 16 // used by remFallback
     , remFallback: false // TODO add rem fallback for px length values
     , defaultUnit: typePixels // default unit added to <length> types
+    , gpuTransforms: true // always prepend gpu cache trick to transforms
   };
   
   // macro() static method
@@ -581,6 +593,13 @@ window.tram = (function ($) {
   
   // --------------------------------------------------
   // Utils
+  
+  var warn = (function () {
+    var warn = 'warn';
+    var console = window.console;
+    if (console && console[warn] && support.bind) return console[warn].bind(console);
+    return function () {};
+  }());
   
   // Lo-Dash compact()
   // Creates an array with all falsey values of `array` removed
