@@ -81,11 +81,13 @@
     chain('add', add);
     chain('start', start);
     chain('stop', stop);
+    chain('redraw', redraw);
     
+    // Public add() - chainable
     function add(transition, options) {
       // Parse transition settings
       var settings = compact(('' + transition).split(' '));
-      var name = settings.shift();
+      var name = settings[0];
       
       // Get property definition from map
       var definition = propertyMap[name];
@@ -94,68 +96,96 @@
       
       // Init property with settings + definition + options
       var Class = definition.shift();
-      var prop = this.props[name];
-      if (prop && prop.Property) {
-        prop.init(settings, definition, options);
+      if (this.props[name]) {
+        this.props[name].init(this.$el, settings, definition, options);
       } else {
-        this.props[name] = new Class(settings, definition, options);
+        this.props[name] = new Class(this.$el, settings, definition, options);
       }
     }
     
+    // Public start() - chainable
     function start(options) {
       // If the first argument is an array, use that as the arguments instead.
       var args = $.isArray(options) ? options : slice.call(arguments);
       if (!args.length) return this;
       
-      // Push extra arguments into queue
-      if (args.length > 1) this.queue = this.queue.concat(args.slice(1));
-      
-      // Begin processing the current item
-      var current = args[0];
+      var current = args.shift();
       if (!current) return this;
+      
+      // TODO - Deal with existing queue. Replacing it entirely for now.
+      // Push any extra arguments into queue
+      if (args.length > 1) this.queue = args;
       
       // If current is a function, invoke it.
       if (typeof current === 'function') return current(this);
       
-      // If current is an object, check for valid props.
+      // If current is an object, start property tweens.
       if (typeof current === 'object') {
-        for (var x in current) {
-          var prop = this.props[x];
-          if (!prop || !prop.Property) continue;
-          console.log('process', x);
-        }
+        // redraw prior to starting tweens
+        this.redraw();
+        // loop through each valid property
+        var timeSpan = 0;
+        eachProp.call(this, current, function (prop, value) {
+          // determine the longest time span (duration + delay)
+          if (prop.span > timeSpan) timeSpan = prop.span;
+          // animate property value
+          // TODO deal with auto-stop before animating a property.
+          prop.animate(value);
+        });
+        // TODO proceed to next item in queue after timeSpan
       }
-      
-      // TODO redraw(el) before tween
     }
     
+    // Public stop() - chainable
     function stop(property) {
-      if (property in this.props) {
-        // TODO stop property or stop all
+      // TODO stop individual properties by name
+      for (var p in this.props) {
+        this.props[p].stop();
       }
+    }
+    
+    // Public redraw() - chainable
+    function redraw() {
+      var draw = this.el.offsetHeight;
+    }
+    
+    // Loop through valid properties and run iterator callback
+    function eachProp(collection, iterator) {
+      var p, valid;
+      var transform = this.props.transform;
+      var transProps = {};
+      for (p in collection) {
+        // check for special Transform sub-properties
+        if (transform && p in Transform.map) {
+          transProps[p] = collection[p];
+          continue;
+        }
+        // validate property
+        valid = p in this.props && p in propertyMap;
+        if (!valid) continue;
+        // iterate with valid property / value
+        iterator(this.props[p], collection[p]);
+      }
+      // iterate with transform prop / sub-prop values
+      if (transform) iterator(transform, transProps);
     }
     
     // Define a chainable method that takes children into account
     function chain(name, method) {
       proto[name] = function () {
-        if (this.children) return each.call(this, method, arguments);
+        if (this.children) return eachChild.call(this, method, arguments);
         method.apply(this, arguments);
         return this;
       };
     }
     
-    // Iterate through children and apply the method
-    function each(method, args) {
+    // Iterate through children and apply the method, return for chaining
+    function eachChild(method, args) {
       var i, count = this.children.length;
       for (i = 0; i < count; i++) {
         method.apply(this.children[i], args);
       }
       return this;
-    }
-    
-    // Redraw element for styles to take effect
-    function redraw(el) {
-      var r = el.offsetHeight;
     }
   });
   
@@ -202,15 +232,43 @@
       , delay: 0
     };
     
-    proto.init = function (settings, definition) {
+    proto.init = function ($el, settings, definition, options) {
       // Initialize or extend settings
-      this.duration = validTime(settings[0], this.duration, defaults.duration);
-      this.ease = validEase(settings[1], this.ease, defaults.ease);
-      this.delay = validTime(settings[2], this.delay, defaults.delay);
+      this.$el = $el;
+      this.id = settings[0];
+      this.duration = validTime(settings[1], this.duration, defaults.duration);
+      this.ease = validEase(settings[2], this.ease, defaults.ease);
+      this.delay = validTime(settings[3], this.delay, defaults.delay);
+      this.span = this.duration + this.delay;
       // Store types array for setters
       this.types = definition;
       // TODO use options to override gpuTransforms value?
+      // TODO use options to allow fallback animation per property?
+      this.animate = support.transition ? this.transition : this.tween;
     };
+    
+    proto.set = function (value) {
+      // TODO set value immediately
+    };
+    
+    // CSS transition
+    proto.transition = function (value) {
+      
+    };
+    
+    // Fallback tweening
+    proto.tween = function (value) {
+      
+    };
+    
+    // Stop animation
+    proto.stop = function () {
+    };
+    
+    // Value type validation
+    function validType(value) {
+      
+    }
     
     // Normalize time values
     var ms = /ms/;
@@ -243,9 +301,6 @@
     // backface-visibility(hidden);
     // translate3d(0,0,0);
     
-    proto.init = function () {
-      
-    };
   });
   
   // --------------------------------------------------
