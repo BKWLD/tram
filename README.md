@@ -6,7 +6,7 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind *tram.js* is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
 
-## jQuery requirement
+## jQuery dependency
 
 TODO describe jquery dependency... data API, cross-browser style getters + setters, bugfixes, feature tests, general utils: type tests, extend()
 

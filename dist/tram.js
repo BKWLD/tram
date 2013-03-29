@@ -362,6 +362,7 @@ window.tram = (function ($) {
       this.el = el;
       this.$el = $(el);
       this.props = {};
+      this.queue = [];
     };
     
     // Public chainable methods
@@ -381,23 +382,45 @@ window.tram = (function ($) {
       
       // Init property with settings + definition + options
       var Class = definition.shift();
-      if (name in this.props) {
-        this.props[name].init(settings, definition, options);
+      var prop = this.props[name];
+      if (prop && prop.Property) {
+        prop.init(settings, definition, options);
       } else {
         this.props[name] = new Class(settings, definition, options);
       }
     }
     
     function start(options) {
-      // TODO
-      // single function
-      // single object
-      // TODO sequence from arguments
-      // obj, function ... (or) function, obj ...
-      // console.log('start', this.el, options);
+      // If the first argument is an array, use that as the arguments instead.
+      var args = $.isArray(options) ? options : slice.call(arguments);
+      if (!args.length) return this;
+      
+      // Push extra arguments into queue
+      if (args.length > 1) this.queue = this.queue.concat(args.slice(1));
+      
+      // Begin processing the current item
+      var current = args[0];
+      if (!current) return this;
+      
+      // If current is a function, invoke it.
+      if (typeof current === 'function') return current(this);
+      
+      // If current is an object, check for valid props.
+      if (typeof current === 'object') {
+        for (var x in current) {
+          var prop = this.props[x];
+          if (!prop || !prop.Property) continue;
+          console.log('process', x);
+        }
+      }
+      
+      // TODO redraw(el) before tween
     }
     
-    function stop() {
+    function stop(property) {
+      if (property in this.props) {
+        // TODO stop property or stop all
+      }
     }
     
     // Define a chainable method that takes children into account
@@ -417,10 +440,15 @@ window.tram = (function ($) {
       }
       return this;
     }
+    
+    // Redraw element for styles to take effect
+    function redraw(el) {
+      var r = el.offsetHeight;
+    }
   });
   
   // Tram class - extends Transition + wraps child instances for chaining.
-  var Tram = P(Transition, function (proto, supr) {
+  var Tram = P(Transition, function (proto) {
     
     proto.init = function (args) {
       var $elems = $(args[0]);
@@ -451,28 +479,69 @@ window.tram = (function ($) {
   });
   
   // --------------------------------------------------
-  // Tween class - handles timing and fallback animation.
-  
-  var Tween = P(function (proto) {
-    easing.linear;
-  });
-  
-  // --------------------------------------------------
   // Property class - get/set property values
   
   var Property = P(function (proto) {
+    proto.Property = true;
     
-    proto.init = function (settings, definition, options) {
-      // TODO
+    var defaults = {
+        duration: 500
+      , ease: 'ease'
+      , delay: 0
     };
     
+    proto.init = function (settings, definition) {
+      // Initialize or extend settings
+      this.duration = validTime(settings[0], this.duration, defaults.duration);
+      this.ease = validEase(settings[1], this.ease, defaults.ease);
+      this.delay = validTime(settings[2], this.delay, defaults.delay);
+      // Store types array for setters
+      this.types = definition;
+      // TODO use options to override gpuTransforms value?
+    };
+    
+    // Normalize time values
+    var ms = /ms/;
+    var sec = /s|\./;
+    function validTime(string, current, safe) {
+      if (current !== undefined) safe = current;
+      if (string === undefined) return safe;
+      var n = safe;
+      // if string contains 'ms' or contains no suffix
+      if (ms.test(string) || !sec.test(string)) {
+        n = parseInt(string, 10);
+      // otherwise if string contains 's' or a decimal point
+      } else if (sec.test(string)) {
+        n = parseFloat(string) * 1000;
+      }
+      if (n < 0) n *= -1; // positive only plz
+      return n === n ? n : safe; // protect from NaNs
+    }
+    
+    // Make sure ease exists
+    function validEase(ease, current, safe) {
+      if (current !== undefined) safe = current;
+      return ease in easing ? ease : safe;
+    }
   });
       
   // Transform - special combo property
-  var Transform = P(Property, function (proto, supr) {
+  var Transform = P(Property, function (proto) {
     // TODO add option for gpu triggers
     // backface-visibility(hidden);
     // translate3d(0,0,0);
+    
+    proto.init = function () {
+      
+    };
+  });
+  
+  // --------------------------------------------------
+  // Tween class - handles timing and fallback animation.
+  
+  var Tween = P(function (proto) {
+    proto.init = function () {
+    };
   });
   
   // --------------------------------------------------
@@ -493,12 +562,12 @@ window.tram = (function ($) {
   };
   
   // macro() static method
-  tram.macro = function (id, fn) {
+  tram.macro = function () {
     // TODO
   };
   
   // tween() static method
-  tram.tween = function (options) {
+  tram.tween = function () {
     // TODO
   };
   
@@ -594,6 +663,7 @@ window.tram = (function ($) {
   // --------------------------------------------------
   // Utils
   
+  // Log warning message if supported
   var warn = (function () {
     var warn = 'warn';
     var console = window.console;
