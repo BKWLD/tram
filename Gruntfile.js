@@ -93,14 +93,8 @@ module.exports = function(grunt) {
   
   // Clean task
   grunt.registerTask('clean', 'Clean dist files.', function () {
-    try {
-      grunt.file.delete(distPath);
-      grunt.log.ok();
-    } catch (e) {
-      grunt.log.error();
-      grunt.verbose.error(e);
-      grunt.fail.warn('Clean operation failed.');
-    }
+    grunt.file.delete(distPath);
+    grunt.log.ok();
   });
   
 };
