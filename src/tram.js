@@ -9,6 +9,7 @@
   var testStyle = doc.createElement('a').style;
   var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
   var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
+  var space = ' ';
   
   var typeNumber = 'number';
   var typeColor = /^(rgb|#)/;
@@ -88,21 +89,45 @@
     // Public add() - chainable
     function add(transition, options) {
       // Parse transition settings
-      var settings = compact(('' + transition).split(' '));
+      var settings = compact(('' + transition).split(space));
       var name = settings[0];
       
       // Get property definition from map
       var definition = propertyMap[name];
       if (!definition) return warn('Unsupported property: ' + name);
-      definition = definition.slice();
       
-      // Init property with settings + definition + options
-      var Class = definition.shift();
-      if (this.props[name]) {
-        this.props[name].init(this.$el, settings, definition, options);
-      } else {
-        this.props[name] = new Class(this.$el, settings, definition, options);
+      // Init property instance
+      var Class = definition[0];
+      var prop = this.props[name];
+      if (!prop) {
+        prop = this.props[name] = new Class.Bare();
+        // Event handlers
+        prop.onStart = proxy(this, onStart);
+        prop.onRemove = proxy(this, onRemove);
+        prop.onEnd = proxy(this, onEnd);
       }
+      // Init settings + type + options
+      prop.init(this.$el, settings, definition[1], options);
+    }
+    
+    function onStart() {
+      // build transition string from active props
+      var p, prop, result = [];
+      for (p in this.props) {
+        prop = this.props[p];
+        if (!prop.active) continue;
+        result.push(prop.string);
+      }
+      result = result.join(',');
+      this.el.style[support.transition.dom] = result;
+    }
+    
+    function onRemove() {
+      // TODO remove -webkit-transition values from this.props?
+    }
+    
+    function onEnd() {
+      // TODO proceed to next item in queue
     }
     
     // Public start() - chainable
@@ -226,7 +251,6 @@
   // Property class - get/set property values
   
   var Property = P(function (proto) {
-    proto.Property = true;
     
     var defaults = {
         duration: 500
@@ -234,19 +258,25 @@
       , delay: 0
     };
     
-    proto.init = function ($el, settings, definition, options) {
+    proto.init = function ($el, settings, type, options) {
       // Initialize or extend settings
       this.$el = $el;
-      this.id = settings[0];
+      this.name = settings[0];
       this.duration = validTime(settings[1], this.duration, defaults.duration);
       this.ease = validEase(settings[2], this.ease, defaults.ease);
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
-      // store type from definition
-      this.type = definition[0];
-      // TODO use options to override gpuTransforms value?
-      // TODO use options to allow fallback animation per property?
-      this.animate = support.transition ? this.transition : this.tween;
+      this.type = type;
+      this.active = false;
+      // TODO use options to override gpuTransforms value
+      // TODO use options to allow fallback animation per property
+      this.animate = support.transition ? this.transition : this.fallback;
+      if (this.animate === this.fallback) return;
+      // CSS-specific string
+      this.string = this.name +
+        space + this.duration + 'ms' +
+        space + easing[this.ease][0] +
+        (this.delay ? space + this.delay + 'ms' : '');
     };
     
     proto.set = function (value) {
@@ -256,16 +286,24 @@
     // CSS transition
     proto.transition = function (value) {
       value = this.convert(value, this.type);
-      console.log(value);
+      this.active = true;
+      this.onStart();
+      this.$el.css(this.name, value);
     };
     
     // Fallback tweening
-    proto.tween = function (value) {
-      // TODO validType
+    proto.fallback = function (value) {
+      
     };
     
     // Stop animation
     proto.stop = function () {
+      this.tween && this.tween.stop();
+      // Reset property to stop CSS transition
+      if (this.animate === this.transition) {
+        var value = this.$el.css(this.name);
+        this.$el.css(this.name, value);
+      }
     };
     
     // Convert value to expected type
@@ -365,7 +403,7 @@
     };
     
     // Fallback tweening
-    proto.tween = function (value) {
+    proto.fallback = function (value) {
     };
     
   });
@@ -440,67 +478,76 @@
     
     // Main Property map { name: [ PropClass, valueTypes ]}
     return {
-        'color'                : [ Prop, typeColor ]
-      , 'background-color'     : [ Prop, typeColor ]
-      , 'outline-color'        : [ Prop, typeColor ]
-      , 'border-color'         : [ Prop, typeColor ]
-      , 'border-top-color'     : [ Prop, typeColor ]
-      , 'border-right-color'   : [ Prop, typeColor ]
-      , 'border-bottom-color'  : [ Prop, typeColor ]
-      , 'border-left-color'    : [ Prop, typeColor ]
-      , 'border-width'         : [ Prop, typeLength ]
-      , 'border-top-width'     : [ Prop, typeLength ]
-      , 'border-right-width'   : [ Prop, typeLength ]
-      , 'border-bottom-width'  : [ Prop, typeLength ]
-      , 'border-left-width'    : [ Prop, typeLength ]
-      , 'border-spacing'       : [ Prop, typeLength ]
-      , 'letter-spacing'       : [ Prop, typeLength ]
-      , 'margin'               : [ Prop, typeLength ]
-      , 'margin-top'           : [ Prop, typeLength ]
-      , 'margin-right'         : [ Prop, typeLength ]
-      , 'margin-bottom'        : [ Prop, typeLength ]
-      , 'margin-left'          : [ Prop, typeLength ]
-      , 'padding'              : [ Prop, typeLength ]
-      , 'padding-top'          : [ Prop, typeLength ]
-      , 'padding-right'        : [ Prop, typeLength ]
-      , 'padding-bottom'       : [ Prop, typeLength ]
-      , 'padding-left'         : [ Prop, typeLength ]
-      , 'outline-width'        : [ Prop, typeLength ]
-      , 'opacity'              : [ Prop, typeNumber ]
-      , 'top'                  : [ Prop, typeLenPerc ]
-      , 'right'                : [ Prop, typeLenPerc ]
-      , 'bottom'               : [ Prop, typeLenPerc ]
-      , 'left'                 : [ Prop, typeLenPerc ]
-      , 'font-size'            : [ Prop, typeLenPerc ]
-      , 'text-indent'          : [ Prop, typeLenPerc ]
-      , 'word-spacing'         : [ Prop, typeLenPerc ]
-      , 'width'                : [ Prop, typeLenPerc ]
-      , 'min-width'            : [ Prop, typeLenPerc ]
-      , 'max-width'            : [ Prop, typeLenPerc ]
-      , 'height'               : [ Prop, typeLenPerc ]
-      , 'min-height'           : [ Prop, typeLenPerc ]
-      , 'max-height'           : [ Prop, typeLenPerc ]
-      , 'background-position'  : [ Prop, typeLenPerc ]
-      , 'line-height'          : [ Prop, typeFancyLad ]
-      , 'transform'            : [ Transform, null ]
-      , 'transform-origin'     : [ Prop, typeLenPerc ]
+        'color'                : [ Property, typeColor ]
+      , 'background-color'     : [ Property, typeColor ]
+      , 'outline-color'        : [ Property, typeColor ]
+      , 'border-color'         : [ Property, typeColor ]
+      , 'border-top-color'     : [ Property, typeColor ]
+      , 'border-right-color'   : [ Property, typeColor ]
+      , 'border-bottom-color'  : [ Property, typeColor ]
+      , 'border-left-color'    : [ Property, typeColor ]
+      , 'border-width'         : [ Property, typeLength ]
+      , 'border-top-width'     : [ Property, typeLength ]
+      , 'border-right-width'   : [ Property, typeLength ]
+      , 'border-bottom-width'  : [ Property, typeLength ]
+      , 'border-left-width'    : [ Property, typeLength ]
+      , 'border-spacing'       : [ Property, typeLength ]
+      , 'letter-spacing'       : [ Property, typeLength ]
+      , 'margin'               : [ Property, typeLength ]
+      , 'margin-top'           : [ Property, typeLength ]
+      , 'margin-right'         : [ Property, typeLength ]
+      , 'margin-bottom'        : [ Property, typeLength ]
+      , 'margin-left'          : [ Property, typeLength ]
+      , 'padding'              : [ Property, typeLength ]
+      , 'padding-top'          : [ Property, typeLength ]
+      , 'padding-right'        : [ Property, typeLength ]
+      , 'padding-bottom'       : [ Property, typeLength ]
+      , 'padding-left'         : [ Property, typeLength ]
+      , 'outline-width'        : [ Property, typeLength ]
+      , 'opacity'              : [ Property, typeNumber ]
+      , 'top'                  : [ Property, typeLenPerc ]
+      , 'right'                : [ Property, typeLenPerc ]
+      , 'bottom'               : [ Property, typeLenPerc ]
+      , 'left'                 : [ Property, typeLenPerc ]
+      , 'font-size'            : [ Property, typeLenPerc ]
+      , 'text-indent'          : [ Property, typeLenPerc ]
+      , 'word-spacing'         : [ Property, typeLenPerc ]
+      , 'width'                : [ Property, typeLenPerc ]
+      , 'min-width'            : [ Property, typeLenPerc ]
+      , 'max-width'            : [ Property, typeLenPerc ]
+      , 'height'               : [ Property, typeLenPerc ]
+      , 'min-height'           : [ Property, typeLenPerc ]
+      , 'max-height'           : [ Property, typeLenPerc ]
+      , 'background-position'  : [ Property, typeLenPerc ]
+      , 'line-height'          : [ Property, typeFancyLad ]
+      , 'transform'            : [ Transform ]
+      , 'transform-origin'     : [ Property, typeLenPerc ]
     };
-  }(Property));
+  }());
   
   // --------------------------------------------------
   // Utils
+  
+  function noop() {}
   
   // Log warning message if supported
   var warn = (function () {
     var warn = 'warn';
     var console = window.console;
     if (console && console[warn] && support.bind) return console[warn].bind(console);
-    return function () {};
+    return noop;
   }());
   
+  // Faux-bind helper (single arg to help performance)
+  function proxy(context, method) {
+    return function(arg) {
+      return method.call(context, arg);
+    };
+  }
+  
   // Lo-Dash compact()
-  // Creates an array with all falsey values of `array` removed
   // MIT license <http://lodash.com/license>
+  // Creates an array with all falsey values of `array` removed
   function compact(array) {
     var index = -1,
         length = array ? array.length : 0,

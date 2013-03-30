@@ -17,13 +17,13 @@
     var $el = $('.test');
     
     tram($el)
-      .add('opacity 400 ease-out-expo')
-      .start({ opacity: 5 }, { opacity: 0.5 })
+      .add('opacity 800 ease-out-expo')
+      .start({ opacity: 0.5 }, { opacity: 0.5 })
     
     $el.tram(function (t) {
-      t.add('width 500ms ease');
+      t.add('width 500ms ease 0.5s');
       t.add('color');
-      t.start({ width: '50rem', color: '#555' });
+      t.start({ width: 500, color: '#555' });
     });
     
     $el.tram(function (t) {
