@@ -77,6 +77,7 @@
       this.el = el;
       this.$el = $(el);
       this.props = {};
+      this.state = {};
       this.queue = [];
     };
     
@@ -118,11 +119,11 @@
         if (!prop.active) continue;
         result.push(prop.string);
       }
-      this.el.style[support.transition.dom] = result.join(',');
-    }
-    
-    function onRemove() {
-      // TODO remove -webkit-transition values from this.props?
+      // set transition style property on dom element
+      result = result.join(',');
+      if (this.state.style === result) return;
+      this.state.style = result;
+      this.el.style[support.transition.dom] = result;
     }
     
     function onEnd() {
@@ -161,6 +162,8 @@
           // TODO deal with auto-stop before animating a property.
           prop.animate(value);
         });
+        // change handler run once after all props have started
+        onChange.call(this);
         // TODO proceed to next item in queue after timeSpan
       }
       return this;
@@ -283,15 +286,17 @@
         (this.delay ? space + this.delay + 'ms' : '');
     };
     
+    // Set value immediately
     proto.set = function (value) {
-      // TODO set value immediately
+      value = this.convert(value, this.type);
+      this.stop();
+      this.$el.css(this.name, value);
     };
     
     // CSS transition
     proto.transition = function (value) {
       value = this.convert(value, this.type);
       this.active = true;
-      this.onChange();
       this.$el.css(this.name, value);
     };
     
@@ -304,9 +309,11 @@
     proto.stop = function () {
       this.tween && this.tween.stop();
       // Reset property to stop CSS transition
-      if (this.animate === this.transition) {
+      if (this.active) {
+        this.active = false;
         var value = this.$el.css(this.name);
         this.$el.css(this.name, value);
+        this.onChange();
       }
     };
     
