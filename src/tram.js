@@ -102,15 +102,15 @@
       if (!prop) {
         prop = this.props[name] = new Class.Bare();
         // Event handlers
-        prop.onStart = proxy(this, onStart);
-        prop.onRemove = proxy(this, onRemove);
+        prop.onChange = proxy(this, onChange);
         prop.onEnd = proxy(this, onEnd);
       }
       // Init settings + type + options
       prop.init(this.$el, settings, definition[1], options);
+      return this;
     }
     
-    function onStart() {
+    function onChange() {
       // build transition string from active props
       var p, prop, result = [];
       for (p in this.props) {
@@ -118,8 +118,7 @@
         if (!prop.active) continue;
         result.push(prop.string);
       }
-      result = result.join(',');
-      this.el.style[support.transition.dom] = result;
+      this.el.style[support.transition.dom] = result.join(',');
     }
     
     function onRemove() {
@@ -133,7 +132,7 @@
     // Public start() - chainable
     function start(options) {
       // If the first argument is an array, use that as the arguments instead.
-      var args = $.isArray(options) ? options : slice.call(arguments);
+      var args = $.isArray(options) ? options.slice() : slice.call(arguments);
       if (!args.length) return this;
       
       var current = args.shift();
@@ -144,7 +143,10 @@
       if (args.length > 1) this.queue = args;
       
       // If current is a function, invoke it.
-      if (typeof current == 'function') return current(this);
+      if (typeof current == 'function') {
+        current(this);
+        return this;
+      }
       
       // If current is an object, start property tweens.
       if (typeof current == 'object') {
@@ -161,6 +163,7 @@
         });
         // TODO proceed to next item in queue after timeSpan
       }
+      return this;
     }
     
     // Public stop() - chainable
@@ -169,11 +172,13 @@
       for (var p in this.props) {
         this.props[p].stop();
       }
+      return this;
     }
     
     // Public redraw() - chainable
     function redraw() {
       var draw = this.el.offsetHeight;
+      return this;
     }
     
     // Loop through valid properties and run iterator callback
@@ -201,8 +206,7 @@
     function chain(name, method) {
       proto[name] = function () {
         if (this.children) return eachChild.call(this, method, arguments);
-        method.apply(this, arguments);
-        return this;
+        return method.apply(this, arguments);
       };
     }
     
@@ -287,7 +291,7 @@
     proto.transition = function (value) {
       value = this.convert(value, this.type);
       this.active = true;
-      this.onStart();
+      this.onChange();
       this.$el.css(this.name, value);
     };
     
