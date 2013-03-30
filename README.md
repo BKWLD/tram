@@ -129,6 +129,10 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 
 ## Options
 
+### Fallback mode
+
+TODO
+
 ### REM support
 
 TODO

@@ -298,9 +298,11 @@ window.tram = (function ($) {
   var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
   var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
   
-  var typeNumber = 'n';
-  var typeColor = '# rgb rgba';
-  var typeLength = 'em cm mm in pt pc px';
+  var typeNumber = 'number';
+  var typeColor = /^(rgb|#)/;
+  var typeLength = /(em|cm|mm|in|pt|pc|px)$/;
+  var typeLenPerc = /(em|cm|mm|in|pt|pc|px|%)$/;
+  var typeFancyLad = 'fancy';
   var typePercent = '%';
   var typeDegrees = 'deg';
   var typePixels = 'px';
@@ -405,10 +407,10 @@ window.tram = (function ($) {
       if (args.length > 1) this.queue = args;
       
       // If current is a function, invoke it.
-      if (typeof current === 'function') return current(this);
+      if (typeof current == 'function') return current(this);
       
       // If current is an object, start property tweens.
-      if (typeof current === 'object') {
+      if (typeof current == 'object') {
         // redraw prior to starting tweens
         this.redraw();
         // loop through each valid property
@@ -528,8 +530,8 @@ window.tram = (function ($) {
       this.ease = validEase(settings[2], this.ease, defaults.ease);
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
-      // Store types array for setters
-      this.types = definition;
+      // store type from definition
+      this.type = definition[0];
       // TODO use options to override gpuTransforms value?
       // TODO use options to allow fallback animation per property?
       this.animate = support.transition ? this.transition : this.tween;
@@ -541,17 +543,78 @@ window.tram = (function ($) {
     
     // CSS transition
     proto.transition = function (value) {
-      
+      value = this.convert(value, this.type);
+      console.log(value);
     };
     
     // Fallback tweening
     proto.tween = function (value) {
-      
+      // TODO validType
     };
     
-    // Value type validation
-    function validType(value) {
-      
+    // Stop animation
+    proto.stop = function () {
+    };
+    
+    // Convert value to expected type
+    proto.convert = function (value, type) {
+      var warnType = type;
+      var number = typeof value == 'number';
+      var string = typeof value == 'string';
+      switch(type) {
+        case typeNumber:
+          if (number) return value;
+          break;
+        case typeColor:
+          if (string && type.test(value)) {
+            if (value.charAt(0) == '#' && value.length == 7) return value;
+            return toHex(value);
+          }
+          warnType = 'hex or rgb string';
+          break;
+        case typeLength:
+          if (number) return value + typePixels;
+          if (string && type.test(value)) return value;
+          warnType = 'number(px) or string(unit)';
+          break;
+        case typeLenPerc:
+          if (number) return value + typePixels;
+          if (string && type.test(value)) return value;
+          warnType = 'number(px) or string(unit or %)';
+          break;
+        case typeFancyLad:
+          if (number) return value;
+          if (string && typeLenPerc.test(value)) return value;
+          warnType = 'number or string(unit or %)';
+          break;
+        case typeDegrees:
+          if (number) return value + typeDegrees;
+          if (string && type.test(value)) return value;
+          warnType = 'number(deg) or string(deg)';
+          break;
+        case typePixels:
+          if (number) return value + typePixels;
+          if (string && type.test(value)) return value;
+          warnType = 'number(px) or string(px)';
+          break;
+      }
+      // Type must be invalid, warn people.
+      typeWarning(warnType, value);
+      return value;
+    };
+    
+    function toHex(c) {
+      var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
+      return (m ? rgb(m[1], m[2], m[3]) : c)
+        .replace(/#(\w)(\w)(\w)$/, '#$1$1$2$2$3$3');
+    }
+    
+    function rgb(r, g, b) {
+      return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
+    }
+    
+    function typeWarning(e, v) {
+      warn('Type warning! Expected: [' + e + '] Got: [' + typeof v + '] ' + v);
     }
     
     // Normalize time values
@@ -584,6 +647,14 @@ window.tram = (function ($) {
     // TODO add option for gpu triggers
     // backface-visibility(hidden);
     // translate3d(0,0,0);
+    
+    // CSS transition
+    proto.transition = function (value) {
+    };
+    
+    // Fallback tweening
+    proto.tween = function (value) {
+    };
     
   });
   
@@ -636,78 +707,71 @@ window.tram = (function ($) {
   
   var propertyMap = (function (Prop) {
     
-    var color = typeColor;
-    var number = typeNumber;
-    var length = typeLength;
-    var percent = typePercent;
-    var deg = typeDegrees;
-    var px = typePixels;
-    
-    // Transform sub-properties { name: [ realName, units ]}
+    // Transform sub-properties { name: [ realName, valueTypes ]}
     Transform.map = {
-        x:            [ 'translateX', px ]
-      , y:            [ 'translateY', px ]
-      , z:            [ 'translateZ', px ]
-      , rotate:       [ '', deg ]
-      , rotateX:      [ '', deg ]
-      , rotateY:      [ '', deg ]
-      , rotateZ:      [ '', deg ]
-      , scale:        [ '', number ]
-      , scaleX:       [ '', number ]
-      , scaleY:       [ '', number ]
-      , scaleZ:       [ '', number ]
-      , skew:         [ '', deg ]
-      , skewX:        [ '', deg ]
-      , skewY:        [ '', deg ]
-      , perspective:  [ '', px ]
+        x:            [ 'translateX', typePixels ]
+      , y:            [ 'translateY', typePixels ]
+      , z:            [ 'translateZ', typePixels ]
+      , rotate:       [ '', typeDegrees ]
+      , rotateX:      [ '', typeDegrees ]
+      , rotateY:      [ '', typeDegrees ]
+      , rotateZ:      [ '', typeDegrees ]
+      , scale:        [ '', typeNumber ]
+      , scaleX:       [ '', typeNumber ]
+      , scaleY:       [ '', typeNumber ]
+      , scaleZ:       [ '', typeNumber ]
+      , skew:         [ '', typeDegrees ]
+      , skewX:        [ '', typeDegrees ]
+      , skewY:        [ '', typeDegrees ]
+      , perspective:  [ '', typePixels ]
     };
     
-    // Main Property map { name: [ class, units ]}
+    // Main Property map { name: [ PropClass, valueTypes ]}
     return {
-        'color'                : [ Prop, color ]
-      , 'background-color'     : [ Prop, color ]
-      , 'outline-color'        : [ Prop, color ]
-      , 'border-color'         : [ Prop, color ]
-      , 'border-top-color'     : [ Prop, color ]
-      , 'border-right-color'   : [ Prop, color ]
-      , 'border-bottom-color'  : [ Prop, color ]
-      , 'border-left-color'    : [ Prop, color ]
-      , 'border-width'         : [ Prop, length ]
-      , 'border-top-width'     : [ Prop, length ]
-      , 'border-right-width'   : [ Prop, length ]
-      , 'border-bottom-width'  : [ Prop, length ]
-      , 'border-left-width'    : [ Prop, length ]
-      , 'border-spacing'       : [ Prop, length ]
-      , 'letter-spacing'       : [ Prop, length ]
-      , 'margin'               : [ Prop, length ]
-      , 'margin-top'           : [ Prop, length ]
-      , 'margin-right'         : [ Prop, length ]
-      , 'margin-bottom'        : [ Prop, length ]
-      , 'margin-left'          : [ Prop, length ]
-      , 'padding'              : [ Prop, length ]
-      , 'padding-top'          : [ Prop, length ]
-      , 'padding-right'        : [ Prop, length ]
-      , 'padding-bottom'       : [ Prop, length ]
-      , 'padding-left'         : [ Prop, length ]
-      , 'outline-width'        : [ Prop, length ]
-      , 'opacity'              : [ Prop, number ]
-      , 'top'                  : [ Prop, length, percent ]
-      , 'right'                : [ Prop, length, percent ]
-      , 'bottom'               : [ Prop, length, percent ]
-      , 'left'                 : [ Prop, length, percent ]
-      , 'font-size'            : [ Prop, length, percent ]
-      , 'text-indent'          : [ Prop, length, percent ]
-      , 'word-spacing'         : [ Prop, length, percent ]
-      , 'width'                : [ Prop, length, percent ]
-      , 'min-width'            : [ Prop, length, percent ]
-      , 'max-width'            : [ Prop, length, percent ]
-      , 'height'               : [ Prop, length, percent ]
-      , 'min-height'           : [ Prop, length, percent ]
-      , 'max-height'           : [ Prop, length, percent ]
-      , 'background-position'  : [ Prop, length, percent ]
-      , 'line-height'          : [ Prop, number, length, percent ]
-      , 'transform'            : [ Transform ]
-      , 'transform-origin'     : [ Prop, length, percent ]
+        'color'                : [ Prop, typeColor ]
+      , 'background-color'     : [ Prop, typeColor ]
+      , 'outline-color'        : [ Prop, typeColor ]
+      , 'border-color'         : [ Prop, typeColor ]
+      , 'border-top-color'     : [ Prop, typeColor ]
+      , 'border-right-color'   : [ Prop, typeColor ]
+      , 'border-bottom-color'  : [ Prop, typeColor ]
+      , 'border-left-color'    : [ Prop, typeColor ]
+      , 'border-width'         : [ Prop, typeLength ]
+      , 'border-top-width'     : [ Prop, typeLength ]
+      , 'border-right-width'   : [ Prop, typeLength ]
+      , 'border-bottom-width'  : [ Prop, typeLength ]
+      , 'border-left-width'    : [ Prop, typeLength ]
+      , 'border-spacing'       : [ Prop, typeLength ]
+      , 'letter-spacing'       : [ Prop, typeLength ]
+      , 'margin'               : [ Prop, typeLength ]
+      , 'margin-top'           : [ Prop, typeLength ]
+      , 'margin-right'         : [ Prop, typeLength ]
+      , 'margin-bottom'        : [ Prop, typeLength ]
+      , 'margin-left'          : [ Prop, typeLength ]
+      , 'padding'              : [ Prop, typeLength ]
+      , 'padding-top'          : [ Prop, typeLength ]
+      , 'padding-right'        : [ Prop, typeLength ]
+      , 'padding-bottom'       : [ Prop, typeLength ]
+      , 'padding-left'         : [ Prop, typeLength ]
+      , 'outline-width'        : [ Prop, typeLength ]
+      , 'opacity'              : [ Prop, typeNumber ]
+      , 'top'                  : [ Prop, typeLenPerc ]
+      , 'right'                : [ Prop, typeLenPerc ]
+      , 'bottom'               : [ Prop, typeLenPerc ]
+      , 'left'                 : [ Prop, typeLenPerc ]
+      , 'font-size'            : [ Prop, typeLenPerc ]
+      , 'text-indent'          : [ Prop, typeLenPerc ]
+      , 'word-spacing'         : [ Prop, typeLenPerc ]
+      , 'width'                : [ Prop, typeLenPerc ]
+      , 'min-width'            : [ Prop, typeLenPerc ]
+      , 'max-width'            : [ Prop, typeLenPerc ]
+      , 'height'               : [ Prop, typeLenPerc ]
+      , 'min-height'           : [ Prop, typeLenPerc ]
+      , 'max-height'           : [ Prop, typeLenPerc ]
+      , 'background-position'  : [ Prop, typeLenPerc ]
+      , 'line-height'          : [ Prop, typeFancyLad ]
+      , 'transform'            : [ Transform, null ]
+      , 'transform-origin'     : [ Prop, typeLenPerc ]
     };
   }(Property));
   
