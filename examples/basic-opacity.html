@@ -21,9 +21,9 @@
       .start({ opacity: 0.5 })
     
     $el.tram(function (t) {
-      t.add('width 500ms ease 0.5s'); // TODO only getting applied to first el
-      t.add('color');
-      t.start({ width: 500, color: '#555' });
+      t.add('width 500ms ease-in-out-quint 0.5s');
+      t.add('background 1s');
+      t.start({ width: 500, background: '#555' });
     });
     
     $el.tram(function (t) {

@@ -365,8 +365,8 @@ window.tram = (function ($) {
       this.el = el;
       this.$el = $(el);
       this.props = {};
-      this.state = {};
       this.queue = [];
+      this.style = '';
     };
     
     // Public chainable methods
@@ -396,7 +396,6 @@ window.tram = (function ($) {
       }
       // Init settings + type + options
       prop.init(this.$el, settings, definition[1], options);
-      return this;
     }
     
     function onChange() {
@@ -409,8 +408,8 @@ window.tram = (function ($) {
       }
       // set transition style property on dom element
       result = result.join(',');
-      if (this.state.style === result) return;
-      this.state.style = result;
+      if (this.style === result) return;
+      this.style = result;
       this.el.style[support.transition.dom] = result;
     }
     
@@ -422,10 +421,10 @@ window.tram = (function ($) {
     function start(options) {
       // If the first argument is an array, use that as the arguments instead.
       var args = $.isArray(options) ? options.slice() : slice.call(arguments);
-      if (!args.length) return this;
+      if (!args.length) return;
       
       var current = args.shift();
-      if (!current) return this;
+      if (!current) return;
       
       // TODO - Deal with existing queue. Replacing it entirely for now.
       // Push any extra arguments into queue
@@ -434,7 +433,7 @@ window.tram = (function ($) {
       // If current is a function, invoke it.
       if (typeof current == 'function') {
         current(this);
-        return this;
+        return;
       }
       
       // If current is an object, start property tweens.
@@ -447,14 +446,12 @@ window.tram = (function ($) {
           // determine the longest time span (duration + delay)
           if (prop.span > timeSpan) timeSpan = prop.span;
           // animate property value
-          // TODO deal with auto-stop before animating a property.
           prop.animate(value);
         });
         // change handler run once after all props have started
         onChange.call(this);
         // TODO proceed to next item in queue after timeSpan
       }
-      return this;
     }
     
     // Public stop() - chainable
@@ -463,13 +460,11 @@ window.tram = (function ($) {
       for (var p in this.props) {
         this.props[p].stop();
       }
-      return this;
     }
     
     // Public redraw() - chainable
     function redraw() {
       var draw = this.el.offsetHeight;
-      return this;
     }
     
     // Loop through valid properties and run iterator callback
@@ -497,7 +492,8 @@ window.tram = (function ($) {
     function chain(name, method) {
       proto[name] = function () {
         if (this.children) return eachChild.call(this, method, arguments);
-        return method.apply(this, arguments);
+        method.apply(this, arguments);
+        return this;
       };
     }
     
@@ -577,20 +573,23 @@ window.tram = (function ($) {
     // Set value immediately
     proto.set = function (value) {
       value = this.convert(value, this.type);
-      this.stop();
+      this.stop(); // stop tween + css
       this.$el.css(this.name, value);
     };
     
     // CSS transition
     proto.transition = function (value) {
       value = this.convert(value, this.type);
+      this.tween && this.tween.stop(); // stop tween only
       this.active = true;
       this.$el.css(this.name, value);
     };
     
     // Fallback tweening
     proto.fallback = function (value) {
-      
+      value = this.convert(value, this.type);
+      this.stop(); // stop tween + css
+      // TODO
     };
     
     // Stop animation
@@ -652,6 +651,7 @@ window.tram = (function ($) {
       return value;
     };
     
+    // Convert rgb and short hex to long hex
     function toHex(c) {
       var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
       return (m ? rgb(m[1], m[2], m[3]) : c)
@@ -778,6 +778,7 @@ window.tram = (function ($) {
     // Main Property map { name: [ PropClass, valueTypes ]}
     return {
         'color'                : [ Property, typeColor ]
+      , 'background'           : [ Property, typeColor ]
       , 'background-color'     : [ Property, typeColor ]
       , 'outline-color'        : [ Property, typeColor ]
       , 'border-color'         : [ Property, typeColor ]

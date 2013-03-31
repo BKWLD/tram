@@ -24,6 +24,7 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 
 ```js
 'color'                // color
+'background'           // color
 'background-color'     // color
 'outline-color'        // color
 'border-color'         // color
