@@ -302,11 +302,7 @@ window.tram = (function ($) {
   var win = window;
   var store = 'bkwld-tram-js';
   var slice = Array.prototype.slice;
-  var testDiv = doc.createElement('a');
-  var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
-  var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
   var space = ' ';
-  
   var typeNumber = 'number';
   var typeColor = /^(rgb|#)/;
   var typeLength = /(em|cm|mm|in|pt|pc|px)$/;
@@ -320,6 +316,9 @@ window.tram = (function ($) {
   // Private functions
   
   // Simple feature detect, returns both dom + css prefixed names
+  var testDiv = doc.createElement('a');
+  var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
+  var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
   var testFeature = function (prop) {
     // unprefixed case
     if (prop in testDiv.style) return { dom: prop, css: prop };
@@ -355,11 +354,6 @@ window.tram = (function ($) {
   
   // Done with test div, avoid IE memory leak.
   testDiv = null;
-  
-  // Prefixed property names
-  var prefixed = {
-    'transform': support.transform.css
-  };
   
   // Animation timer shim with setTimeout fallback
   var enterFrame = function () {
@@ -427,7 +421,7 @@ window.tram = (function ($) {
         prop.onEnd = proxy(this, onEnd);
       }
       // Init settings + type + options
-      prop.init(this.$el, settings, definition, options);
+      prop.init(this.$el, settings, definition, options || {});
     }
     
     function onChange() {
@@ -589,15 +583,15 @@ window.tram = (function ($) {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
-      // TODO use options to override gpuTransforms value
-      // TODO use options to allow fallback animation per property
-      this.animate = support.transition ? this.transition : this.fallback;
-      if (this.animate === this.transition) {
-        // CSS string for transition style
+      // Use CSS transitions when supported unless options.tween is true.
+      if (support.transition && options.tween !== true) {
+        this.animate = this.transition;
         this.string = this.name +
           space + this.duration + 'ms' +
           space + easing[this.ease][0] +
           (this.delay ? space + this.delay + 'ms' : '');
+      } else {
+        this.animate = this.fallback;
       }
       // Call sub init for subclasses
       this.subInit && this.subInit();
@@ -624,11 +618,13 @@ window.tram = (function ($) {
     proto.fallback = function (value) {
       value = this.convert(value, this.type);
       this.stop(); // stop tween + css
-      // TODO
+      // start a new tween
+      console.log(value);
     };
     
     // Stop animation
     proto.stop = function (emit) {
+      // emit defaults to true
       if (emit !== false) emit = true;
       this.tween && this.tween.stop();
       // Reset property to stop CSS transition
@@ -753,8 +749,20 @@ window.tram = (function ($) {
   // Tween class - handles timing and fallback animation.
   
   var Tween = P(function (proto) {
+    // Private vars
+    var renderList = [];
+    
     proto.init = function () {
     };
+    
+    
+    
+    
+    
+    
+    
+    
+    
   });
   
   // --------------------------------------------------
@@ -803,6 +811,11 @@ window.tram = (function ($) {
   
   // --------------------------------------------------
   // Property map + unit values
+  
+  // Prefixed property names
+  var prefixed = {
+    'transform': support.transform.css
+  };
   
   var propertyMap = (function (Prop) {
     
