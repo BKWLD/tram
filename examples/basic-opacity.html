@@ -16,6 +16,7 @@
   <div class="test"></div>
   <div class="test"></div>
   <div class="test"></div>
+  <div class="test"></div>
   <script>
     
     var $el = $('.test');
@@ -31,9 +32,25 @@
         .start({ width: 500, background: '#555' })
     });
     
-    $el.tram(function (t) {
-      t.add('transform 1s ease');
-      t.start({ x: 20, y: 20 });
+    // $el.tram(function (t) {
+    //   t.add('transform 1s ease');
+    //   t.start({ x: 20, y: 20 });
+    // });
+    
+    var clicks = 0;
+    
+    $(window).on('mousedown', function () {
+      tram($el).stop()
+      
+      if (++clicks > 1) {
+        tram($el)
+          .add('width 200ms ease 0')
+          .start({ width: 50 })
+          .start({ background: '' })
+      }
+      
+      // .add('width 1s ease-out-expo')
+      // .start({ width: 50 })
     });
     
   </script>

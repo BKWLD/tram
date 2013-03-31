@@ -46,6 +46,24 @@
     , backface: testFeature('backface-visibility')
   };
   
+  // Match end event to transition type
+  var endEventMap = {
+      'WebkitTransition': 'webkitTransitionEnd'
+    , 'MozTransition': 'transitionend'
+    , 'OTransition': 'oTransitionEnd'
+    , 'msTransition': 'MSTransitionEnd'
+    , 'transition': 'transitionend'
+  };
+  support.transitionEnd = support.transition && endEventMap[support.transition.dom] || null;
+  
+  // Done with test div
+  testStyle = null;
+  
+  // Prefixed property names
+  var prefixed = {
+    'transform': support.transform.css
+  };
+  
   // Animation timer shim with setTimeout fallback
   var enterFrame = function () {
     return win.requestAnimationFrame ||
@@ -91,7 +109,6 @@
     chain('add', add);
     chain('start', start);
     chain('stop', stop);
-    chain('redraw', redraw);
     
     // Public add() - chainable
     function add(transition, options) {
@@ -156,8 +173,8 @@
       
       // If current is an object, start property tweens.
       if (typeof current == 'object') {
-        // redraw prior to starting tweens
-        this.redraw();
+        // redraw before animation begins
+        redraw.call(this.el);
         // loop through each valid property
         var timeSpan = 0;
         eachProp.call(this, current, function (prop, value) {
@@ -178,11 +195,6 @@
       for (var p in this.props) {
         this.props[p].stop();
       }
-    }
-    
-    // Public redraw() - chainable
-    function redraw() {
-      var draw = this.el.offsetHeight;
     }
     
     // Loop through valid properties and run iterator callback
@@ -272,7 +284,7 @@
       this.$el = $el;
       var name = settings[0];
       if (definition[2]) name = definition[2]; // expand name
-      if (support[name]) name = support[name].css; // css prefixed name
+      if (prefixed[name]) name = prefixed[name];
       this.name = name;
       this.type = definition[1];
       this.duration = validTime(settings[1], this.duration, defaults.duration);
@@ -283,12 +295,15 @@
       // TODO use options to override gpuTransforms value
       // TODO use options to allow fallback animation per property
       this.animate = support.transition ? this.transition : this.fallback;
-      if (this.animate === this.fallback) return;
-      // CSS-specific string
-      this.string = this.name +
-        space + this.duration + 'ms' +
-        space + easing[this.ease][0] +
-        (this.delay ? space + this.delay + 'ms' : '');
+      if (this.animate === this.transition) {
+        // CSS-specific things
+        this.string = this.name +
+          space + this.duration + 'ms' +
+          space + easing[this.ease][0] +
+          (this.delay ? space + this.delay + 'ms' : '');
+      }
+      // Call sub init for subclasses
+      this.subInit && this.subInit();
     };
     
     // Set value immediately
@@ -301,10 +316,19 @@
     // CSS transition
     proto.transition = function (value) {
       value = this.convert(value, this.type);
-      this.tween && this.tween.stop(); // stop tween only
+      // stop any active transition (without change event)
+      this.stop(false);
+      // set new value to start transition
       this.active = true;
       this.$el.css(this.name, value);
     };
+    
+    // // Listen for transition end event to change `active` state
+    // proto.transEnd = function (e) {
+    //   if (e.originalEvent.propertyName !== this.name) return; this.$el.off(support.transitionEnd, this.transEnd);
+    //   this.active = false;
+    //   this.onChange();
+    // };
     
     // Fallback tweening
     proto.fallback = function (value) {
@@ -314,14 +338,15 @@
     };
     
     // Stop animation
-    proto.stop = function () {
+    proto.stop = function (emit) {
+      if (emit !== false) emit = true;
       this.tween && this.tween.stop();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
         var value = this.$el.css(this.name);
         this.$el.css(this.name, value);
-        this.onChange();
+        emit && this.onChange();
       }
     };
     
@@ -335,9 +360,14 @@
           if (number) return value;
           break;
         case typeColor:
-          if (string && type.test(value)) {
-            if (value.charAt(0) == '#' && value.length == 7) return value;
-            return toHex(value);
+          if (string) {
+            if (value === '' && this.original) {
+              return this.original;
+            }
+            if (type.test(value)) {
+              if (value.charAt(0) == '#' && value.length == 7) return value;
+              return toHex(value);
+            }
           }
           warnType = 'hex or rgb string';
           break;
@@ -411,8 +441,14 @@
       return ease in easing ? ease : safe;
     }
   });
-      
-  // Transform - special combo property
+  
+  var Color = P(Property, function (proto, supr) {
+    // Store original color value to allow '' values
+    proto.subInit = function () {
+      if (!this.original) this.original = this.$el.css(this.name);
+    };
+  });
+  
   var Transform = P(Property, function (proto) {
     // TODO add option for gpu triggers
     // translate3d(0,0,0);
@@ -467,6 +503,14 @@
     return this;
   };
   
+  // jQuery redraw helper
+  $.fn.redraw = function(){
+     return this.each(redraw);
+  };
+  function redraw() {
+    var draw = this.offsetHeight;
+  }
+  
   // --------------------------------------------------
   // Property map + unit values
   
@@ -493,14 +537,14 @@
     
     // Main Property map { name: [ Class, valueType, expand ]}
     return {
-        'color'                : [ Property, typeColor ]
-      , 'background'           : [ Property, typeColor, 'background-color' ]
-      , 'outline-color'        : [ Property, typeColor ]
-      , 'border-color'         : [ Property, typeColor ]
-      , 'border-top-color'     : [ Property, typeColor ]
-      , 'border-right-color'   : [ Property, typeColor ]
-      , 'border-bottom-color'  : [ Property, typeColor ]
-      , 'border-left-color'    : [ Property, typeColor ]
+        'color'                : [ Color, typeColor ]
+      , 'background'           : [ Color, typeColor, 'background-color' ]
+      , 'outline-color'        : [ Color, typeColor ]
+      , 'border-color'         : [ Color, typeColor ]
+      , 'border-top-color'     : [ Color, typeColor ]
+      , 'border-right-color'   : [ Color, typeColor ]
+      , 'border-bottom-color'  : [ Color, typeColor ]
+      , 'border-left-color'    : [ Color, typeColor ]
       , 'border-width'         : [ Property, typeLength ]
       , 'border-top-width'     : [ Property, typeLength ]
       , 'border-right-width'   : [ Property, typeLength ]

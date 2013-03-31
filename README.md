@@ -23,14 +23,14 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 ### Supported property names / values
 
 ```js
-'color'                // color
-'background'           // color (background-color)
-'outline-color'        // color
-'border-color'         // color
-'border-top-color'     // color
-'border-right-color'   // color
-'border-bottom-color'  // color
-'border-left-color'    // color
+'color'                // color or ''
+'background'           // color or ''
+'outline-color'        // color or ''
+'border-color'         // color or ''
+'border-top-color'     // color or ''
+'border-right-color'   // color or ''
+'border-bottom-color'  // color or ''
+'border-left-color'    // color or ''
 'border-width'         // length
 'border-top-width'     // length
 'border-right-width'   // length
