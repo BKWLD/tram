@@ -24,8 +24,7 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 
 ```js
 'color'                // color
-'background'           // color
-'background-color'     // color
+'background'           // color (background-color)
 'outline-color'        // color
 'border-color'         // color
 'border-top-color'     // color
@@ -64,14 +63,14 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 'height'               // length, percentage
 'min-height'           // length, percentage
 'max-height'           // length, percentage
-'background-position'  // length, percentage
 'line-height'          // number, length, percentage
-'transform'            // transform-function
-'transform-origin'     // length, percentage
+'transform'            // transform-object
 
 // TODO - planned support
-// 'clip'              // rectangle
-// 'crop'              // rectangle
+// 'background-position'  // length, percentage (x, y)
+// 'transform-origin'     // length, percentage (x, y)
+// 'clip'                 // rectangle
+// 'crop'                 // rectangle
 ```
 
 [1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"

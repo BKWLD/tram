@@ -36,11 +36,11 @@
   };
   
   // Feature tests
-  var support = $.extend({}, $.support, {
+  var support = {
       bind: Function.prototype.bind
     , transform: testFeature('transform')
     , transition: testFeature('transition')
-  });
+  };
   
   // Animation timer shim with setTimeout fallback
   var enterFrame = function () {
@@ -107,7 +107,7 @@
         prop.onEnd = proxy(this, onEnd);
       }
       // Init settings + type + options
-      prop.init(this.$el, settings, definition[1], options);
+      prop.init(this.$el, settings, definition, options);
     }
     
     function onChange() {
@@ -261,15 +261,18 @@
       , delay: 0
     };
     
-    proto.init = function ($el, settings, type, options) {
+    proto.init = function ($el, settings, definition, options) {
       // Initialize or extend settings
       this.$el = $el;
-      this.name = settings[0];
+      var name = settings[0];
+      if (definition[2]) name = definition[2]; // expand name
+      if (support[name]) name = support[name].css; // css prefixed name
+      this.name = name;
+      this.type = definition[1];
       this.duration = validTime(settings[1], this.duration, defaults.duration);
       this.ease = validEase(settings[2], this.ease, defaults.ease);
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
-      this.type = type;
       this.active = false;
       // TODO use options to override gpuTransforms value
       // TODO use options to allow fallback animation per property
@@ -409,14 +412,10 @@
     // backface-visibility(hidden);
     // translate3d(0,0,0);
     
-    // CSS transition
-    proto.transition = function (value) {
+    // Convert transform sub-properties
+    proto.convert = function (value, type) {
+      console.log('convert', value);
     };
-    
-    // Fallback tweening
-    proto.fallback = function (value) {
-    };
-    
   });
   
   // --------------------------------------------------
@@ -468,30 +467,29 @@
   
   var propertyMap = (function (Prop) {
     
-    // Transform sub-properties { name: [ realName, valueTypes ]}
+    // Transform sub-properties { name: [ valueType, expand ]}
     Transform.map = {
-        x:            [ 'translateX', typePixels ]
-      , y:            [ 'translateY', typePixels ]
-      , z:            [ 'translateZ', typePixels ]
-      , rotate:       [ '', typeDegrees ]
-      , rotateX:      [ '', typeDegrees ]
-      , rotateY:      [ '', typeDegrees ]
-      , rotateZ:      [ '', typeDegrees ]
-      , scale:        [ '', typeNumber ]
-      , scaleX:       [ '', typeNumber ]
-      , scaleY:       [ '', typeNumber ]
-      , scaleZ:       [ '', typeNumber ]
-      , skew:         [ '', typeDegrees ]
-      , skewX:        [ '', typeDegrees ]
-      , skewY:        [ '', typeDegrees ]
-      , perspective:  [ '', typePixels ]
+        x:            [ typePixels, 'translateX' ]
+      , y:            [ typePixels, 'translateY' ]
+      , z:            [ typePixels, 'translateZ' ]
+      , rotate:       [ typeDegrees ]
+      , rotateX:      [ typeDegrees ]
+      , rotateY:      [ typeDegrees ]
+      , rotateZ:      [ typeDegrees ]
+      , scale:        [ typeNumber ]
+      , scaleX:       [ typeNumber ]
+      , scaleY:       [ typeNumber ]
+      , scaleZ:       [ typeNumber ]
+      , skew:         [ typeDegrees ]
+      , skewX:        [ typeDegrees ]
+      , skewY:        [ typeDegrees ]
+      , perspective:  [ typePixels ]
     };
     
-    // Main Property map { name: [ PropClass, valueTypes ]}
+    // Main Property map { name: [ Class, valueType, expand ]}
     return {
         'color'                : [ Property, typeColor ]
-      , 'background'           : [ Property, typeColor ]
-      , 'background-color'     : [ Property, typeColor ]
+      , 'background'           : [ Property, typeColor, 'background-color' ]
       , 'outline-color'        : [ Property, typeColor ]
       , 'border-color'         : [ Property, typeColor ]
       , 'border-top-color'     : [ Property, typeColor ]
@@ -530,10 +528,10 @@
       , 'height'               : [ Property, typeLenPerc ]
       , 'min-height'           : [ Property, typeLenPerc ]
       , 'max-height'           : [ Property, typeLenPerc ]
-      , 'background-position'  : [ Property, typeLenPerc ]
       , 'line-height'          : [ Property, typeFancyLad ]
       , 'transform'            : [ Transform ]
-      , 'transform-origin'     : [ Property, typeLenPerc ]
+      // , 'background-position'  : [ Property, typeLenPerc ]
+      // , 'transform-origin'     : [ Property, typeLenPerc ]
     };
   }());
   
