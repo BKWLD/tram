@@ -11,23 +11,17 @@
 </head>
 <body>
   <div class="test"></div>
-  <div class="test"></div>
-  <div class="test"></div>
-  <div class="test"></div>
-  <div class="test"></div>
-  <div class="test"></div>
-  <div class="test"></div>
   <script>
-    
+  
     var $el = $('.test');
     
     tram($el)
       .add('opacity 800ms ease-in-out')
-      .start({ opacity: 0.5 })
+      .start({ opacity: 0.5, width: 400 })
     
     $el.each(function (i, el) {
       tram(this)
-        .add('width 500ms ease-out-back ' + 100 * i)
+        .add('width 500ms ease-out-back')
         .add('background 1s')
         .start({ width: 500, background: '#555' })
     });
@@ -39,14 +33,21 @@
     
     var clicks = 0;
     
-    $(window).on('mousedown', function () {
+    $(window).on('mousedown touchstart', function () {
       tram($el).stop()
       
-      if (++clicks > 1) {
+      clicks++;
+      
+      if (clicks == 2) {
         tram($el)
           .add('width 200ms ease 0')
           .start({ width: 50 })
           .start({ background: '' })
+      }
+      
+      if (clicks == 3) {
+        tram($el)
+          .start({ width: 500, background: '#555' })
       }
       
       // .add('width 1s ease-out-expo')

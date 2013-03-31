@@ -1,12 +1,12 @@
   // --------------------------------------------------
   // Private vars
-  /*global $, P, easing */
+  /*global $, P, easing, clamped */
   
   var doc = document;
   var win = window;
   var store = 'bkwld-tram-js';
   var slice = Array.prototype.slice;
-  var testStyle = doc.createElement('a').style;
+  var testDiv = doc.createElement('a');
   var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
   var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
   var space = ' ';
@@ -26,7 +26,7 @@
   // Simple feature detect, returns both dom + css prefixed names
   var testFeature = function (prop) {
     // unprefixed case
-    if (prop in testStyle) return { dom: prop, css: prop };
+    if (prop in testDiv.style) return { dom: prop, css: prop };
     // test all prefixes
     var i, domProp, domSuffix = '', words = prop.split('-');
     for (i = 0; i < words.length; i++) {
@@ -34,7 +34,7 @@
     }
     for (i = 0; i < domPrefixes.length; i++) {
       domProp = domPrefixes[i] + domSuffix;
-      if (domProp in testStyle) return { dom: domProp, css: cssPrefixes[i] + prop };
+      if (domProp in testDiv.style) return { dom: domProp, css: cssPrefixes[i] + prop };
     }
   };
   
@@ -44,20 +44,21 @@
     , transform: testFeature('transform')
     , transition: testFeature('transition')
     , backface: testFeature('backface-visibility')
+    , timing: testFeature('transition-timing-function')
   };
   
-  // Match end event to transition type
-  var endEventMap = {
-      'WebkitTransition': 'webkitTransitionEnd'
-    , 'MozTransition': 'transitionend'
-    , 'OTransition': 'oTransitionEnd'
-    , 'msTransition': 'MSTransitionEnd'
-    , 'transition': 'transitionend'
-  };
-  support.transitionEnd = support.transition && endEventMap[support.transition.dom] || null;
+  // Modify easing variants for webkit clamp bug
+  if (support.transition) {
+    var timingProp = support.timing.dom;
+    testDiv.style[timingProp] = easing['ease-in-back'][0];
+    if (!testDiv.style[timingProp]) {
+      // style invalid, use clamped versions
+      for (var x in clamped) easing[x][0] = clamped[x];
+    }
+  }
   
-  // Done with test div
-  testStyle = null;
+  // Done with test div, avoid IE memory leak.
+  testDiv = null;
   
   // Prefixed property names
   var prefixed = {
@@ -296,7 +297,7 @@
       // TODO use options to allow fallback animation per property
       this.animate = support.transition ? this.transition : this.fallback;
       if (this.animate === this.transition) {
-        // CSS-specific things
+        // CSS string for transition style
         this.string = this.name +
           space + this.duration + 'ms' +
           space + easing[this.ease][0] +
@@ -322,13 +323,6 @@
       this.active = true;
       this.$el.css(this.name, value);
     };
-    
-    // // Listen for transition end event to change `active` state
-    // proto.transEnd = function (e) {
-    //   if (e.originalEvent.propertyName !== this.name) return; this.$el.off(support.transitionEnd, this.transEnd);
-    //   this.active = false;
-    //   this.onChange();
-    // };
     
     // Fallback tweening
     proto.fallback = function (value) {
@@ -508,7 +502,7 @@
      return this.each(redraw);
   };
   function redraw() {
-    var draw = this.offsetHeight;
+    this.offsetHeight;
   }
   
   // --------------------------------------------------
