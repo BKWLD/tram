@@ -128,7 +128,7 @@
       result = result.join(',');
       if (this.style === result) return;
       this.style = result;
-      this.el.style[support.transition.css] = result;
+      this.el.style[support.transition.dom] = result;
     }
     
     function onEnd() {
