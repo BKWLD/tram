@@ -316,7 +316,10 @@ window.tram = (function ($) {
     // unprefixed case
     if (prop in testStyle) return { dom: prop, css: prop };
     // test all prefixes
-    var i, domProp, domSuffix = prop.charAt(0).toUpperCase() + prop.slice(1);
+    var i, domProp, domSuffix = '', words = prop.split('-');
+    for (i = 0; i < words.length; i++) {
+      domSuffix += words[i].charAt(0).toUpperCase() + words[i].slice(1);
+    }
     for (i = 0; i < domPrefixes.length; i++) {
       domProp = domPrefixes[i] + domSuffix;
       if (domProp in testStyle) return { dom: domProp, css: cssPrefixes[i] + prop };
@@ -328,6 +331,7 @@ window.tram = (function ($) {
       bind: Function.prototype.bind
     , transform: testFeature('transform')
     , transition: testFeature('transition')
+    , backface: testFeature('backface-visibility')
   };
   
   // Animation timer shim with setTimeout fallback
@@ -367,6 +371,8 @@ window.tram = (function ($) {
       this.props = {};
       this.queue = [];
       this.style = '';
+      // hide backface if supported, for better perf
+      if (support.backface) this.el.style[support.backface.dom] = 'hidden';
     };
     
     // Public chainable methods
@@ -410,7 +416,7 @@ window.tram = (function ($) {
       result = result.join(',');
       if (this.style === result) return;
       this.style = result;
-      this.el.style[support.transition.dom] = result;
+      this.el.style[support.transition.css] = result;
     }
     
     function onEnd() {
@@ -448,7 +454,7 @@ window.tram = (function ($) {
           // animate property value
           prop.animate(value);
         });
-        // change handler run once after all props have started
+        // call change handler once for all active props
         onChange.call(this);
         // TODO proceed to next item in queue after timeSpan
       }
@@ -697,7 +703,6 @@ window.tram = (function ($) {
   // Transform - special combo property
   var Transform = P(Property, function (proto) {
     // TODO add option for gpu triggers
-    // backface-visibility(hidden);
     // translate3d(0,0,0);
     
     // Convert transform sub-properties

@@ -11,24 +11,29 @@
 </head>
 <body>
   <div class="test"></div>
-  <div class="test second"></div>
+  <div class="test"></div>
+  <div class="test"></div>
+  <div class="test"></div>
+  <div class="test"></div>
+  <div class="test"></div>
   <script>
     
     var $el = $('.test');
     
     tram($el)
-      .add('opacity 800 ease-out-expo')
+      .add('opacity 800ms ease-in-out')
       .start({ opacity: 0.5 })
     
-    $el.tram(function (t) {
-      t.add('width 500ms ease-in-out-quint 0.5s');
-      t.add('background 1s');
-      t.start({ width: 500, background: '#555' });
+    $el.each(function (i, el) {
+      tram(this)
+        .add('width 500ms ease-out-back ' + 100 * i)
+        .add('background 1s')
+        .start({ width: 500, background: '#555' })
     });
     
     $el.tram(function (t) {
-      t.add('transform 2s ease');
-      t.start({ x: 400, y: 200 });
+      t.add('transform 1s ease');
+      t.start({ x: 20, y: 20 });
     });
     
   </script>
