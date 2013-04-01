@@ -303,6 +303,7 @@ window.tram = (function ($) {
   var store = 'bkwld-tram-js';
   var slice = Array.prototype.slice;
   var space = ' ';
+  var unitRegex = /[\.0-9]/g;
   var typeNumber = 'number';
   var typeColor = /^(rgb|#)/;
   var typeLength = /(em|cm|mm|in|pt|pc|px)$/;
@@ -557,7 +558,7 @@ window.tram = (function ($) {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
-      // Use CSS transitions when supported, unless tween is forced via options.
+      // Use CSS transitions when supported, unless tween is set via options.
       if (support.transition && options.tween !== true) {
         this.animate = this.transition;
         this.string = this.name + space + this.duration + 'ms' +
@@ -566,8 +567,6 @@ window.tram = (function ($) {
       } else {
         this.animate = this.fallback;
       }
-      // Call sub init for subclasses
-      this.subInit && this.subInit();
     };
     
     // Set value immediately
@@ -591,19 +590,22 @@ window.tram = (function ($) {
     proto.fallback = function (value) {
       value = this.convert(value, this.type);
       this.stop(); // stop tween + css
+      var from = this.convert(this.$el.css(this.name), this.type);
       // start a new tween
       this.tween = new Tween({
-          from: this.$el.css(this.name)
+          from: from
         , to: value
         , duration: this.duration
         , delay: this.delay
         , ease: this.ease
+        , update: this.update
+        , context: this
       });
-      // TODO make prettier.. 
-      var self = this;
-      this.tween.update = function (value) {
-        self.$el.css(self.name, value);
-      };
+    };
+    
+    // Update css value (called from tween)
+    proto.update = function (value) {
+      this.$el.css(this.name, value);
     };
     
     // Stop animation
@@ -628,6 +630,7 @@ window.tram = (function ($) {
       switch(type) {
         case typeNumber:
           if (number) return value;
+          if (string && value.replace(unitRegex, '') === '') return +value;
           break;
         case typeColor:
           if (string) {
@@ -672,21 +675,6 @@ window.tram = (function ($) {
       return value;
     };
     
-    // Convert rgb and short hex to long hex
-    function toHex(c) {
-      var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
-      return (m ? rgb(m[1], m[2], m[3]) : c)
-        .replace(/#(\w)(\w)(\w)$/, '#$1$1$2$2$3$3');
-    }
-    
-    function rgb(r, g, b) {
-      return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
-    }
-    
-    function typeWarning(e, v) {
-      warn('Type warning: Expected: [' + e + '] Got: [' + typeof v + '] ' + v);
-    }
-    
     // Normalize time values
     var ms = /ms/;
     var sec = /s|\./;
@@ -713,8 +701,11 @@ window.tram = (function ($) {
   });
   
   var Color = P(Property, function (proto, supr) {
-    // Store original color value to allow '' values
-    proto.subInit = function () {
+    
+    proto.init = function () {
+      supr.init.apply(this, arguments);
+      
+      // Store original color value to allow '' values
       if (!this.original) this.original = this.$el.css(this.name);
     };
   });
@@ -730,13 +721,12 @@ window.tram = (function ($) {
   });
   
   // --------------------------------------------------
-  // Tween class - handles timing and fallback animation.
+  // Tween class - handles timing and frame-based animation.
   
   var Tween = P(function (proto) {
     
     // Private vars
     var tweenList = [];
-    var unitRegex = /[\.0-9]/g;
     var defaults = {
         duration: 500
       , ease: easing.ease[1]
@@ -754,6 +744,8 @@ window.tram = (function ($) {
       if (easing[ease]) ease = easing[ease][1];
       if (typeof ease != 'function') ease = defaults.ease;
       this.ease = ease;
+      this.update = options.update || noop;
+      this.context = options.context;
       // Format value and determine units
       var from = options.from;
       var to = options.to;
@@ -777,25 +769,34 @@ window.tram = (function ($) {
     
     proto.render = function (now) {
       var value;
-      // do nothing until after delay
-      if (now < this.start - this.delay) {
-        console.log('delaying..');
-        // TODO delay not quite there...
-        return;
-      }
+      var delay = this.delay;
+      var begin = this.begin;
+      var change = this.change;
+      var duration = this.duration;
+      var context = this.context;
+      var unit = this.unit;
       var delta = now - this.start;
-      if (delta >= this.duration) {
-        removeRender(this);
-        value = this.begin + this.change;
-        this.update(value + this.unit);
+      // skip render during delay
+      if (delay) {
+        if (delta <= delay) return;
+        // after delay, reduce delta
+        delta -= delay;
+      }
+      if (delta < duration) {
+        // calculate eased position
+        var position = this.ease(delta, 0, 1, duration);
+        // TODO interpolate hex here
+        value = begin + (position * change);
+        if (unit) value += unit;
+        this.update.call(context, value);
         return;
       }
-      // TODO interpolate hex
-      value = this.ease(now, this.begin, this.change, this.duration);
-      this.update(value + this.unit);
+      // we're done, remove tween and set final value
+      removeRender(this);
+      value = this.endHex || begin + change;
+      if (unit) value += unit;
+      this.update.call(context, value);
     };
-    
-    proto.update = noop;
     
     // Format string values for tween
     proto.format = function (to, from) {
@@ -813,7 +814,7 @@ window.tram = (function ($) {
       // number with unit
       var fromUnit = from.replace(unitRegex, '');
       var toUnit = to.replace(unitRegex, '');
-      if (fromUnit !== toUnit) warn('Tween units do not match:', from, to);
+      if (fromUnit !== toUnit) unitWarning('tween', from, to);
       from = parseFloat(from);
       to = parseFloat(to);
       this.unit = fromUnit;
@@ -1015,11 +1016,19 @@ window.tram = (function ($) {
   
   function noop() {}
   
+  function typeWarning(exp, val) {
+    warn('Type warning: Expected: [' + exp + '] Got: [' + typeof val + '] ' + val);
+  }
+  
+  function unitWarning(name, from, to) {
+    warn('Units do not match: ' + from + ', ' + to);
+  }
+  
   // Log warning message if supported
   var warn = (function () {
     var warn = 'warn';
     var console = window.console;
-    if (console && console[warn] && support.bind) return console[warn].bind(console);
+    if (console && console[warn]) return console[warn];
     return noop;
   }());
   
@@ -1028,6 +1037,17 @@ window.tram = (function ($) {
     return function(arg) {
       return method.call(context, arg);
     };
+  }
+  
+  // Convert rgb and short hex to long hex
+  function toHex(c) {
+    var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
+    return (m ? rgb(m[1], m[2], m[3]) : c)
+      .replace(/#(\w)(\w)(\w)$/, '#$1$1$2$2$3$3');
+  }
+  
+  function rgb(r, g, b) {
+    return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
   }
   
   // Lo-Dash compact()

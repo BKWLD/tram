@@ -11,6 +11,10 @@
 </head>
 <body>
   <div class="test"></div>
+  <div class="test"></div>
+  <div class="test"></div>
+  <div class="test"></div>
+  <div class="test"></div>
   <script>
   
     var $el = $('.test');
@@ -21,7 +25,7 @@
     
     $el.each(function (i, el) {
       tram(this)
-        .add('width 500ms ease 2s', { tween: true })
+        .add('width 500ms ease-out-back ' + 100 * i, { tween: !(i % 2) })
         .add('background 1s')
         .start({ width: 500, background: '#555' })
     });
