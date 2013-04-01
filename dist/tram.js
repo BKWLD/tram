@@ -355,32 +355,6 @@ window.tram = (function ($) {
   // Done with test div, avoid IE memory leak.
   testDiv = null;
   
-  // Animation timer shim with setTimeout fallback
-  var enterFrame = function () {
-    return win.requestAnimationFrame ||
-    win.webkitRequestAnimationFrame ||
-    win.mozRequestAnimationFrame ||
-    win.oRequestAnimationFrame ||
-    win.msRequestAnimationFrame ||
-    function (callback) {
-      win.setTimeout(callback, 16);
-    };
-  }();
-  
-  // Timestamp shim with fallback
-  var timeNow = function () {
-    // use high-res timer if available
-    var perf = win.performance,
-      perfNow = perf && (perf.now || perf.webkitNow || perf.msNow || perf.mozNow);
-    if (perfNow && support.bind) {
-      return perfNow.bind(perf);
-    }
-    // fallback to epoch-based timestamp
-    return Date.now || function () {
-      return +(new Date);
-    };
-  }();
-  
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
   
@@ -583,12 +557,11 @@ window.tram = (function ($) {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
-      // Use CSS transitions when supported unless options.tween is true.
+      // Use CSS transitions when supported, unless tween is forced via options.
       if (support.transition && options.tween !== true) {
         this.animate = this.transition;
-        this.string = this.name +
-          space + this.duration + 'ms' +
-          space + easing[this.ease][0] +
+        this.string = this.name + space + this.duration + 'ms' +
+          (this.ease != 'ease' ? space + easing[this.ease][0] : '') +
           (this.delay ? space + this.delay + 'ms' : '');
       } else {
         this.animate = this.fallback;
@@ -619,7 +592,18 @@ window.tram = (function ($) {
       value = this.convert(value, this.type);
       this.stop(); // stop tween + css
       // start a new tween
-      console.log(value);
+      this.tween = new Tween({
+          from: this.$el.css(this.name)
+        , to: value
+        , duration: this.duration
+        , delay: this.delay
+        , ease: this.ease
+      });
+      // TODO make prettier.. 
+      var self = this;
+      this.tween.update = function (value) {
+        self.$el.css(self.name, value);
+      };
     };
     
     // Stop animation
@@ -700,7 +684,7 @@ window.tram = (function ($) {
     }
     
     function typeWarning(e, v) {
-      warn('Type warning! Expected: [' + e + '] Got: [' + typeof v + '] ' + v);
+      warn('Type warning: Expected: [' + e + '] Got: [' + typeof v + '] ' + v);
     }
     
     // Normalize time values
@@ -736,7 +720,7 @@ window.tram = (function ($) {
   });
   
   var Transform = P(Property, function (proto) {
-    // TODO add option for gpu triggers
+    // TODO add option for gpu trigger
     // translate3d(0,0,0);
     
     // Convert transform sub-properties
@@ -749,20 +733,159 @@ window.tram = (function ($) {
   // Tween class - handles timing and fallback animation.
   
   var Tween = P(function (proto) {
-    // Private vars
-    var renderList = [];
     
-    proto.init = function () {
+    // Private vars
+    var tweenList = [];
+    var unitRegex = /[\.0-9]/g;
+    var defaults = {
+        duration: 500
+      , ease: easing.ease[1]
+      , delay: 0
+      , from: 0
+      , to: 1
     };
     
+    proto.init = function (options) {
+      // Init timing props
+      this.duration = options.duration || defaults.duration;
+      this.delay = options.delay || defaults.delay;
+      // Use ease function or key value from easing map
+      var ease = options.ease || defaults.ease;
+      if (easing[ease]) ease = easing[ease][1];
+      if (typeof ease != 'function') ease = defaults.ease;
+      this.ease = ease;
+      // Format value and determine units
+      var from = options.from;
+      var to = options.to;
+      if (from === undefined) from = defaults.from;
+      if (to === undefined) to = defaults.to;
+      this.unit = '';
+      if (typeof from == 'number' && typeof to == 'number') {
+        this.begin = from;
+        this.change = to - from;
+      } else {
+        this.format(to, from);
+      }
+      // Start tween
+      this.start = timeNow();
+      addRender(this);
+    };
     
+    proto.stop = function () {
+      removeRender(this);
+    };
     
+    proto.render = function (now) {
+      var value;
+      // do nothing until after delay
+      if (now < this.start - this.delay) {
+        console.log('delaying..');
+        // TODO delay not quite there...
+        return;
+      }
+      var delta = now - this.start;
+      if (delta >= this.duration) {
+        removeRender(this);
+        value = this.begin + this.change;
+        this.update(value + this.unit);
+        return;
+      }
+      // TODO interpolate hex
+      value = this.ease(now, this.begin, this.change, this.duration);
+      this.update(value + this.unit);
+    };
     
+    proto.update = noop;
     
+    // Format string values for tween
+    proto.format = function (to, from) {
+      // cast strings
+      from += '';
+      to += '';
+      // hex colors
+      if (from.charAt(0) == '#') {
+        this.startHex = from;
+        this.endHex = to;
+        this.begin = 0;
+        this.change = 1;
+        return;
+      }
+      // number with unit
+      var fromUnit = from.replace(unitRegex, '');
+      var toUnit = to.replace(unitRegex, '');
+      if (fromUnit !== toUnit) warn('Tween units do not match:', from, to);
+      from = parseFloat(from);
+      to = parseFloat(to);
+      this.unit = fromUnit;
+      this.begin = from;
+      this.change = to - from;
+    };
     
+    // Animation timer shim with setTimeout fallback
+    var enterFrame = function () {
+      return win.requestAnimationFrame ||
+      win.webkitRequestAnimationFrame ||
+      win.mozRequestAnimationFrame ||
+      win.oRequestAnimationFrame ||
+      win.msRequestAnimationFrame ||
+      function (callback) {
+        win.setTimeout(callback, 16);
+      };
+    }();
     
+    // Timestamp shim with fallback
+    var timeNow = function () {
+      // use high-res timer if available
+      var perf = win.performance,
+        perfNow = perf && (perf.now || perf.webkitNow || perf.msNow || perf.mozNow);
+      if (perfNow && support.bind) {
+        return perfNow.bind(perf);
+      }
+      // fallback to epoch-based timestamp
+      return Date.now || function () {
+        return +(new Date);
+      };
+    }();
     
+    // Add a tween to the render list
+    var addRender = function (tween) {
+      // if this is the first item, start the render loop
+      if (tweenList.push(tween) === 1) enterFrame(renderLoop);
+    };
     
+    // Loop through all tweens on each frame
+    var renderLoop = function () {
+      var i, now, count = tweenList.length;
+      if (!count) return;
+      enterFrame(renderLoop);
+      now = timeNow();
+      for (i = count; i--;) {
+        tweenList[i].render(now);
+      }
+    };
+    
+    // Remove tween from render list
+    var removeRender = function (tween) {
+      var rest, index = $.inArray(tween, tweenList);
+      if (index >= 0) {
+        rest = tweenList.slice(index + 1);
+        tweenList.length = index;
+        if (rest.length) tweenList = tweenList.concat(rest);
+      }
+    };
+    
+    // Interpolate hex colors based on `position`
+    var interpolate = function (start, finish, position) {
+      var r = [], i, e, from, to;
+      for (i = 0; i < 6; i++) {
+        from = Math.min(15, parseInt(start.charAt(i),  16));
+        to   = Math.min(15, parseInt(finish.charAt(i), 16));
+        e = Math.floor((to - from) * position + from);
+        e = e > 15 ? 15 : e < 0 ? 0 : e;
+        r[i] = e.toString(16);
+      }
+      return '#' + r.join('');
+    };
   });
   
   // --------------------------------------------------
