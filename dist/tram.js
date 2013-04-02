@@ -439,8 +439,6 @@ window.tram = (function ($) {
       
       // If current is an object, start property tweens.
       if (typeof current == 'object') {
-        // redraw before animation begins
-        redraw.call(this.el);
         // loop through each valid property
         var timeSpan = 0;
         eachProp.call(this, current, function (prop, value) {
@@ -571,30 +569,38 @@ window.tram = (function ($) {
     
     // Set value immediately
     proto.set = function (value) {
+      // stop any active transition or tween
+      this.stop();
       value = this.convert(value, this.type);
-      this.stop(); // stop tween + css
       this.$el.css(this.name, value);
     };
     
     // CSS transition
     proto.transition = function (value) {
-      value = this.convert(value, this.type);
       // stop any active transition (without change event)
       this.stop(false);
       // set new value to start transition
       this.active = true;
-      this.$el.css(this.name, value);
+      this.defer(this.convert(value, this.type));
+    };
+    
+    // Deferred update to start CSS transition
+    proto.defer = function (value) {
+      var self = this;
+      setTimeout(function () {
+        // Check active state to prevent a race condition
+        self.active && self.$el.css(self.name, value);
+      }, 0);
     };
     
     // Fallback tweening
     proto.fallback = function (value) {
-      value = this.convert(value, this.type);
-      this.stop(); // stop tween + css
-      var from = this.convert(this.$el.css(this.name), this.type);
+      // stop any active transition or tween
+      this.stop();
       // start a new tween
       this.tween = new Tween({
-          from: from
-        , to: value
+          from: this.convert(this.$el.css(this.name), this.type)
+        , to: this.convert(value, this.type)
         , duration: this.duration
         , delay: this.delay
         , ease: this.ease
@@ -610,7 +616,7 @@ window.tram = (function ($) {
     
     // Stop animation
     proto.stop = function (emit) {
-      // emit defaults to true
+      // Emit change event by default
       if (emit !== false) emit = true;
       this.tween && this.tween.stop();
       // Reset property to stop CSS transition
@@ -629,10 +635,12 @@ window.tram = (function ($) {
       var string = typeof value == 'string';
       switch(type) {
         case typeNumber:
+          this.unit = '';
           if (number) return value;
           if (string && value.replace(unitRegex, '') === '') return +value;
           break;
         case typeColor:
+          this.unit = '';
           if (string) {
             if (value === '' && this.original) {
               return this.original;
@@ -751,7 +759,7 @@ window.tram = (function ($) {
       var to = options.to;
       if (from === undefined) from = defaults.from;
       if (to === undefined) to = defaults.to;
-      this.unit = '';
+      this.unit = options.unit || '';
       if (typeof from == 'number' && typeof to == 'number') {
         this.begin = from;
         this.change = to - from;
@@ -804,20 +812,22 @@ window.tram = (function ($) {
       from += '';
       to += '';
       // hex colors
-      if (from.charAt(0) == '#') {
-        this.startHex = from;
+      if (to.charAt(0) == '#') {
+        this.beginHex = from;
         this.endHex = to;
         this.begin = 0;
         this.change = 1;
         return;
       }
-      // number with unit
-      var fromUnit = from.replace(unitRegex, '');
-      var toUnit = to.replace(unitRegex, '');
-      if (fromUnit !== toUnit) unitWarning('tween', from, to);
+      // try to determine units
+      if (!this.unit) {
+        var fromUnit = from.replace(unitRegex, '');
+        var toUnit = to.replace(unitRegex, '');
+        if (fromUnit !== toUnit) unitWarning('tween', from, to);
+        this.unit = fromUnit;
+      }
       from = parseFloat(from);
       to = parseFloat(to);
-      this.unit = fromUnit;
       this.begin = from;
       this.change = to - from;
     };
@@ -925,14 +935,6 @@ window.tram = (function ($) {
     return this;
   };
   
-  // jQuery redraw helper
-  $.fn.redraw = function(){
-     return this.each(redraw);
-  };
-  function redraw() {
-    this.offsetHeight;
-  }
-  
   // --------------------------------------------------
   // Property map + unit values
   
@@ -1021,14 +1023,14 @@ window.tram = (function ($) {
   }
   
   function unitWarning(name, from, to) {
-    warn('Units do not match: ' + from + ', ' + to);
+    warn('Units do not match [' + name + ']: ' + from + ', ' + to);
   }
   
   // Log warning message if supported
   var warn = (function () {
     var warn = 'warn';
     var console = window.console;
-    if (console && console[warn]) return console[warn];
+    if (console && console[warn]) return function (msg) { console[warn](msg); };
     return noop;
   }());
   
