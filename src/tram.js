@@ -455,7 +455,6 @@
   var Tween = P(function (proto) {
     
     // Private vars
-    var tweenList = [];
     var defaults = {
         duration: 500
       , ease: easing.ease[1]
@@ -474,6 +473,7 @@
       if (typeof ease != 'function') ease = defaults.ease;
       this.ease = ease;
       this.update = options.update || noop;
+      this.complete = options.complete || noop;
       this.context = options.context;
       // Format value and determine units
       var from = options.from;
@@ -518,6 +518,8 @@
       value = this.endHex || this.begin + this.change;
       if (this.unit) value += this.unit;
       this.update.call(this.context, value);
+      this.complete.call(this.context);
+      this.destroy();
     };
     
     // Format string values for tween
@@ -547,6 +549,15 @@
       this.change = to - from;
     };
     
+    // Clean up for garbage collection
+    proto.destroy = function () {
+      this.ease =
+      this.update =
+      this.complete =
+      this.context =
+      null;
+    };
+    
     // Animation timer shim with setTimeout fallback
     var enterFrame = function () {
       return win.requestAnimationFrame ||
@@ -574,6 +585,7 @@
     }();
     
     // Add a tween to the render list
+    var tweenList = [];
     function addRender(tween) {
       // if this is the first item, start the render loop
       if (tweenList.push(tween) === 1) enterFrame(renderLoop);

@@ -26,7 +26,7 @@
     $el.each(function (i, el) {
       tram(this)
         .add('width 500ms ease-out-back ' + 100 * i, { tween: false })
-        .add('background 1s', { tween: true })
+        .add('background 300 ease ' + (500 + 100*i), { tween: true })
         .start({ width: 500, background: '#555' })
     });
     
@@ -45,7 +45,7 @@
       if (clicks == 2) {
         tram($el)
           .add('width 200ms ease 0')
-          .add('background 0.5')
+          .add('background 0.2 ease 0')
           .start({ width: 50 })
           .start({ background: '' })
       }
