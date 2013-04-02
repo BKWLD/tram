@@ -938,7 +938,7 @@ window.tram = (function ($) {
   
   // Prefixed property names
   var prefixed = {
-    'transform': support.transform.css
+    'transform': support.transform && support.transform.css
   };
   
   var propertyMap = (function (Prop) {
