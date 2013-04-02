@@ -298,28 +298,30 @@ window.tram = (function ($) {
   // Private vars
   /*global $, P, easing, clamped */
   
-  var doc = document;
-  var win = window;
-  var store = 'bkwld-tram-js';
-  var slice = Array.prototype.slice;
-  var space = ' ';
-  var unitRegex = /[\.0-9]/g;
-  var typeNumber = 'number';
-  var typeColor = /^(rgb|#)/;
-  var typeLength = /(em|cm|mm|in|pt|pc|px)$/;
-  var typeLenPerc = /(em|cm|mm|in|pt|pc|px|%)$/;
-  var typeFancyLad = 'fancy';
-  var typePercent = '%';
-  var typeDegrees = 'deg';
-  var typePixels = 'px';
+  var doc = document
+    , win = window
+    , store = 'bkwld-tram-js'
+    , slice = Array.prototype.slice
+    , space = ' '
+    , unitRegex = /[\.0-9]/g
+    , typeNumber = 'number'
+    , typeColor = /^(rgb|#)/
+    , typeLength = /(em|cm|mm|in|pt|pc|px)$/
+    , typeLenPerc = /(em|cm|mm|in|pt|pc|px|%)$/
+    , typeFancyLad = 'fancy'
+    , typePercent = '%'
+    , typeDegrees = 'deg'
+    , typePixels = 'px'
+  ;
   
   // --------------------------------------------------
   // Private functions
   
   // Simple feature detect, returns both dom + css prefixed names
-  var testDiv = doc.createElement('a');
-  var domPrefixes = ['Webkit', 'Moz', 'O', 'ms'];
-  var cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-'];
+  var testDiv = doc.createElement('a')
+    , domPrefixes = ['Webkit', 'Moz', 'O', 'ms']
+    , cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-']
+  ;
   var testFeature = function (prop) {
     // unprefixed case
     if (prop in testDiv.style) return { dom: prop, css: prop };
@@ -473,9 +475,10 @@ window.tram = (function ($) {
     
     // Loop through valid properties and run iterator callback
     function eachProp(collection, iterator) {
-      var p, valid;
-      var transform = this.props.transform;
-      var transProps = {};
+      var p, valid
+        , transform = this.props.transform
+        , transProps = {}
+      ;
       for (p in collection) {
         // check for special Transform sub-properties
         if (transform && p in Transform.map) {
@@ -639,17 +642,16 @@ window.tram = (function ($) {
     
     // Convert value to expected type
     proto.convert = function (value, type) {
-      var warnType = type;
-      var number = typeof value == 'number';
-      var string = typeof value == 'string';
+      var warnType = type
+        , number = typeof value == 'number'
+        , string = typeof value == 'string'
+      ;
       switch(type) {
         case typeNumber:
-          this.unit = '';
           if (number) return value;
           if (string && value.replace(unitRegex, '') === '') return +value;
           break;
         case typeColor:
-          this.unit = '';
           if (string) {
             if (value === '' && this.original) {
               return this.original;
@@ -693,8 +695,7 @@ window.tram = (function ($) {
     };
     
     // Normalize time values
-    var ms = /ms/;
-    var sec = /s|\./;
+    var ms = /ms/, sec = /s|\./;
     function validTime(string, current, safe) {
       if (current !== undefined) safe = current;
       if (string === undefined) return safe;
@@ -714,6 +715,17 @@ window.tram = (function ($) {
     function validEase(ease, current, safe) {
       if (current !== undefined) safe = current;
       return ease in easing ? ease : safe;
+    }
+    
+    // Convert rgb and short hex to long hex
+    function toHex(c) {
+      var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
+      return (m ? rgb(m[1], m[2], m[3]) : c)
+        .replace(/#(\w)(\w)(\w)$/, '#$1$1$2$2$3$3');
+    }
+    
+    function rgb(r, g, b) {
+      return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
     }
   });
   
@@ -785,34 +797,27 @@ window.tram = (function ($) {
     };
     
     proto.render = function (now) {
-      var value;
-      var delay = this.delay;
-      var begin = this.begin;
-      var change = this.change;
-      var duration = this.duration;
-      var context = this.context;
-      var unit = this.unit;
-      var delta = now - this.start;
+      var value, delta = now - this.start;
       // skip render during delay
-      if (delay) {
-        if (delta <= delay) return;
+      if (this.delay) {
+        if (delta <= this.delay) return;
         // after delay, reduce delta
-        delta -= delay;
+        delta -= this.delay;
       }
-      if (delta < duration) {
+      if (delta < this.duration) {
         // calculate eased position
-        var position = this.ease(delta, 0, 1, duration);
-        // TODO interpolate hex here
-        value = begin + (position * change);
-        if (unit) value += unit;
-        this.update.call(context, value);
+        var position = this.ease(delta, 0, 1, this.duration);
+        value = this.startHex ? interpolate(this.startHex, this.endHex, position)
+          : this.begin + (position * this.change);
+        if (this.unit) value += this.unit;
+        this.update.call(this.context, value);
         return;
       }
       // we're done, remove tween and set final value
       removeRender(this);
-      value = this.endHex || begin + change;
-      if (unit) value += unit;
-      this.update.call(context, value);
+      value = this.endHex || this.begin + this.change;
+      if (this.unit) value += this.unit;
+      this.update.call(this.context, value);
     };
     
     // Format string values for tween
@@ -822,13 +827,13 @@ window.tram = (function ($) {
       to += '';
       // hex colors
       if (to.charAt(0) == '#') {
-        this.beginHex = from;
+        this.startHex = from;
         this.endHex = to;
         this.begin = 0;
         this.change = 1;
         return;
       }
-      // try to determine units
+      // determine unit suffix
       if (!this.unit) {
         var fromUnit = from.replace(unitRegex, '');
         var toUnit = to.replace(unitRegex, '');
@@ -896,15 +901,15 @@ window.tram = (function ($) {
     
     // Interpolate hex colors based on `position`
     var interpolate = function (start, finish, position) {
-      var r = [], i, e, from, to;
+      var result = '#', i, e, from, to;
       for (i = 0; i < 6; i++) {
-        from = Math.min(15, parseInt(start.charAt(i),  16));
-        to   = Math.min(15, parseInt(finish.charAt(i), 16));
+        from = Math.min(15, parseInt(start.charAt(i+1),  16));
+        to   = Math.min(15, parseInt(finish.charAt(i+1), 16));
         e = Math.floor((to - from) * position + from);
         e = e > 15 ? 15 : e < 0 ? 0 : e;
-        r[i] = e.toString(16);
+        result += e.toString(16);
       }
-      return '#' + r.join('');
+      return result;
     };
   });
   
@@ -1048,17 +1053,6 @@ window.tram = (function ($) {
     return function(arg) {
       return method.call(context, arg);
     };
-  }
-  
-  // Convert rgb and short hex to long hex
-  function toHex(c) {
-    var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
-    return (m ? rgb(m[1], m[2], m[3]) : c)
-      .replace(/#(\w)(\w)(\w)$/, '#$1$1$2$2$3$3');
-  }
-  
-  function rgb(r, g, b) {
-    return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
   }
   
   // Lo-Dash compact()
