@@ -334,7 +334,7 @@
     proto.stop = function (emit) {
       // Emit change event by default
       if (emit !== false) emit = true;
-      this.tween && this.tween.stop();
+      this.tween && this.tween.destroy();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
@@ -489,10 +489,18 @@
       }
       // Start tween
       this.start = timeNow();
+      this.play();
+    };
+    
+    proto.play = function () {
+      if (this.active) return;
+      this.active = true;
       addRender(this);
     };
     
     proto.stop = function () {
+      if (!this.active) return;
+      this.active = false;
       removeRender(this);
     };
     
@@ -513,8 +521,7 @@
         this.update.call(this.context, value);
         return;
       }
-      // we're done, remove tween and set final value
-      removeRender(this);
+      // we're done, set final value and destroy
       value = this.endHex || this.begin + this.change;
       if (this.unit) value += this.unit;
       this.update.call(this.context, value);
@@ -551,6 +558,7 @@
     
     // Clean up for garbage collection
     proto.destroy = function () {
+      this.stop();
       this.ease =
       this.update =
       this.complete =
