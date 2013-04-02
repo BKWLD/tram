@@ -658,7 +658,7 @@ window.tram = (function ($) {
             }
             if (type.test(value)) {
               if (value.charAt(0) == '#' && value.length == 7) return value;
-              return toHex(value);
+              return cssToHex(value);
             }
           }
           warnType = 'hex or rgb string';
@@ -718,14 +718,10 @@ window.tram = (function ($) {
     }
     
     // Convert rgb and short hex to long hex
-    function toHex(c) {
+    function cssToHex(c) {
       var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
-      return (m ? rgb(m[1], m[2], m[3]) : c)
+      return (m ? rgbToHex(m[1], m[2], m[3]) : c)
         .replace(/#(\w)(\w)(\w)$/, '#$1$1$2$2$3$3');
-    }
-    
-    function rgb(r, g, b) {
-      return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
     }
   });
   
@@ -807,7 +803,7 @@ window.tram = (function ($) {
       if (delta < this.duration) {
         // calculate eased position
         var position = this.ease(delta, 0, 1, this.duration);
-        value = this.startHex ? interpolate(this.startHex, this.endHex, position)
+        value = this.startRGB ? interpolate(this.startRGB, this.endRGB, position)
           : this.begin + (position * this.change);
         if (this.unit) value += this.unit;
         this.update.call(this.context, value);
@@ -827,7 +823,8 @@ window.tram = (function ($) {
       to += '';
       // hex colors
       if (to.charAt(0) == '#') {
-        this.startHex = from;
+        this.startRGB = hexToRgb(from);
+        this.endRGB = hexToRgb(to);
         this.endHex = to;
         this.begin = 0;
         this.change = 1;
@@ -873,13 +870,13 @@ window.tram = (function ($) {
     }();
     
     // Add a tween to the render list
-    var addRender = function (tween) {
+    function addRender(tween) {
       // if this is the first item, start the render loop
       if (tweenList.push(tween) === 1) enterFrame(renderLoop);
-    };
+    }
     
     // Loop through all tweens on each frame
-    var renderLoop = function () {
+    function renderLoop() {
       var i, now, count = tweenList.length;
       if (!count) return;
       enterFrame(renderLoop);
@@ -887,30 +884,26 @@ window.tram = (function ($) {
       for (i = count; i--;) {
         tweenList[i].render(now);
       }
-    };
+    }
     
     // Remove tween from render list
-    var removeRender = function (tween) {
+    function removeRender(tween) {
       var rest, index = $.inArray(tween, tweenList);
       if (index >= 0) {
         rest = tweenList.slice(index + 1);
         tweenList.length = index;
         if (rest.length) tweenList = tweenList.concat(rest);
       }
-    };
+    }
     
-    // Interpolate hex colors based on `position`
-    var interpolate = function (start, finish, position) {
-      var result = '#', i, e, from, to;
-      for (i = 0; i < 6; i++) {
-        from = Math.min(15, parseInt(start.charAt(i+1),  16));
-        to   = Math.min(15, parseInt(finish.charAt(i+1), 16));
-        e = Math.floor((to - from) * position + from);
-        e = e > 15 ? 15 : e < 0 ? 0 : e;
-        result += e.toString(16);
-      }
-      return result;
-    };
+    // Interpolate rgb colors based on `position`, returns hex string
+    function interpolate(start, end, position) {
+      return rgbToHex(
+        start[0] + position * (end[0] - start[0]),
+        start[1] + position * (end[1] - start[1]),
+        start[2] + position * (end[2] - start[2])
+      );
+    }
   });
   
   // --------------------------------------------------
@@ -1030,6 +1023,18 @@ window.tram = (function ($) {
   // --------------------------------------------------
   // Utils
   
+  function hexToRgb(hex) {
+    var n = parseInt(hex.slice(1), 16);
+    var r = (n >> 16) & 255;
+    var g = (n >> 8) & 255;
+    var b = n & 255;
+    return [r,g,b];
+  }
+  
+  function rgbToHex(r, g, b) {
+    return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
+  }
+  
   function noop() {}
   
   function typeWarning(exp, val) {
@@ -1048,7 +1053,7 @@ window.tram = (function ($) {
     return noop;
   }());
   
-  // Faux-bind helper (single arg to help performance)
+  // Faux-bind helper (single arg for perf)
   function proxy(context, method) {
     return function(arg) {
       return method.call(context, arg);
