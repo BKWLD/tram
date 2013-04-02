@@ -1,6 +1,6 @@
   // --------------------------------------------------
   // Private vars
-  /*global $, P, easing, clamped */
+  /*global $, nextTick, P, easing, clamped */
   
   var doc = document
     , win = window
@@ -17,6 +17,8 @@
     , typeDegrees = 'deg'
     , typePixels = 'px'
   ;
+  
+  console.log(nextTick);
   
   // --------------------------------------------------
   // Private functions
@@ -303,10 +305,10 @@
     
     // Deferred update to start CSS transition
     proto.defer = function (self, value) {
-      setTimeout(function () {
+      nextTick(function () {
         // Check active state to prevent a race condition
         self.active && self.$el.css(self.name, value);
-      }, 0);
+      });
     };
     
     // Fallback tweening

@@ -28,6 +28,7 @@ module.exports = function(grunt) {
         options: { banner: bannerFlag('-global') },
         src: [
           'support/global/1.js',
+          'src/nextTick.js',
           'src/p.js',
           'src/easing.js',
           'src/<%= pkg.name %>.js',
@@ -39,6 +40,7 @@ module.exports = function(grunt) {
         options: { banner: bannerFlag('-amd') },
         src: [
           'support/amd/1.js',
+          'src/nextTick.js',
           'src/p.js',
           'src/easing.js',
           'src/<%= pkg.name %>.js',
@@ -50,6 +52,7 @@ module.exports = function(grunt) {
         options: { banner: bannerFlag('-commonjs') },
         src: [
           'support/commonjs/1.js',
+          'src/nextTick.js',
           'src/p.js',
           'src/easing.js',
           'src/<%= pkg.name %>.js',
