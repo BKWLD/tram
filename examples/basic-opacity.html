@@ -51,8 +51,9 @@
       }
       
       if (clicks == 3) {
+        clicks = 1;
         tram($el)
-          .start({ width: 500, background: '#555' })
+          .set({ width: 500, background: '#555' })
       }
     });
     

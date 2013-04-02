@@ -375,6 +375,7 @@ window.tram = (function ($) {
     chain('add', add);
     chain('start', start);
     chain('stop', stop);
+    chain('set', set);
     
     // Public add() - chainable
     function add(transition, options) {
@@ -455,10 +456,19 @@ window.tram = (function ($) {
     
     // Public stop() - chainable
     function stop(property) {
-      // TODO stop individual properties by name
-      for (var p in this.props) {
-        this.props[p].stop();
-      }
+      var values = {};
+      if (property) values[property] = 1;
+      else values = this.props;
+      eachProp.call(this, values, function (prop, value) {
+        prop.stop();
+      });
+    }
+    
+    // Public set() - chainable
+    function set(values) {
+      eachProp.call(this, values, function (prop, value) {
+        prop.set(value);
+      });
     }
     
     // Loop through valid properties and run iterator callback
@@ -581,12 +591,11 @@ window.tram = (function ($) {
       this.stop(false);
       // set new value to start transition
       this.active = true;
-      this.defer(this.convert(value, this.type));
+      this.defer(this, this.convert(value, this.type));
     };
     
     // Deferred update to start CSS transition
-    proto.defer = function (value) {
-      var self = this;
+    proto.defer = function (self, value) {
       setTimeout(function () {
         // Check active state to prevent a race condition
         self.active && self.$el.css(self.name, value);
