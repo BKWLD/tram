@@ -71,6 +71,8 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 // 'transform-origin'     // length, percentage (x, y)
 // 'clip'                 // rectangle
 // 'crop'                 // rectangle
+// 'scroll-top'           // number (tween-only)
+// 'scroll-left'          // number (tween-only)
 ```
 
 [1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"

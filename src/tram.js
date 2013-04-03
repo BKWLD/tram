@@ -18,8 +18,6 @@
     , typePixels = 'px'
   ;
   
-  console.log(nextTick);
-  
   // --------------------------------------------------
   // Private functions
   
@@ -43,7 +41,7 @@
   };
   
   // Feature tests
-  var support = {
+  var support = tram.support = {
       bind: Function.prototype.bind
     , transform: testFeature('transform')
     , transition: testFeature('transition')
@@ -655,8 +653,14 @@
   };
   
   // tween() static method
-  tram.tween = function () {
-    // TODO
+  tram.tween = function (options) {
+    return new Tween(options);
+  };
+  
+  // remap() static method
+  var remapped = {};
+  tram.remap = function (from, to) {
+    // TODO remap properties ... for example: x -> left
   };
   
   // jQuery plugin method, keeps jQuery chain intact.
