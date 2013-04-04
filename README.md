@@ -13,8 +13,12 @@ TODO describe jquery dependency... data API, cross-browser style getters + sette
 ## How it works
 
 ```js
-// magic
+// TODO
 ```
+
+## Methods
+
+TODO
 
 ## Properties
 
@@ -23,14 +27,14 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 ### Supported property names / values
 
 ```js
-'color'                // color or ''
-'background'           // color or ''
-'outline-color'        // color or ''
-'border-color'         // color or ''
-'border-top-color'     // color or ''
-'border-right-color'   // color or ''
-'border-bottom-color'  // color or ''
-'border-left-color'    // color or ''
+'color'                // color
+'background'           // color
+'outline-color'        // color
+'border-color'         // color
+'border-top-color'     // color
+'border-right-color'   // color
+'border-bottom-color'  // color
+'border-left-color'    // color
 'border-width'         // length
 'border-top-width'     // length
 'border-right-width'   // length
@@ -64,13 +68,13 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 'min-height'           // length, percentage
 'max-height'           // length, percentage
 'line-height'          // number, length, percentage
-'transform'            // (see transform section below)
+'transform'            // (see transform info below)
 
 // TODO - planned support
-// 'background-position'  // length, percentage (x, y)
-// 'transform-origin'     // length, percentage (x, y)
-// 'clip'                 // rectangle
-// 'crop'                 // rectangle
+// 'background-position'  // [x, y] length, percentage
+// 'transform-origin'     // [x, y] length, percentage
+// 'clip'                 // [x, y, w, h] rectangle
+// 'crop'                 // [x, y, w, h] rectangle
 // 'scroll-top'           // number (tween-only)
 // 'scroll-left'          // number (tween-only)
 ```
@@ -80,9 +84,8 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 
 ## Transforms
 
-TODO describe transform shortcuts w/ example
+TODO describe transform shortcuts w/ examples
 
-'top'                  // length, percentage
 'x'                    // length, percentage
 'y'                    // length, percentage
 'z'                    // length, percentage
@@ -150,19 +153,12 @@ TODO describe transform shortcuts w/ example
 'ease-in-out-back'
 ```
 
-## Options
+## TODO
 
-### Fallback mode
-
-TODO
-
-### REM support
-
-TODO
-
-### GPU acceleration
-
-TODO
+* Add scrollTop and scrollLeft as tween-only props
+* Support array props like 'background-position'
+* Confirm 'backface:hidden' is enough for gpu acceleration
+* Add px -> rem unit calculation w/ fallback
 
 ## Thanks
 

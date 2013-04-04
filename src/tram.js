@@ -436,12 +436,11 @@
   });
   
   var Transform = P(Property, function (proto) {
-    // TODO add option for gpu trigger
-    // translate3d(0,0,0);
     
-    // Convert transform sub-properties
     proto.convert = function (value, type) {
+      // Convert transform sub-properties
       console.log('convert', value);
+      // TODO
     };
   });
   
@@ -637,16 +636,20 @@
   
   // Global tram config
   tram.config = {
-      baseFontSize: 16 // used by remFallback
-    , remFallback: false // TODO add rem fallback for px length values?
-    , defaultUnit: pixels // default unit added to <length> types
+      defaultUnit: pixels // default unit added to <length> types
     , defaultAngle: degrees // default unit added to <angle> types
-    , gpuTransforms: true // always prepend gpu cache trick to transforms
+    , remPixels: false // rems with pixel length fallback
+    , remFontSize: 16 // used by remPixels option
+    , gpuTransforms: true // always add gpu cache trick to transforms
   };
   
   // macro() static method
   tram.macro = function () {
     // TODO
+    // use string for macros?
+    // example:
+    // t.start({ x: 50 });
+    // t.then('fade-out');
   };
   
   // tween() static method
@@ -658,6 +661,7 @@
   var remapped = {};
   tram.remap = function (from, to) {
     // TODO remap properties ... for example: x -> left
+    // should be per-element using a chained .remap method
   };
   
   // jQuery plugin method, keeps jQuery chain intact.
