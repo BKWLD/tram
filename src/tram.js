@@ -6,16 +6,16 @@
     , win = window
     , store = 'bkwld-tram-js'
     , slice = Array.prototype.slice
-    , space = ' '
     , unitRegex = /[\.0-9]/g
     , typeNumber = 'number'
     , typeColor = /^(rgb|#)/
     , typeLength = /(em|cm|mm|in|pt|pc|px)$/
     , typeLenPerc = /(em|cm|mm|in|pt|pc|px|%)$/
-    , typeFancyLad = 'fancy'
-    , typePercent = '%'
-    , typeDegrees = 'deg'
-    , typePixels = 'px'
+    , typeAngle = /(deg|rad|turn)$/
+    , typeFancy = 'unitless'
+    , space = ' '
+    , degrees = 'deg'
+    , pixels = 'px'
   ;
   
   // --------------------------------------------------
@@ -346,7 +346,7 @@
     
     // Convert value to expected type
     proto.convert = function (value, type) {
-      var warnType = type
+      var warnType
         , number = typeof value == 'number'
         , string = typeof value == 'string'
       ;
@@ -354,6 +354,7 @@
         case typeNumber:
           if (number) return value;
           if (string && value.replace(unitRegex, '') === '') return +value;
+          warnType = 'number(unitless)';
           break;
         case typeColor:
           if (string) {
@@ -368,29 +369,24 @@
           warnType = 'hex or rgb string';
           break;
         case typeLength:
-          if (number) return value + typePixels;
+          if (number) return value + pixels;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit)';
           break;
         case typeLenPerc:
-          if (number) return value + typePixels;
+          if (number) return value + pixels;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit or %)';
           break;
-        case typeFancyLad:
+        case typeAngle:
+          if (number) return value + degrees;
+          if (string && type.test(value)) return value;
+          warnType = 'number(deg) or string(angle)';
+          break;
+        case typeFancy:
           if (number) return value;
           if (string && typeLenPerc.test(value)) return value;
-          warnType = 'number or string(unit or %)';
-          break;
-        case typeDegrees:
-          if (number) return value + typeDegrees;
-          if (string && type.test(value)) return value;
-          warnType = 'number(deg) or string(deg)';
-          break;
-        case typePixels:
-          if (number) return value + typePixels;
-          if (string && type.test(value)) return value;
-          warnType = 'number(px) or string(px)';
+          warnType = 'number(unitless) or string(unit or %)';
           break;
       }
       // Type must be invalid, warn people.
@@ -642,8 +638,9 @@
   // Global tram config
   tram.config = {
       baseFontSize: 16 // used by remFallback
-    , remFallback: false // TODO add rem fallback for px length values
-    , defaultUnit: typePixels // default unit added to <length> types
+    , remFallback: false // TODO add rem fallback for px length values?
+    , defaultUnit: pixels // default unit added to <length> types
+    , defaultAngle: degrees // default unit added to <angle> types
     , gpuTransforms: true // always prepend gpu cache trick to transforms
   };
   
@@ -684,21 +681,21 @@
     
     // Transform sub-properties { name: [ valueType, expand ]}
     Transform.map = {
-        x:            [ typePixels, 'translateX' ]
-      , y:            [ typePixels, 'translateY' ]
-      , z:            [ typePixels, 'translateZ' ]
-      , rotate:       [ typeDegrees ]
-      , rotateX:      [ typeDegrees ]
-      , rotateY:      [ typeDegrees ]
-      , rotateZ:      [ typeDegrees ]
+        x:            [ typeLenPerc, 'translateX' ]
+      , y:            [ typeLenPerc, 'translateY' ]
+      , z:            [ typeLenPerc, 'translateZ' ]
+      , rotate:       [ typeAngle ]
+      , rotateX:      [ typeAngle ]
+      , rotateY:      [ typeAngle ]
+      , rotateZ:      [ typeAngle ]
       , scale:        [ typeNumber ]
       , scaleX:       [ typeNumber ]
       , scaleY:       [ typeNumber ]
       , scaleZ:       [ typeNumber ]
-      , skew:         [ typeDegrees ]
-      , skewX:        [ typeDegrees ]
-      , skewY:        [ typeDegrees ]
-      , perspective:  [ typePixels ]
+      , skew:         [ typeAngle ]
+      , skewX:        [ typeAngle ]
+      , skewY:        [ typeAngle ]
+      , perspective:  [ typeLength ]
     };
     
     // Main Property map { name: [ Class, valueType, expand ]}
@@ -743,7 +740,7 @@
       , 'height'               : [ Property, typeLenPerc ]
       , 'min-height'           : [ Property, typeLenPerc ]
       , 'max-height'           : [ Property, typeLenPerc ]
-      , 'line-height'          : [ Property, typeFancyLad ]
+      , 'line-height'          : [ Property, typeFancy ]
       , 'transform'            : [ Transform ]
       // , 'background-position'  : [ Property, typeLenPerc ]
       // , 'transform-origin'     : [ Property, typeLenPerc ]

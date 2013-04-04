@@ -64,7 +64,7 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 'min-height'           // length, percentage
 'max-height'           // length, percentage
 'line-height'          // number, length, percentage
-'transform'            // transform-object
+'transform'            // (see transform section below)
 
 // TODO - planned support
 // 'background-position'  // length, percentage (x, y)
@@ -77,6 +77,27 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 
 [1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"
 [2]: http://www.w3.org/TR/css3-transitions/#properties-from-css- "w3.org"
+
+## Transforms
+
+TODO describe transform shortcuts w/ example
+
+'top'                  // length, percentage
+'x'                    // length, percentage
+'y'                    // length, percentage
+'z'                    // length, percentage
+'rotate'               // angle
+'rotateX'              // angle
+'rotateY'              // angle
+'rotateZ'              // angle
+'scale'                // number
+'scaleX'               // number
+'scaleY'               // number
+'scaleZ'               // number
+'skew'                 // angle
+'skewX'                // angle
+'skewY'                // angle
+'perspective'          // length
 
 ## Easings
 
