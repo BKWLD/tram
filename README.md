@@ -6,15 +6,13 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind *tram.js* is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
 
-## jQuery dependency
+### How it works
+
+TODO
+
+### jQuery dependency
 
 TODO describe jquery dependency... data API, cross-browser style getters + setters, bugfixes, feature tests, general utils: type tests, extend()
-
-## How it works
-
-```js
-// TODO
-```
 
 ## Methods
 
@@ -82,10 +80,11 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 [1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"
 [2]: http://www.w3.org/TR/css3-transitions/#properties-from-css- "w3.org"
 
-## Transforms
+### Transforms
 
 TODO describe transform shortcuts w/ examples
 
+```js
 'x'                    // length, percentage
 'y'                    // length, percentage
 'z'                    // length, percentage
@@ -101,8 +100,9 @@ TODO describe transform shortcuts w/ examples
 'skewX'                // angle
 'skewY'                // angle
 'perspective'          // length
+```
 
-## Easings
+### Easings
 
 ```js
 // Defaults
@@ -155,6 +155,7 @@ TODO describe transform shortcuts w/ examples
 
 ## TODO
 
+* Add fallback({ x: 'left' }) method for non-supported props
 * Add scrollTop and scrollLeft as tween-only props
 * Support array props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
@@ -171,12 +172,9 @@ Special thanks to the following open source authors + libraries.
 
 ## MIT License 
 
-This code may be freely distributed under the MIT license.
-http://danro.mit-license.org/
+This code may be freely distributed under the [MIT license](http://danro.mit-license.org/).
 
-## BSD License (Easing Equations)
-
-TERMS OF USE - EASING EQUATIONS
+### Terms Of Use - Easing Equations
 
 Open source under the [BSD License](http://www.opensource.org/licenses/bsd-license.php).
 

@@ -181,12 +181,14 @@
     function eachProp(collection, iterator) {
       var p, valid
         , transform = this.props.transform
+        , transMatch = false
         , transProps = {}
       ;
       for (p in collection) {
         // check for special Transform sub-properties
         if (transform && p in Transform.map) {
           transProps[p] = collection[p];
+          transMatch = true;
           continue;
         }
         // validate property
@@ -196,7 +198,7 @@
         iterator(this.props[p], collection[p]);
       }
       // iterate with transform prop / sub-prop values
-      if (transform) iterator(transform, transProps);
+      if (transMatch) iterator(transform, transProps);
     }
     
     // Define a chainable method that takes children into account
@@ -435,12 +437,25 @@
     };
   });
   
-  var Transform = P(Property, function (proto) {
+  var Transform = P(Property, function (proto, supr) {
     
-    proto.convert = function (value, type) {
+    proto.set = function () {
+      // TODO store all previous transform values during set or start
+      // and then include them in the result of convert()
+    };
+    
+    proto.convert = function (props, type) {
       // Convert transform sub-properties
-      console.log('convert', value);
-      // TODO
+      var p, name, value, def, result = '';
+      for (p in props) {
+        def = Transform.map[p];
+        name = def[1] || p;
+        console.log(name);
+        value = supr.convert(props[p], def[0]);
+        result += name + '(' + value + ') ';
+      }
+      console.log(result);
+      return result;
     };
   });
   
@@ -655,13 +670,6 @@
   // tween() static method
   tram.tween = function (options) {
     return new Tween(options);
-  };
-  
-  // remap() static method
-  var remapped = {};
-  tram.remap = function (from, to) {
-    // TODO remap properties ... for example: x -> left
-    // should be per-element using a chained .remap method
   };
   
   // jQuery plugin method, keeps jQuery chain intact.

@@ -13,8 +13,6 @@
   <div class="test"></div>
   <div class="test"></div>
   <div class="test"></div>
-  <div class="test"></div>
-  <div class="test"></div>
   <script>
   
     var $el = $('.test');
@@ -25,15 +23,15 @@
     
     $el.each(function (i, el) {
       tram(this)
-        .add('width 500ms ease-out-back ' + 100 * i, { tween: !(i % 2) })
+        .add('width 500ms ease-out-back ' + 100 * i, { tween: false })
         .add('background 1s ease-out 500', { tween: false })
         .start({ width: 500, background: '#555' })
     });
     
-    // $el.tram(function (t) {
-    //   t.add('transform 1s ease');
-    //   t.start({ x: 20, y: 20 });
-    // });
+    $el.tram(function (t) {
+      t.add('transform 1s ease', { tween: false });
+      t.start({ x: 50, y: 50, rotate: 5 });
+    });
     
     var clicks = 0;
     

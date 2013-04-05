@@ -529,12 +529,14 @@ window.tram = (function ($) {
     function eachProp(collection, iterator) {
       var p, valid
         , transform = this.props.transform
+        , transMatch = false
         , transProps = {}
       ;
       for (p in collection) {
         // check for special Transform sub-properties
         if (transform && p in Transform.map) {
           transProps[p] = collection[p];
+          transMatch = true;
           continue;
         }
         // validate property
@@ -544,7 +546,7 @@ window.tram = (function ($) {
         iterator(this.props[p], collection[p]);
       }
       // iterate with transform prop / sub-prop values
-      if (transform) iterator(transform, transProps);
+      if (transMatch) iterator(transform, transProps);
     }
     
     // Define a chainable method that takes children into account
@@ -783,13 +785,25 @@ window.tram = (function ($) {
     };
   });
   
-  var Transform = P(Property, function (proto) {
-    // TODO add option for gpu trigger
-    // translate3d(0,0,0);
+  var Transform = P(Property, function (proto, supr) {
     
-    // Convert transform sub-properties
-    proto.convert = function (value, type) {
-      console.log('convert', value);
+    proto.set = function () {
+      // TODO store all previous transform values during set or start
+      // and then include them in the result of convert()
+    };
+    
+    proto.convert = function (props, type) {
+      // Convert transform sub-properties
+      var p, name, value, def, result = '';
+      for (p in props) {
+        def = Transform.map[p];
+        name = def[1] || p;
+        console.log(name);
+        value = supr.convert(props[p], def[0]);
+        result += name + '(' + value + ') ';
+      }
+      console.log(result);
+      return result;
     };
   });
   
@@ -985,27 +999,25 @@ window.tram = (function ($) {
   
   // Global tram config
   tram.config = {
-      baseFontSize: 16 // used by remFallback
-    , remFallback: false // TODO add rem fallback for px length values?
-    , defaultUnit: pixels // default unit added to <length> types
+      defaultUnit: pixels // default unit added to <length> types
     , defaultAngle: degrees // default unit added to <angle> types
-    , gpuTransforms: true // always prepend gpu cache trick to transforms
+    , remPixels: false // rems with pixel length fallback
+    , remFontSize: 16 // used by remPixels option
+    , gpuTransforms: true // always add gpu cache trick to transforms
   };
   
   // macro() static method
   tram.macro = function () {
     // TODO
+    // use string for macros?
+    // example:
+    // t.start({ x: 50 });
+    // t.then('fade-out');
   };
   
   // tween() static method
   tram.tween = function (options) {
     return new Tween(options);
-  };
-  
-  // remap() static method
-  var remapped = {};
-  tram.remap = function (from, to) {
-    // TODO remap properties ... for example: x -> left
   };
   
   // jQuery plugin method, keeps jQuery chain intact.
