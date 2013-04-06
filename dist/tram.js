@@ -4,7 +4,7 @@
   * https://github.com/bkwld/tram
   * MIT License
   */
-window.tram = (function ($) {
+window.tram = (function (jQuery) {
 
   /*!
    * Breeze - process.nextTick browser shim
@@ -350,7 +350,7 @@ window.tram = (function ($) {
 
   // --------------------------------------------------
   // Private vars
-  /*global $, nextTick, P, easing, clamped */
+  /*global jQuery, nextTick, P, easing, clamped */
   
   var doc = document
     , win = window
@@ -420,7 +420,7 @@ window.tram = (function ($) {
     
     proto.init = function (el) {
       this.el = el;
-      this.$el = $(el);
+      this.$el = jQuery(el);
       this.props = {};
       this.queue = [];
       this.style = '';
@@ -479,7 +479,7 @@ window.tram = (function ($) {
     // Public start() - chainable
     function start(options) {
       // If the first argument is an array, use that as the arguments instead.
-      var args = $.isArray(options) ? options.slice() : slice.call(arguments);
+      var args = jQuery.isArray(options) ? options.slice() : slice.call(arguments);
       if (!args.length) return;
       
       var current = args.shift();
@@ -577,7 +577,7 @@ window.tram = (function ($) {
   var Tram = P(Transition, function (proto) {
     
     proto.init = function (args) {
-      var $elems = $(args[0]);
+      var $elems = jQuery(args[0]);
       var options = args.slice(1);
       
       // Invalid selector, do nothing.
@@ -597,7 +597,7 @@ window.tram = (function ($) {
     
     // Retrieve instance from data or create a new one.
     function factory(el, options) {
-      var t = $.data(el, store) || $.data(el, store, new Transition.Bare());
+      var t = jQuery.data(el, store) || jQuery.data(el, store, new Transition.Bare());
       if (!t.el) t.init(el);
       if (options.length) return t.start(options);
       return t;
@@ -1000,7 +1000,7 @@ window.tram = (function ($) {
     
     // Remove tween from render list
     function removeRender(tween) {
-      var rest, index = $.inArray(tween, tweenList);
+      var rest, index = jQuery.inArray(tween, tweenList);
       if (index >= 0) {
         rest = tweenList.slice(index + 1);
         tweenList.length = index;
@@ -1033,7 +1033,6 @@ window.tram = (function ($) {
     , defaultAngle: degrees // default unit added to <angle> types
     , remPixels: false // rems with pixel length fallback
     , remFontSize: 16 // used by remPixels option
-    , gpuTransforms: true // always add gpu cache trick to transforms
   };
   
   // macro() static method
@@ -1051,7 +1050,7 @@ window.tram = (function ($) {
   };
   
   // jQuery plugin method, keeps jQuery chain intact.
-  $.fn.tram = function (args) {
+  jQuery.fn.tram = function (args) {
     // Pass along element as first argument
     args = [this].concat(slice.call(arguments));
     // Directly instantiate Tram class, no tram chain!
@@ -1202,6 +1201,6 @@ window.tram = (function ($) {
   
   // --------------------------------------------------
   // Export public module.
-  return $.tram = tram;
+  return jQuery.tram = tram;
 
 }(window.jQuery));

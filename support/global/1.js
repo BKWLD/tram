@@ -1,1 +1,1 @@
-window.tram = (function ($) {
+window.tram = (function (jQuery) {

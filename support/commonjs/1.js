@@ -1,2 +1,2 @@
 module.exports = (function () {
-  var $ = require('jquery');
+  var jQuery = require('jquery');
