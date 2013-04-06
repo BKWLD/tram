@@ -74,7 +74,10 @@
       this.queue = [];
       this.style = '';
       // hide backface if supported, for better perf
-      if (support.backface) this.el.style[support.backface.dom] = 'hidden';
+      if (support.backface) {
+        this.el.style[support.backface.dom] = 'hidden';
+        this.el.style[support.transform.dom] = 'perspective(1000)';
+      }
     };
     
     // Public chainable methods

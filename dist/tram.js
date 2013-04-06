@@ -115,9 +115,9 @@ window.tram = (function ($) {
       C.mixin = function(def) {
         Bare[prototype] = C[prototype] = P(C, def)[prototype];
         return C;
-      }
+      };
 
-      return (C.open = function(def) {
+      C.open = function(def) {
         extensions = {};
 
         if (isFunction(def)) {
@@ -146,7 +146,9 @@ window.tram = (function ($) {
         }
 
         return C;
-      })(definition);
+      };
+      
+      return C.open(definition);
     }
 
     // ship it
@@ -422,7 +424,10 @@ window.tram = (function ($) {
       this.queue = [];
       this.style = '';
       // hide backface if supported, for better perf
-      if (support.backface) this.el.style[support.backface.dom] = 'hidden';
+      if (support.backface) {
+        this.el.style[support.backface.dom] = 'hidden';
+        this.el.style[support.transform.dom] = 'perspective(1000)';
+      }
     };
     
     // Public chainable methods

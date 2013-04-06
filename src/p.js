@@ -55,9 +55,9 @@
       C.mixin = function(def) {
         Bare[prototype] = C[prototype] = P(C, def)[prototype];
         return C;
-      }
+      };
 
-      return (C.open = function(def) {
+      C.open = function(def) {
         extensions = {};
 
         if (isFunction(def)) {
@@ -86,7 +86,9 @@
         }
 
         return C;
-      })(definition);
+      };
+      
+      return C.open(definition);
     }
 
     // ship it

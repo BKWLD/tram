@@ -14,6 +14,6 @@ h1 {
 	background: #68BFB6;
 }
 
-.test:nth-child(2n) {
+.alt {
   background: #57889D;
 }
