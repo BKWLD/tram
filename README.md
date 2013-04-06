@@ -8,19 +8,19 @@ The idea behind *tram.js* is simple: Take the flexibility and performance of CSS
 
 ### How it works
 
-TODO
+TODO explain features inline with examples
 
 ### jQuery dependency
 
-TODO describe jquery dependency... data API, cross-browser style getters + setters, bugfixes, feature tests, general utils: type tests, extend()
+TODO describe jquery dependency... data API, cross-browser fixes, style getters + setters
 
 ## Methods
 
-TODO
+TODO document each method
 
 ## Properties
 
-Browser support for transitioning CSS properties is limited, so *tram.js* attempts to cover the most common *cross-browser* properties. This list is based on CSS animation specs [here][1] and [here][2].
+Browser support for transitioning CSS properties is limited, so *tram.js* attempts to cover the most common cross-browser properties, and even adds a couple extras. This list was compiled using CSS animation specs [here][1] and [here][2].
 
 ### Supported property names / values
 
@@ -76,6 +76,8 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 // 'scroll-top'           // number (tween-only)
 // 'scroll-left'          // number (tween-only)
 ```
+
+**Note:** `dash-style` names are required in the `.add()` string, but other methods such as `.start()` and `.stop()` may use `camelCase` style.
 
 [1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"
 [2]: http://www.w3.org/TR/css3-transitions/#properties-from-css- "w3.org"

@@ -18,14 +18,13 @@
     
     tram($el)
       .add('opacity 800ms ease-in-out')
-      .start({ opacity: 0.5, width: 400 })
+      .start({ opacity: 0.5 })
     
     $el.each(function (i, el) {
       tram(this)
-        .add('width 500ms ease-out-back ' + 200 * i, { tween: false })
-        .add('height 500ms ease-out-back ' + 300 * i, { tween: false })
+        .add('min-width 500ms ease-out-back ' + 200 * i, { tween: false })
         .add('background 1s ease-out 500', { tween: false })
-        .start({ height: 200, width: 500, background: '#555' })
+        .start({ minWidth: 500, background: '#555' });
     });
     
     $el.tram(function (t) {
@@ -42,16 +41,15 @@
       
       if (clicks == 2) {
         tram($el)
-          .add('width 200ms ease 0')
+          .add('min-width 200ms ease 0')
           .add('background 0.2 ease 0')
-          .start({ width: 100 })
-          .start({ background: '' })
+          .start({ perspective: 1000, minWidth: 100, background: '' })
       }
       
       if (clicks == 3) {
         clicks = 1;
         tram($el)
-          .set({ width: 500, background: '#000' })
+          .set({ minWidth: 500, background: '#000' })
       }
     });
     

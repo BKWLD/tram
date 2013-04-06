@@ -357,6 +357,7 @@ window.tram = (function ($) {
     , store = 'bkwld-tram-js'
     , slice = Array.prototype.slice
     , unitRegex = /[\.0-9]/g
+    , capsRegex = /[A-Z]/g
     , typeNumber = 'number'
     , typeColor = /^(rgb|#)/
     , typeLength = /(em|cm|mm|in|pt|pc|px)$/
@@ -424,10 +425,7 @@ window.tram = (function ($) {
       this.queue = [];
       this.style = '';
       // hide backface if supported, for better perf
-      if (support.backface) {
-        this.el.style[support.backface.dom] = 'hidden';
-        this.el.style[support.transform.dom] = 'perspective(1000)';
-      }
+      if (support.backface) this.el.style[support.backface.dom] = 'hidden';
     };
     
     // Public chainable methods
@@ -532,23 +530,25 @@ window.tram = (function ($) {
     
     // Loop through valid properties and run iterator callback
     function eachProp(collection, iterator) {
-      var p, valid
+      var p, value
         , transform = this.props.transform
         , transMatch = false
         , transProps = {}
       ;
       for (p in collection) {
+        value = collection[p];
         // check for special Transform sub-properties
         if (transform && p in Transform.map) {
-          transProps[p] = collection[p];
+          transProps[p] = value;
           transMatch = true;
           continue;
         }
-        // validate property
-        valid = p in this.props && p in propertyMap;
-        if (!valid) continue;
+        // check for camelCase property name + convert to dashed
+        if (capsRegex.test(p)) p = toDashed(p);
         // iterate with valid property / value
-        iterator(this.props[p], collection[p]);
+        if (p in this.props && p in propertyMap) {
+          iterator(this.props[p], value);
+        }
       }
       // iterate with transform prop / sub-prop values
       if (transMatch) iterator(transform, transProps);
@@ -618,6 +618,7 @@ window.tram = (function ($) {
     proto.init = function ($el, settings, definition, options) {
       // Initialize or extend settings
       this.$el = $el;
+      this.el = $el[0];
       var name = settings[0];
       if (definition[2]) name = definition[2]; // expand name
       if (prefixed[name]) name = prefixed[name];
@@ -785,16 +786,41 @@ window.tram = (function ($) {
     proto.init = function () {
       supr.init.apply(this, arguments);
       
-      // Store original color value to allow '' values
+      // Store original computed value to allow tweening to ''
       if (!this.original) this.original = this.$el.css(this.name);
     };
   });
   
   var Transform = P(Property, function (proto, supr) {
     
-    proto.set = function () {
+    var perspective = 1000;
+    
+    proto.init = function () {
+      supr.init.apply(this, arguments);
+      
+      // Store transform state
+      this.props = {};
+      
+      // Set default perspective (if backface supported)
+      if (support.backface) {
+        this.el.style[support.transform.dom] = 'perspective(' + perspective + ')';
+        this.el.offsetHeight; // redraw
+        this.props.perspective = perspective;
+      }
+    };
+    
+    proto.set = function (props) {
       // TODO store all previous transform values during set or start
       // and then include them in the result of convert()
+    };
+    
+    proto.transition = function () {
+      // TODO use a tween to keep values updated?
+      // or just don't allow get() ing the transform props?
+    };
+    
+    proto.fallback = function () {
+      // TODO create a tween for each transform prop
     };
     
     proto.convert = function (props, type) {
@@ -807,7 +833,6 @@ window.tram = (function ($) {
         value = supr.convert(props[p], def[0]);
         result += name + '(' + value + ') ';
       }
-      console.log(result);
       return result;
     };
   });
@@ -1114,6 +1139,12 @@ window.tram = (function ($) {
   
   // --------------------------------------------------
   // Utils
+  
+  function toDashed(string) {
+    return string.replace(capsRegex, function (s) {
+      return '-' + s.toLowerCase();
+    });
+  }
   
   function hexToRgb(hex) {
     var n = parseInt(hex.slice(1), 16);
