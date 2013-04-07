@@ -4,21 +4,20 @@ Cross-browser CSS3 transitions in JavaScript.
 
 ## About
 
-The idea behind Tram is to take all the nice things about CSS transitions, but define them using JavaScript instead of CSS. This gives us more control, reliable timer events, and fallback support for older browsers.
+The idea behind Tram is to take all the nice things about CSS transitions, but define them using JavaScript instead of CSS. This gives us more control, reliable timers, and fallback support for older browsers.
 
-*Welcome to Tram. Please keep your arms and legs inside at all times.*
+Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If you know of another library that offers these two things, then porting Tram would be trivial.
 
+Size report:
 * dev ~`40 kb`
 * min ~`15 kb`
 * gzip ~`3 kb`
 
-### How it works
+*Please keep your arms and legs inside the tram at all times.*
+
+## How it works
 
 TODO explain features inline with examples
-
-### jQuery dependency
-
-TODO describe jquery dependency... data API, cross-browser fixes, style getters + setters
 
 ## Methods
 
@@ -165,9 +164,9 @@ TODO describe transform shortcuts w/ examples
 
 * Add scrollTop and scrollLeft as tween-only props
 * Add fallback({ x: 'left' }) method for non-supported props
+* Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
-* Consider adding a .get(prop) method (transforms make this hard)
 * Consider px -> rem unit conversion support
 
 ## Thanks
