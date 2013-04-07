@@ -4,12 +4,12 @@ Cross-browser CSS3 transitions in JavaScript.
 
 ## About
 
-Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers. Welcome to tram.
+The idea behind Tram is to take all the nice things about CSS transitions, but define them using JavaScript instead of CSS. This gives us more control, reliable timer events, and fallback support for older browsers.
 
-File sizes:
+*Welcome to Tram. Please keep your arms and legs inside at all times.*
 
-* dev ~`38 kb`
-* min ~`14 kb`
+* dev ~`40 kb`
+* min ~`15 kb`
 * gzip ~`3 kb`
 
 ### How it works

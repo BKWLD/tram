@@ -7,7 +7,7 @@
     , store = 'bkwld-tram-js'
     , slice = Array.prototype.slice
     , unitRegex = /[\-\.0-9]/g
-    , capsRegex = /[A-Z]/g
+    , capsRegex = /[A-Z]/
     , typeNumber = 'number'
     , typeColor = /^(rgb|#)/
     , typeLength = /(em|cm|mm|in|pt|pc|px)$/
@@ -445,7 +445,8 @@
       supr.init.apply(this, arguments);
       
       // Store original computed value to allow tweening to ''
-      if (!this.original) this.original = this.$el.css(this.name);
+      if (this.original) return;
+      this.original = this.convert(this.$el.css(this.name), typeColor);
     };
   });
   
@@ -478,85 +479,97 @@
       this.stop();
       
       // convert new props and store current values
-      eachProp.call(this, props, function (name, value) {
+      convertEach.call(this, props, function (name, value) {
         this.current[name] = value;
-      }, true);
+      });
       
       // set element style immediately
-      this.style(this.current, true);
+      this.$el.css(this.name, this.style(this.current));
+      this.redraw();
     };
     
     proto.transition = function (props) {
       // stop any active transition (without change event)
       this.stop(false);
       
-      // convert new prop values
+      // convert new prop values and initialize current
       var values = {};
-      eachProp.call(this, props, function (name, value, type) {
+      convertEach.call(this, props, function (name, value, type) {
         values[name] = value;
-        // init empty value if property name does not yet exist in current
+        // init empty value if current property does not exist
         if (this.current[name] === undefined) {
           this.current[name] = this.convert(0, type);
         }
-      }, true);
+      });
       
       // create MultiTween to track values over time
       this.tween = new MultiTween({
-          from: this.current
-        , to: values
+          current: this.current
+        , values: values
+        , duration: this.duration
+        , delay: this.delay
+        , ease: this.ease
+      });
+      
+      // build temp object for final transition values
+      var p, temp = {};
+      for (p in this.current) {
+        temp[p] = p in values ? values[p] : this.current[p];
+      }
+      
+      // set new value to start transition
+      this.active = true;
+      this.defer(this, this.style(temp));
+    };
+    
+    proto.fallback = function (props) {
+      // stop any active transition or tween
+      this.stop();
+      
+      // convert new prop values and initialize current
+      var values = {};
+      convertEach.call(this, props, function (name, value, type) {
+        values[name] = value;
+        // init empty value if current property does not exist
+        if (this.current[name] === undefined) {
+          this.current[name] = this.convert(0, type);
+        }
+      });
+      
+      // create MultiTween to track values over time
+      this.tween = new MultiTween({
+          current: this.current
+        , values: values
         , duration: this.duration
         , delay: this.delay
         , ease: this.ease
         , update: this.update
         , context: this
       });
-      
-      
-      // // store new prop values
-      // var p, after = '';
-      // for (p in props) {
-      //   this.current[p] = props[p];
-      // }
-      // // loop through each prop in current and build style output
-      // eachProp.call(this, this.current, function (style) {
-      //   after += style;
-      // });
-      
-      // // set new value to start transition
-      // this.active = true;
-      // this.defer(this, after);
     };
     
-    // Update current values with update from MultiTween
-    proto.update = function (values) {
-      this.current = values;
-      // TODO - during fallback this will set values
+    // Update current values (called from MultiTween)
+    proto.update = function () {
+      this.$el.css(this.name, this.style(this.current));
     };
     
-    proto.fallback = function (props) {
-      // stop any active transition or tween
-      this.stop();
-    };
-    
-    // Set combined style string from current props
-    proto.style = function (props, redraw) {
-      var out = '';
-      eachProp.call(this, props, function (name, value) {
-        out += name + '(' + value + ') ';
-      });
-      this.$el.css(this.name, out);
-      redraw && this.redraw();
+    // Get combined style string from props
+    proto.style = function (props) {
+      var p, out = '';
+      for (p in props) {
+        out += p + '(' + props[p] + ') ';
+      }
+      return out;
     };
     
     // Loop through each prop and output name + converted value
-    function eachProp(props, iterator, convert) {
+    function convertEach(props, iterator, convert) {
       var p, name, type, def, value;
       for (p in props) {
         def = transformMap[p];
         type = def[0];
         name = def[1] || p;
-        // only convert values if specified
-        value = convert ? this.convert(props[p], type) : props[p];
+        value = this.convert(props[p], type);
         iterator.call(this, name, value, type);
       }
     }
@@ -762,14 +775,14 @@
     proto.init = function (options) {
       // configure basic options
       this.context = options.context;
-      this.update = options.update || noop;
+      this.update = options.update;
       
       // create child tweens for each changed property
       this.tweens = [];
-      this.current = options.from; // store direct reference
+      this.current = options.current; // store direct reference
       var name, value;
-      for (name in options.to) {
-        value = options.to[name];
+      for (name in options.values) {
+        value = options.values[name];
         if (this.current[name] === value) continue;
         this.tweens.push(new Tween({
             name: name
@@ -793,7 +806,7 @@
         tween = this.tweens[i];
         if (tween.ease) {
           tween.render(now);
-          // store current value
+          // store current value directly on object
           this.current[tween.name] = tween.value;
           alive = true;
         }
@@ -802,11 +815,12 @@
       if (!alive) return this.destroy();
       
       // call update method
-      this.update.call(this.context);
+      this.update && this.update.call(this.context);
     };
     
     proto.destroy = function () {
       supr.destroy.call(this);
+      if (!this.tweens) return;
       
       // Destroy all child tweens
       var i, tween, count = this.tweens.length;
@@ -867,29 +881,6 @@
     'transform': support.transform && support.transform.css
   };
   
-  // Transform sub-property map { name: [ valueType, expand ]}
-  var transformMap = support.transform ? {
-      x:            [ typeLenPerc, 'translateX' ]
-    , y:            [ typeLenPerc, 'translateY' ]
-    , rotate:       [ typeAngle ]
-    , rotateX:      [ typeAngle ]
-    , rotateY:      [ typeAngle ]
-    , scale:        [ typeNumber ]
-    , scaleX:       [ typeNumber ]
-    , scaleY:       [ typeNumber ]
-    , skew:         [ typeAngle ]
-    , skewX:        [ typeAngle ]
-    , skewY:        [ typeAngle ]
-  } : {};
-  
-  // Add 3D transform props if supported
-  if (support.transform && support.backface) {
-    transformMap.z           = [ typeLenPerc, 'translateZ' ];
-    transformMap.rotateZ     = [ typeAngle ];
-    transformMap.scaleZ      = [ typeNumber ];
-    transformMap.perspective = [ typeLength ];
-  }
-  
   // Main Property map { name: [ Class, valueType, expand ]}
   var propertyMap = {
       'color'                : [ Color, typeColor ]
@@ -933,16 +924,46 @@
     , 'min-height'           : [ Property, typeLenPerc ]
     , 'max-height'           : [ Property, typeLenPerc ]
     , 'line-height'          : [ Property, typeFancy ]
-    , 'transform'            : [ Transform ]
     // , 'background-position'  : [ Property, typeLenPerc ]
-    // , 'transform-origin'     : [ Property, typeLenPerc ]
   };
+  
+  // Transform property maps
+  var transformMap = {};
+  
+  if (support.transform) {
+    // Add base properties if supported
+    propertyMap['transform'] = [ Transform ];
+    // TODO propertyMap['transform-origin'] = [ Transform ];
+    
+    // Transform sub-property map { name: [ valueType, expand ]}
+    transformMap = {
+        x:            [ typeLenPerc, 'translateX' ]
+      , y:            [ typeLenPerc, 'translateY' ]
+      , rotate:       [ typeAngle ]
+      , rotateX:      [ typeAngle ]
+      , rotateY:      [ typeAngle ]
+      , scale:        [ typeNumber ]
+      , scaleX:       [ typeNumber ]
+      , scaleY:       [ typeNumber ]
+      , skew:         [ typeAngle ]
+      , skewX:        [ typeAngle ]
+      , skewY:        [ typeAngle ]
+    };
+  }
+  
+  // Add 3D transform props if supported
+  if (support.transform && support.backface) {
+    transformMap.z           = [ typeLenPerc, 'translateZ' ];
+    transformMap.rotateZ     = [ typeAngle ];
+    transformMap.scaleZ      = [ typeNumber ];
+    transformMap.perspective = [ typeLength ];
+  }
   
   // --------------------------------------------------
   // Utils
   
   function toDashed(string) {
-    return string.replace(capsRegex, function (letter) {
+    return string.replace(/[A-Z]/g, function (letter) {
       return '-' + letter.toLowerCase();
     });
   }

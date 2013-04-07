@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>tram.js example</title>
   <link rel="stylesheet" href="../support/styles/example.css">
   <!-- prefer local jQuery for dev -->
@@ -11,50 +12,48 @@
 </head>
 <body>
   <div class="test"></div>
+  <div class="test"></div>
+  <div class="test"></div>
   <script>
   
     var $el = $('.test');
     
+    $el.css('transform-origin', '0 0')
+    
     tram($el)
       .add('opacity 800ms ease-in-out')
-      .add('transform 1s linear', { tween: false })
+      .add('transform 1s ease', { tween: true })
       .start({ opacity: 0.5 })
-      .start({ x: 200, y: 200 })
-      .start({ perspective: 500, x: -100, rotateY: 45 })
+      .start({ x: 50, y: 50, scale: 0.5 })
       
     
-    // $el.each(function (i, el) {
-    //   tram(this)
-    //     .add('min-width 500ms ease-out-back ' + 200 * i, { tween: false })
-    //     .add('background 1s ease-out 500', { tween: false })
-    //     .start({ minWidth: 500, background: '#555' });
-    // });
+    $el.each(function (i, el) {
+      tram(this)
+        .add('min-width 500ms ease-out-back ' + 200 * i, { tween: false })
+        .add('background 1s ease-out 500', { tween: false })
+        .start({ minWidth: 500, background: '#555' });
+    });
     
-    // $el.tram(function (t) {
-    //   t.add('transform 1s ease');
-    //   t.start({ perspective: 500, rotateY: 45 });
-    // });
     
-    // var clicks = 0;
-    
-    // $(document).on('mousedown touchstart', function () {
-    //   tram($el).stop()
+    var clicks = 0;
+    $(document).on('mousedown touchstart', function () {
+      tram($el).stop()
       
-    //   clicks++;
+      clicks++;
       
-    //   if (clicks == 2) {
-    //     tram($el)
-    //       .add('min-width 200ms ease 0')
-    //       .add('background 0.2 ease 0')
-    //       .start({ perspective: 1000, minWidth: 100, background: '' })
-    //   }
+      if (clicks == 2) {
+        tram($el)
+          .add('min-width 200ms ease 0')
+          .add('background 0.2 ease 0')
+          .start({ perspective: 50, minWidth: 100, background: '' })
+      }
       
-    //   if (clicks == 3) {
-    //     clicks = 1;
-    //     tram($el)
-    //       .set({ minWidth: 500, background: '#000' })
-    //   }
-    // });
+      if (clicks == 3) {
+        clicks = 1;
+        tram($el)
+          .start({ minWidth: 500, background: '#000' })
+      }
+    });
     
   </script>
 </body>
