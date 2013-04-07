@@ -443,7 +443,7 @@
   });
   
   // --------------------------------------------------
-  // Color
+  // Color prop
   
   var Color = P(Property, function (proto, supr) {
     
@@ -456,7 +456,7 @@
   });
   
   // --------------------------------------------------
-  // Transform
+  // Transform prop w/ sub-properties
   
   var Transform = P(Property, function (proto, supr) {
     
@@ -484,7 +484,7 @@
       // stop any active transition or tween
       this.stop();
       
-      // set new prop values
+      // store new prop values
       var p, result = '';
       for (p in props) {
         this.current[p] = props[p];
@@ -503,47 +503,77 @@
       // stop any active transition or tween
       this.stop();
       
-      // store the state before starting transition
+      // set the current styles immediately to retain transform state
       var before = '';
       eachProp.call(this, this.current, function (style) {
         before += style;
       });
+      this.$el.css(this.name, before);
+      this.redraw();
       
-      // set new prop values
-      var p, result = '';
+      // store new prop values
+      var p, after = '';
       for (p in props) {
         this.current[p] = props[p];
       }
       // loop through each prop in current and build style output
       eachProp.call(this, this.current, function (style) {
-        result += style;
+        after += style;
       });
-      
-      // set the 'before' style immediately
-      if (before) {
-        this.$el.css(this.name, before);
-        this.redraw();
-      }
       
       // set new value to start transition
       this.active = true;
-      this.defer(this, result);
+      this.defer(this, after);
     };
     
-    proto.fallback = function () {
+    proto.fallback = function (props) {
       // stop any active transition or tween
       this.stop();
       
-      // TODO create tweens for each current property
+      // set the current styles immediately to retain transform state
+      var before = '';
+      eachProp.call(this, this.current, function (style) {
+        before += style;
+      });
+      this.$el.css(this.name, before);
       
+      // create tweens for each new property
+      // TODO use debounced update call?
+      var update = this.update, self = this;
+      eachProp.call(this, props, function (style, name, value, type) {
+        self.tweens.push(new Tween({
+            from: self.convert(self.current[name] || 0, type)
+          , to: value
+          , duration: self.duration
+          , delay: self.delay
+          , ease: self.ease
+          , update: update
+          , context: self
+        }));
+      });
+      
+      // store new prop values
+      for (var p in props) {
+        this.current[p] = props[p];
+      }
+    };
+    
+    // Update all tweens
+    proto.update = function () {
+      console.log(this.tweens.length);
     };
     
     // Destroy tween(s) if they exist
     proto.destroy = function () {
-      // TODO destroy all current tweens
+      // destroy all current tweens
+      var i, count = this.tweens.length;
+      for (i = 0; i < count; i++) {
+        this.tweens[i].destroy();
+      }
+      this.tweens = [];
     };
     
-    // Loop through each prop and invoke iterator(string, name, value)
+    // Loop through each prop and invoke iterator
     function eachProp(props, iterator) {
       var p, name, type, def, value;
       for (p in props) {
@@ -551,7 +581,7 @@
         type = def[0];
         name = def[1] || p;
         value = this.convert(props[p], type);
-        iterator(name + '(' + value + ') ', name, value);
+        iterator(name + '(' + value + ') ', p, value, type);
       }
     }
   });
@@ -581,7 +611,8 @@
       this.ease = ease;
       this.update = options.update || noop;
       this.complete = options.complete || noop;
-      this.context = options.context;
+      this.context = options.context || this;
+      this.name = options.name;
       // Format value and determine units
       var from = options.from;
       var to = options.to;
@@ -860,8 +891,8 @@
   // Utils
   
   function toDashed(string) {
-    return string.replace(capsRegex, function (s) {
-      return '-' + s.toLowerCase();
+    return string.replace(capsRegex, function (letter) {
+      return '-' + letter.toLowerCase();
     });
   }
   

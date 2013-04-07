@@ -165,9 +165,10 @@ TODO describe transform shortcuts w/ examples
 
 * Add scrollTop and scrollLeft as tween-only props
 * Add fallback({ x: 'left' }) method for non-supported props
-* Support array props like 'background-position'
+* Support array values for props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
-* Add px -> rem unit calculation w/ fallback
+* Consider adding a .get(prop) method (transforms make this hard)
+* Consider px -> rem unit conversion support
 
 ## Thanks
 

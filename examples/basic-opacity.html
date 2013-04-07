@@ -17,7 +17,7 @@
     
     tram($el)
       .add('opacity 800ms ease-in-out')
-      .add('transform 1s ease')
+      .add('transform 1s ease', { tween: true })
       .start({ opacity: 0.5 })
       .start({ x: 200, y: 200 })
       .start({ perspective: 500, rotateY: 45 })
