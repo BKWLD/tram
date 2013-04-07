@@ -7,58 +7,6 @@
 window.tram = (function (jQuery) {
 
   /*!
-   * Breeze - process.nextTick browser shim
-   * Copyright(c) 2012 Jake Luer <jake@alogicalparadox.com>
-   * MIT Licensed
-   */
-
-  /**
-   * ### .nextTick (fn)
-   *
-   * Cross-compatible `nextTick` implementation. Uses
-   * `process.nextTick` for node and `setTimeout(fn, 0)`
-   * for the browser.
-   *
-   * @param {Function} callback
-   * @name nextTick
-   * @api public
-   */
-
-  var nextTick = ('undefined' === typeof process || !process.nextTick) ?
-      browserNextTick() : process.nextTick;
-
-  /*!
-   * Prepares a cross-browser capable nextTick implementation
-   * using either `postMessage` or `setTimeout(0)`.
-   *
-   * @attr http://dbaron.org/log/20100309-faster-timeouts
-   * @api private
-   */
-
-  function browserNextTick () {
-    if (!window || !window.postMessage || window.ActiveXObject) {
-      return function (fn) {
-        setTimeout(fn, 0);
-      };
-    }
-
-    var timeouts = []
-      , name = 'breeze-zero-timeout';
-
-    window.addEventListener('message', function (e) {
-      if (e.source === window && e.data === name) {
-        if (e.stopPropagation) e.stopPropagation();
-        if (timeouts.length) timeouts.shift()();
-      }
-    });
-
-    return function (fn) {
-      timeouts.push(fn);
-      window.postMessage(name, '*');
-    };
-  }
-
-  /*!
    * P.js
    * A lightweight class system.  It's just prototypes!
    * http:// github.com/jayferd/pjs
@@ -391,7 +339,7 @@ window.tram = (function (jQuery) {
     }
   };
   
-  // Feature tests
+  // Define feature tests
   var support = tram.support = {
       bind: Function.prototype.bind
     , transform: testFeature('transform')
@@ -405,7 +353,7 @@ window.tram = (function (jQuery) {
     var timingProp = support.timing.dom;
     testDiv.style[timingProp] = easing['ease-in-back'][0];
     if (!testDiv.style[timingProp]) {
-      // style invalid, use clamped versions
+      // style invalid, use clamped versions instead
       for (var x in clamped) easing[x][0] = clamped[x];
     }
   }
@@ -646,6 +594,7 @@ window.tram = (function (jQuery) {
       this.stop();
       value = this.convert(value, this.type);
       this.$el.css(this.name, value);
+      this.redraw();
     };
     
     // CSS transition
@@ -659,10 +608,10 @@ window.tram = (function (jQuery) {
     
     // Deferred update to start CSS transition
     proto.defer = function (self, value) {
-      nextTick(function () {
-        // Check active state to prevent a race condition
-        self.active && self.$el.css(self.name, value);
-      });
+      clearTimeout(this._defer);
+      this._defer = setTimeout(function () {
+        self.$el.css(self.name, value);
+      }, 0);
     };
     
     // Fallback tweening
@@ -690,7 +639,8 @@ window.tram = (function (jQuery) {
     proto.stop = function (emit) {
       // Emit change event by default
       if (emit !== false) emit = true;
-      this.tween && this.tween.destroy();
+      clearTimeout(this._defer);
+      this.destroy();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
@@ -698,6 +648,11 @@ window.tram = (function (jQuery) {
         this.$el.css(this.name, value);
         emit && this.onChange();
       }
+    };
+    
+    // Destroy tween(s) if they exist
+    proto.destroy = function () {
+      this.tween && this.tween.destroy();
     };
     
     // Convert value to expected type
@@ -750,6 +705,10 @@ window.tram = (function (jQuery) {
       return value;
     };
     
+    proto.redraw = function () {
+      this.el.offsetHeight;
+    };
+    
     // Normalize time values
     var ms = /ms/, sec = /s|\./;
     function validTime(string, current, safe) {
@@ -781,6 +740,9 @@ window.tram = (function (jQuery) {
     }
   });
   
+  // --------------------------------------------------
+  // Color
+  
   var Color = P(Property, function (proto, supr) {
     
     proto.init = function () {
@@ -791,6 +753,9 @@ window.tram = (function (jQuery) {
     };
   });
   
+  // --------------------------------------------------
+  // Transform
+  
   var Transform = P(Property, function (proto, supr) {
     
     var perspective = 1000;
@@ -798,43 +763,95 @@ window.tram = (function (jQuery) {
     proto.init = function () {
       supr.init.apply(this, arguments);
       
-      // Store transform state
-      this.props = {};
+      // If a current state exists, return here
+      if (this.current) return;
       
-      // Set default perspective (if backface supported)
+      // Store transform state
+      this.current = {};
+      this.tweens = [];
+      
+      // Set default perspective, if supported
       if (support.backface) {
         this.el.style[support.transform.dom] = 'perspective(' + perspective + ')';
-        this.el.offsetHeight; // redraw
-        this.props.perspective = perspective;
+        this.current.perspective = perspective;
+        this.redraw();
       }
     };
     
     proto.set = function (props) {
-      // TODO store all previous transform values during set or start
-      // and then include them in the result of convert()
+      // stop any active transition or tween
+      this.stop();
+      
+      // set new prop values
+      var p, result = '';
+      for (p in props) {
+        this.current[p] = props[p];
+      }
+      // loop through each prop in current and build style output
+      eachProp.call(this, this.current, function (style) {
+        result += style;
+      });
+      
+      // set resulting style immediately
+      this.$el.css(this.name, result);
+      this.redraw();
     };
     
-    proto.transition = function () {
-      // TODO use a tween to keep values updated?
-      // or just don't allow get() ing the transform props?
+    proto.transition = function (props) {
+      // stop any active transition or tween
+      this.stop();
+      
+      // store the state before starting transition
+      var before = '';
+      eachProp.call(this, this.current, function (style) {
+        before += style;
+      });
+      
+      // set new prop values
+      var p, result = '';
+      for (p in props) {
+        this.current[p] = props[p];
+      }
+      // loop through each prop in current and build style output
+      eachProp.call(this, this.current, function (style) {
+        result += style;
+      });
+      
+      // set the 'before' style immediately
+      if (before) {
+        this.$el.css(this.name, before);
+        this.redraw();
+      }
+      
+      // set new value to start transition
+      this.active = true;
+      this.defer(this, result);
     };
     
     proto.fallback = function () {
-      // TODO create a tween for each transform prop
+      // stop any active transition or tween
+      this.stop();
+      
+      // TODO create tweens for each current property
+      
     };
     
-    proto.convert = function (props, type) {
-      // Convert transform sub-properties
-      var p, name, value, def, result = '';
+    // Destroy tween(s) if they exist
+    proto.destroy = function () {
+      // TODO destroy all current tweens
+    };
+    
+    // Loop through each prop and invoke iterator(string, name, value)
+    function eachProp(props, iterator) {
+      var p, name, type, def, value;
       for (p in props) {
         def = Transform.map[p];
+        type = def[0];
         name = def[1] || p;
-        console.log(name);
-        value = supr.convert(props[p], def[0]);
-        result += name + '(' + value + ') ';
+        value = this.convert(props[p], type);
+        iterator(name + '(' + value + ') ', name, value);
       }
-      return result;
-    };
+    }
   });
   
   // --------------------------------------------------
@@ -1033,6 +1050,7 @@ window.tram = (function (jQuery) {
     , defaultAngle: degrees // default unit added to <angle> types
     , remPixels: false // rems with pixel length fallback
     , remFontSize: 16 // used by remPixels option
+    , gpuTransforms: true // always add gpu cache trick to transforms
   };
   
   // macro() static method
@@ -1069,7 +1087,7 @@ window.tram = (function (jQuery) {
   var propertyMap = (function (Prop) {
     
     // Transform sub-properties { name: [ valueType, expand ]}
-    Transform.map = {
+    Transform.map = support.transform ? {
         x:            [ typeLenPerc, 'translateX' ]
       , y:            [ typeLenPerc, 'translateY' ]
       , z:            [ typeLenPerc, 'translateZ' ]
@@ -1085,7 +1103,7 @@ window.tram = (function (jQuery) {
       , skewX:        [ typeAngle ]
       , skewY:        [ typeAngle ]
       , perspective:  [ typeLength ]
-    };
+    } : {};
     
     // Main Property map { name: [ Class, valueType, expand ]}
     return {

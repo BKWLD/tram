@@ -41,7 +41,7 @@
     }
   };
   
-  // Feature tests
+  // Define feature tests
   var support = tram.support = {
       bind: Function.prototype.bind
     , transform: testFeature('transform')
@@ -55,7 +55,7 @@
     var timingProp = support.timing.dom;
     testDiv.style[timingProp] = easing['ease-in-back'][0];
     if (!testDiv.style[timingProp]) {
-      // style invalid, use clamped versions
+      // style invalid, use clamped versions instead
       for (var x in clamped) easing[x][0] = clamped[x];
     }
   }
@@ -296,6 +296,7 @@
       this.stop();
       value = this.convert(value, this.type);
       this.$el.css(this.name, value);
+      this.redraw();
     };
     
     // CSS transition
@@ -309,10 +310,10 @@
     
     // Deferred update to start CSS transition
     proto.defer = function (self, value) {
-      nextTick(function () {
-        // Check active state to prevent a race condition
-        self.active && self.$el.css(self.name, value);
-      });
+      clearTimeout(this._defer);
+      this._defer = setTimeout(function () {
+        self.$el.css(self.name, value);
+      }, 0);
     };
     
     // Fallback tweening
@@ -340,7 +341,8 @@
     proto.stop = function (emit) {
       // Emit change event by default
       if (emit !== false) emit = true;
-      this.tween && this.tween.destroy();
+      clearTimeout(this._defer);
+      this.destroy();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
@@ -348,6 +350,11 @@
         this.$el.css(this.name, value);
         emit && this.onChange();
       }
+    };
+    
+    // Destroy tween(s) if they exist
+    proto.destroy = function () {
+      this.tween && this.tween.destroy();
     };
     
     // Convert value to expected type
@@ -400,6 +407,10 @@
       return value;
     };
     
+    proto.redraw = function () {
+      this.el.offsetHeight;
+    };
+    
     // Normalize time values
     var ms = /ms/, sec = /s|\./;
     function validTime(string, current, safe) {
@@ -431,6 +442,9 @@
     }
   });
   
+  // --------------------------------------------------
+  // Color
+  
   var Color = P(Property, function (proto, supr) {
     
     proto.init = function () {
@@ -441,6 +455,9 @@
     };
   });
   
+  // --------------------------------------------------
+  // Transform
+  
   var Transform = P(Property, function (proto, supr) {
     
     var perspective = 1000;
@@ -448,43 +465,95 @@
     proto.init = function () {
       supr.init.apply(this, arguments);
       
-      // Store transform state
-      this.props = {};
+      // If a current state exists, return here
+      if (this.current) return;
       
-      // Set default perspective (if backface supported)
+      // Store transform state
+      this.current = {};
+      this.tweens = [];
+      
+      // Set default perspective, if supported
       if (support.backface) {
         this.el.style[support.transform.dom] = 'perspective(' + perspective + ')';
-        this.el.offsetHeight; // redraw
-        this.props.perspective = perspective;
+        this.current.perspective = perspective;
+        this.redraw();
       }
     };
     
     proto.set = function (props) {
-      // TODO store all previous transform values during set or start
-      // and then include them in the result of convert()
+      // stop any active transition or tween
+      this.stop();
+      
+      // set new prop values
+      var p, result = '';
+      for (p in props) {
+        this.current[p] = props[p];
+      }
+      // loop through each prop in current and build style output
+      eachProp.call(this, this.current, function (style) {
+        result += style;
+      });
+      
+      // set resulting style immediately
+      this.$el.css(this.name, result);
+      this.redraw();
     };
     
-    proto.transition = function () {
-      // TODO use a tween to keep values updated?
-      // or just don't allow get() ing the transform props?
+    proto.transition = function (props) {
+      // stop any active transition or tween
+      this.stop();
+      
+      // store the state before starting transition
+      var before = '';
+      eachProp.call(this, this.current, function (style) {
+        before += style;
+      });
+      
+      // set new prop values
+      var p, result = '';
+      for (p in props) {
+        this.current[p] = props[p];
+      }
+      // loop through each prop in current and build style output
+      eachProp.call(this, this.current, function (style) {
+        result += style;
+      });
+      
+      // set the 'before' style immediately
+      if (before) {
+        this.$el.css(this.name, before);
+        this.redraw();
+      }
+      
+      // set new value to start transition
+      this.active = true;
+      this.defer(this, result);
     };
     
     proto.fallback = function () {
-      // TODO create a tween for each transform prop
+      // stop any active transition or tween
+      this.stop();
+      
+      // TODO create tweens for each current property
+      
     };
     
-    proto.convert = function (props, type) {
-      // Convert transform sub-properties
-      var p, name, value, def, result = '';
+    // Destroy tween(s) if they exist
+    proto.destroy = function () {
+      // TODO destroy all current tweens
+    };
+    
+    // Loop through each prop and invoke iterator(string, name, value)
+    function eachProp(props, iterator) {
+      var p, name, type, def, value;
       for (p in props) {
         def = Transform.map[p];
+        type = def[0];
         name = def[1] || p;
-        console.log(name);
-        value = supr.convert(props[p], def[0]);
-        result += name + '(' + value + ') ';
+        value = this.convert(props[p], type);
+        iterator(name + '(' + value + ') ', name, value);
       }
-      return result;
-    };
+    }
   });
   
   // --------------------------------------------------
@@ -720,7 +789,7 @@
   var propertyMap = (function (Prop) {
     
     // Transform sub-properties { name: [ valueType, expand ]}
-    Transform.map = {
+    Transform.map = support.transform ? {
         x:            [ typeLenPerc, 'translateX' ]
       , y:            [ typeLenPerc, 'translateY' ]
       , z:            [ typeLenPerc, 'translateZ' ]
@@ -736,7 +805,7 @@
       , skewX:        [ typeAngle ]
       , skewY:        [ typeAngle ]
       , perspective:  [ typeLength ]
-    };
+    } : {};
     
     // Main Property map { name: [ Class, valueType, expand ]}
     return {

@@ -4,7 +4,13 @@ Cross-browser CSS3 transitions in JavaScript.
 
 ## About
 
-The idea behind *tram.js* is simple: Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers.
+Take the flexibility and performance of CSS3 transitions and manage them through a more powerful JavaScript API, while providing support for older browsers. Welcome to tram.
+
+File sizes:
+
+* dev ~`38 kb`
+* min ~`14 kb`
+* gzip ~`3 kb`
 
 ### How it works
 
@@ -157,8 +163,8 @@ TODO describe transform shortcuts w/ examples
 
 ## TODO
 
-* Add fallback({ x: 'left' }) method for non-supported props
 * Add scrollTop and scrollLeft as tween-only props
+* Add fallback({ x: 'left' }) method for non-supported props
 * Support array props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
 * Add px -> rem unit calculation w/ fallback

@@ -20,7 +20,6 @@
   },
   "devDependencies": {
     "pjs": "*",
-    "breeze-nexttick": "*",
     "sink-test": "*",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.6",
