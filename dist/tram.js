@@ -304,7 +304,7 @@ window.tram = (function (jQuery) {
     , win = window
     , store = 'bkwld-tram-js'
     , slice = Array.prototype.slice
-    , unitRegex = /[\.0-9]/g
+    , unitRegex = /[\-\.0-9]/g
     , capsRegex = /[A-Z]/g
     , typeNumber = 'number'
     , typeColor = /^(rgb|#)/
@@ -486,7 +486,7 @@ window.tram = (function (jQuery) {
       for (p in collection) {
         value = collection[p];
         // check for special Transform sub-properties
-        if (transform && p in Transform.map) {
+        if (transform && p in transformMap) {
           transProps[p] = value;
           transMatch = true;
           continue;
@@ -495,11 +495,11 @@ window.tram = (function (jQuery) {
         if (capsRegex.test(p)) p = toDashed(p);
         // iterate with valid property / value
         if (p in this.props && p in propertyMap) {
-          iterator(this.props[p], value);
+          iterator.call(this, this.props[p], value);
         }
       }
       // iterate with transform prop / sub-prop values
-      if (transMatch) iterator(transform, transProps);
+      if (transMatch) iterator.call(this, transform, transProps);
     }
     
     // Define a chainable method that takes children into account
@@ -637,10 +637,9 @@ window.tram = (function (jQuery) {
     
     // Stop animation
     proto.stop = function (emit) {
-      // Emit change event by default
-      if (emit !== false) emit = true;
+      emit = emit !== false; // default to true
       clearTimeout(this._defer);
-      this.destroy();
+      this.tween && this.tween.destroy();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
@@ -648,11 +647,6 @@ window.tram = (function (jQuery) {
         this.$el.css(this.name, value);
         emit && this.onChange();
       }
-    };
-    
-    // Destroy tween(s) if they exist
-    proto.destroy = function () {
-      this.tween && this.tween.destroy();
     };
     
     // Convert value to expected type
@@ -758,7 +752,7 @@ window.tram = (function (jQuery) {
   
   var Transform = P(Property, function (proto, supr) {
     
-    var perspective = 1000;
+    var perspective = '1000px';
     
     proto.init = function () {
       supr.init.apply(this, arguments);
@@ -768,10 +762,9 @@ window.tram = (function (jQuery) {
       
       // Store transform state
       this.current = {};
-      this.tweens = [];
       
       // Set default perspective, if supported
-      if (support.backface) {
+      if (transformMap.perspective) {
         this.el.style[support.transform.dom] = 'perspective(' + perspective + ')';
         this.current.perspective = perspective;
         this.redraw();
@@ -782,110 +775,93 @@ window.tram = (function (jQuery) {
       // stop any active transition or tween
       this.stop();
       
-      // store new prop values
-      var p, result = '';
-      for (p in props) {
-        this.current[p] = props[p];
-      }
-      // loop through each prop in current and build style output
-      eachProp.call(this, this.current, function (style) {
-        result += style;
-      });
+      // convert new props and store current values
+      eachProp.call(this, props, function (name, value) {
+        this.current[name] = value;
+      }, true);
       
-      // set resulting style immediately
-      this.$el.css(this.name, result);
-      this.redraw();
+      // set element style immediately
+      this.style(this.current, true);
     };
     
     proto.transition = function (props) {
-      // stop any active transition or tween
-      this.stop();
+      // stop any active transition (without change event)
+      this.stop(false);
       
-      // set the current styles immediately to retain transform state
-      var before = '';
-      eachProp.call(this, this.current, function (style) {
-        before += style;
+      // convert new prop values
+      var values = {};
+      eachProp.call(this, props, function (name, value, type) {
+        values[name] = value;
+        // init empty value if property name does not yet exist in current
+        if (this.current[name] === undefined) {
+          this.current[name] = this.convert(0, type);
+        }
+      }, true);
+      
+      // create MultiTween to track values over time
+      this.tween = new MultiTween({
+          from: this.current
+        , to: values
+        , duration: this.duration
+        , delay: this.delay
+        , ease: this.ease
+        , update: this.update
+        , context: this
       });
-      this.$el.css(this.name, before);
-      this.redraw();
       
-      // store new prop values
-      var p, after = '';
-      for (p in props) {
-        this.current[p] = props[p];
-      }
-      // loop through each prop in current and build style output
-      eachProp.call(this, this.current, function (style) {
-        after += style;
-      });
       
-      // set new value to start transition
-      this.active = true;
-      this.defer(this, after);
+      // // store new prop values
+      // var p, after = '';
+      // for (p in props) {
+      //   this.current[p] = props[p];
+      // }
+      // // loop through each prop in current and build style output
+      // eachProp.call(this, this.current, function (style) {
+      //   after += style;
+      // });
+      
+      // // set new value to start transition
+      // this.active = true;
+      // this.defer(this, after);
+    };
+    
+    // Update current values with update from MultiTween
+    proto.update = function (values) {
+      this.current = values;
+      // TODO - during fallback this will set values
     };
     
     proto.fallback = function (props) {
       // stop any active transition or tween
       this.stop();
-      
-      // set the current styles immediately to retain transform state
-      var before = '';
-      eachProp.call(this, this.current, function (style) {
-        before += style;
+    };
+    
+    // Set combined style string from current props
+    proto.style = function (props, redraw) {
+      var out = '';
+      eachProp.call(this, props, function (name, value) {
+        out += name + '(' + value + ') ';
       });
-      this.$el.css(this.name, before);
-      
-      // create tweens for each new property
-      // TODO use debounced update call?
-      var update = this.update, self = this;
-      eachProp.call(this, props, function (style, name, value, type) {
-        self.tweens.push(new Tween({
-            from: self.convert(self.current[name] || 0, type)
-          , to: value
-          , duration: self.duration
-          , delay: self.delay
-          , ease: self.ease
-          , update: update
-          , context: self
-        }));
-      });
-      
-      // store new prop values
-      for (var p in props) {
-        this.current[p] = props[p];
-      }
+      this.$el.css(this.name, out);
+      redraw && this.redraw();
     };
     
-    // Update all tweens
-    proto.update = function () {
-      console.log(this.tweens.length);
-    };
-    
-    // Destroy tween(s) if they exist
-    proto.destroy = function () {
-      // destroy all current tweens
-      var i, count = this.tweens.length;
-      for (i = 0; i < count; i++) {
-        this.tweens[i].destroy();
-      }
-      this.tweens = [];
-    };
-    
-    // Loop through each prop and invoke iterator
-    function eachProp(props, iterator) {
+    // Loop through each prop and output name + converted value
+    function eachProp(props, iterator, convert) {
       var p, name, type, def, value;
       for (p in props) {
-        def = Transform.map[p];
+        def = transformMap[p];
         type = def[0];
         name = def[1] || p;
-        value = this.convert(props[p], type);
-        iterator(name + '(' + value + ') ', p, value, type);
+        // only convert values if specified
+        value = convert ? this.convert(props[p], type) : props[p];
+        iterator.call(this, name, value, type);
       }
     }
   });
   
   // --------------------------------------------------
-  // Tween class - handles timing and frame-based animation.
+  // Tween class - tweens values over time, based on frame timers.
   
   var Tween = P(function (proto) {
     
@@ -902,15 +878,18 @@ window.tram = (function (jQuery) {
       // Init timing props
       this.duration = options.duration || defaults.duration;
       this.delay = options.delay || defaults.delay;
+      
       // Use ease function or key value from easing map
       var ease = options.ease || defaults.ease;
       if (easing[ease]) ease = easing[ease][1];
       if (typeof ease != 'function') ease = defaults.ease;
       this.ease = ease;
+      
       this.update = options.update || noop;
       this.complete = options.complete || noop;
       this.context = options.context || this;
       this.name = options.name;
+      
       // Format value and determine units
       var from = options.from;
       var to = options.to;
@@ -923,9 +902,13 @@ window.tram = (function (jQuery) {
       } else {
         this.format(to, from);
       }
-      // Start tween
+      
       this.start = timeNow();
-      this.play();
+      
+      // Start tween (unless autoplay disabled)
+      if (options.autoplay !== false) {
+        this.play();
+      }
     };
     
     proto.play = function () {
@@ -954,12 +937,14 @@ window.tram = (function (jQuery) {
         value = this.startRGB ? interpolate(this.startRGB, this.endRGB, position)
           : this.begin + (position * this.change);
         if (this.unit) value += this.unit;
+        this.value = value;
         this.update.call(this.context, value);
         return;
       }
       // we're done, set final value and destroy
       value = this.endHex || this.begin + this.change;
       if (this.unit) value += this.unit;
+      this.value = value;
       this.update.call(this.context, value);
       this.complete.call(this.context);
       this.destroy();
@@ -988,7 +973,7 @@ window.tram = (function (jQuery) {
       }
       from = parseFloat(from);
       to = parseFloat(to);
-      this.begin = from;
+      this.begin = this.value = from;
       this.change = to - from;
     };
     
@@ -1066,6 +1051,71 @@ window.tram = (function (jQuery) {
     }
   });
   
+  // DelayTween - simplified tween that acts as delay timer
+  // TODO
+  
+  // MultiTween - tween multiple properties on a single frame loop
+  var MultiTween = P(Tween, function (proto, supr) {
+    
+    proto.init = function (options) {
+      // configure basic options
+      this.context = options.context;
+      this.update = options.update || noop;
+      
+      // create child tweens for each changed property
+      this.tweens = [];
+      this.current = options.from; // store direct reference
+      var name, value;
+      for (name in options.to) {
+        value = options.to[name];
+        if (this.current[name] === value) continue;
+        this.tweens.push(new Tween({
+            name: name
+          , from: this.current[name]
+          , to: value
+          , duration: options.duration
+          , delay: options.delay
+          , ease: options.ease
+          , autoplay: false
+        }));
+      }
+      // begin MultiTween render
+      this.play();
+    };
+    
+    proto.render = function (now) {
+      // render each child tween
+      var i, tween, count = this.tweens.length;
+      var alive = false;
+      for (i = count; i--;) {
+        tween = this.tweens[i];
+        if (tween.ease) {
+          tween.render(now);
+          // store current value
+          this.current[tween.name] = tween.value;
+          alive = true;
+        }
+      }
+      // destroy and stop render if no longer alive
+      if (!alive) return this.destroy();
+      
+      // call update method
+      this.update.call(this.context);
+    };
+    
+    proto.destroy = function () {
+      supr.destroy.call(this);
+      
+      // Destroy all child tweens
+      var i, tween, count = this.tweens.length;
+      for (i = count; i--;) {
+        this.tweens[i].destroy();
+      }
+      this.tweens = null;
+      this.current = null;
+    };
+  });
+  
   // --------------------------------------------------
   // Main wrapper - returns a Tram instance with public chaining API.
   
@@ -1108,82 +1158,83 @@ window.tram = (function (jQuery) {
   };
   
   // --------------------------------------------------
-  // Property map + unit values
+  // Property maps + unit values
   
   // Prefixed property names
   var prefixed = {
     'transform': support.transform && support.transform.css
   };
   
-  var propertyMap = (function (Prop) {
-    
-    // Transform sub-properties { name: [ valueType, expand ]}
-    Transform.map = support.transform ? {
-        x:            [ typeLenPerc, 'translateX' ]
-      , y:            [ typeLenPerc, 'translateY' ]
-      , z:            [ typeLenPerc, 'translateZ' ]
-      , rotate:       [ typeAngle ]
-      , rotateX:      [ typeAngle ]
-      , rotateY:      [ typeAngle ]
-      , rotateZ:      [ typeAngle ]
-      , scale:        [ typeNumber ]
-      , scaleX:       [ typeNumber ]
-      , scaleY:       [ typeNumber ]
-      , scaleZ:       [ typeNumber ]
-      , skew:         [ typeAngle ]
-      , skewX:        [ typeAngle ]
-      , skewY:        [ typeAngle ]
-      , perspective:  [ typeLength ]
-    } : {};
-    
-    // Main Property map { name: [ Class, valueType, expand ]}
-    return {
-        'color'                : [ Color, typeColor ]
-      , 'background'           : [ Color, typeColor, 'background-color' ]
-      , 'outline-color'        : [ Color, typeColor ]
-      , 'border-color'         : [ Color, typeColor ]
-      , 'border-top-color'     : [ Color, typeColor ]
-      , 'border-right-color'   : [ Color, typeColor ]
-      , 'border-bottom-color'  : [ Color, typeColor ]
-      , 'border-left-color'    : [ Color, typeColor ]
-      , 'border-width'         : [ Property, typeLength ]
-      , 'border-top-width'     : [ Property, typeLength ]
-      , 'border-right-width'   : [ Property, typeLength ]
-      , 'border-bottom-width'  : [ Property, typeLength ]
-      , 'border-left-width'    : [ Property, typeLength ]
-      , 'border-spacing'       : [ Property, typeLength ]
-      , 'letter-spacing'       : [ Property, typeLength ]
-      , 'margin'               : [ Property, typeLength ]
-      , 'margin-top'           : [ Property, typeLength ]
-      , 'margin-right'         : [ Property, typeLength ]
-      , 'margin-bottom'        : [ Property, typeLength ]
-      , 'margin-left'          : [ Property, typeLength ]
-      , 'padding'              : [ Property, typeLength ]
-      , 'padding-top'          : [ Property, typeLength ]
-      , 'padding-right'        : [ Property, typeLength ]
-      , 'padding-bottom'       : [ Property, typeLength ]
-      , 'padding-left'         : [ Property, typeLength ]
-      , 'outline-width'        : [ Property, typeLength ]
-      , 'opacity'              : [ Property, typeNumber ]
-      , 'top'                  : [ Property, typeLenPerc ]
-      , 'right'                : [ Property, typeLenPerc ]
-      , 'bottom'               : [ Property, typeLenPerc ]
-      , 'left'                 : [ Property, typeLenPerc ]
-      , 'font-size'            : [ Property, typeLenPerc ]
-      , 'text-indent'          : [ Property, typeLenPerc ]
-      , 'word-spacing'         : [ Property, typeLenPerc ]
-      , 'width'                : [ Property, typeLenPerc ]
-      , 'min-width'            : [ Property, typeLenPerc ]
-      , 'max-width'            : [ Property, typeLenPerc ]
-      , 'height'               : [ Property, typeLenPerc ]
-      , 'min-height'           : [ Property, typeLenPerc ]
-      , 'max-height'           : [ Property, typeLenPerc ]
-      , 'line-height'          : [ Property, typeFancy ]
-      , 'transform'            : [ Transform ]
-      // , 'background-position'  : [ Property, typeLenPerc ]
-      // , 'transform-origin'     : [ Property, typeLenPerc ]
-    };
-  }());
+  // Transform sub-property map { name: [ valueType, expand ]}
+  var transformMap = support.transform ? {
+      x:            [ typeLenPerc, 'translateX' ]
+    , y:            [ typeLenPerc, 'translateY' ]
+    , rotate:       [ typeAngle ]
+    , rotateX:      [ typeAngle ]
+    , rotateY:      [ typeAngle ]
+    , scale:        [ typeNumber ]
+    , scaleX:       [ typeNumber ]
+    , scaleY:       [ typeNumber ]
+    , skew:         [ typeAngle ]
+    , skewX:        [ typeAngle ]
+    , skewY:        [ typeAngle ]
+  } : {};
+  
+  // Add 3D transform props if supported
+  if (support.transform && support.backface) {
+    transformMap.z           = [ typeLenPerc, 'translateZ' ];
+    transformMap.rotateZ     = [ typeAngle ];
+    transformMap.scaleZ      = [ typeNumber ];
+    transformMap.perspective = [ typeLength ];
+  }
+  
+  // Main Property map { name: [ Class, valueType, expand ]}
+  var propertyMap = {
+      'color'                : [ Color, typeColor ]
+    , 'background'           : [ Color, typeColor, 'background-color' ]
+    , 'outline-color'        : [ Color, typeColor ]
+    , 'border-color'         : [ Color, typeColor ]
+    , 'border-top-color'     : [ Color, typeColor ]
+    , 'border-right-color'   : [ Color, typeColor ]
+    , 'border-bottom-color'  : [ Color, typeColor ]
+    , 'border-left-color'    : [ Color, typeColor ]
+    , 'border-width'         : [ Property, typeLength ]
+    , 'border-top-width'     : [ Property, typeLength ]
+    , 'border-right-width'   : [ Property, typeLength ]
+    , 'border-bottom-width'  : [ Property, typeLength ]
+    , 'border-left-width'    : [ Property, typeLength ]
+    , 'border-spacing'       : [ Property, typeLength ]
+    , 'letter-spacing'       : [ Property, typeLength ]
+    , 'margin'               : [ Property, typeLength ]
+    , 'margin-top'           : [ Property, typeLength ]
+    , 'margin-right'         : [ Property, typeLength ]
+    , 'margin-bottom'        : [ Property, typeLength ]
+    , 'margin-left'          : [ Property, typeLength ]
+    , 'padding'              : [ Property, typeLength ]
+    , 'padding-top'          : [ Property, typeLength ]
+    , 'padding-right'        : [ Property, typeLength ]
+    , 'padding-bottom'       : [ Property, typeLength ]
+    , 'padding-left'         : [ Property, typeLength ]
+    , 'outline-width'        : [ Property, typeLength ]
+    , 'opacity'              : [ Property, typeNumber ]
+    , 'top'                  : [ Property, typeLenPerc ]
+    , 'right'                : [ Property, typeLenPerc ]
+    , 'bottom'               : [ Property, typeLenPerc ]
+    , 'left'                 : [ Property, typeLenPerc ]
+    , 'font-size'            : [ Property, typeLenPerc ]
+    , 'text-indent'          : [ Property, typeLenPerc ]
+    , 'word-spacing'         : [ Property, typeLenPerc ]
+    , 'width'                : [ Property, typeLenPerc ]
+    , 'min-width'            : [ Property, typeLenPerc ]
+    , 'max-width'            : [ Property, typeLenPerc ]
+    , 'height'               : [ Property, typeLenPerc ]
+    , 'min-height'           : [ Property, typeLenPerc ]
+    , 'max-height'           : [ Property, typeLenPerc ]
+    , 'line-height'          : [ Property, typeFancy ]
+    , 'transform'            : [ Transform ]
+    // , 'background-position'  : [ Property, typeLenPerc ]
+    // , 'transform-origin'     : [ Property, typeLenPerc ]
+  };
   
   // --------------------------------------------------
   // Utils

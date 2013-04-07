@@ -17,10 +17,10 @@
     
     tram($el)
       .add('opacity 800ms ease-in-out')
-      .add('transform 1s ease', { tween: true })
+      .add('transform 1s linear', { tween: false })
       .start({ opacity: 0.5 })
       .start({ x: 200, y: 200 })
-      .start({ perspective: 500, rotateY: 45 })
+      .start({ perspective: 500, x: -100, rotateY: 45 })
       
     
     // $el.each(function (i, el) {
