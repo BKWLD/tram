@@ -99,14 +99,13 @@
       var prop = this.props[name];
       if (!prop) {
         prop = this.props[name] = new Class.Bare();
-        // Event handlers
         prop.onChange = proxy(this, onChange);
-        prop.onEnd = proxy(this, onEnd);
       }
       // Init settings + type + options
       prop.init(this.$el, settings, definition, options || {});
     }
     
+    // Handle change events from properties
     function onChange() {
       // build transition string from active props
       var p, prop, result = [];
@@ -120,10 +119,6 @@
       if (this.style === result) return;
       this.style = result;
       this.el.style[support.transition.dom] = result;
-    }
-    
-    function onEnd() {
-      // TODO proceed to next item in queue
     }
     
     // Public start() - chainable
@@ -226,9 +221,8 @@
   // Tram class - extends Transition + wraps child instances for chaining.
   var Tram = P(Transition, function (proto) {
     
-    proto.init = function (args) {
-      var $elems = jQuery(args[0]);
-      var options = args.slice(1);
+    proto.init = function (element, options) {
+      var $elems = jQuery(element);
       
       // Invalid selector, do nothing.
       if (!$elems.length) return this;
@@ -249,7 +243,7 @@
     function factory(el, options) {
       var t = jQuery.data(el, store) || jQuery.data(el, store, new Transition.Bare());
       if (!t.el) t.init(el);
-      if (options.length) return t.start(options);
+      if (options) return t.start(options);
       return t;
     }
   });
@@ -834,10 +828,10 @@
   // --------------------------------------------------
   // Main wrapper - returns a Tram instance with public chaining API.
   
-  function tram() {
+  function tram(element, options) {
     // Chain on the result of Tram.init() to optimize single case.
     var wrap = new Tram.Bare();
-    return wrap.init(slice.call(arguments));
+    return wrap.init(element, options);
   }
   
   // Global tram config
@@ -864,11 +858,8 @@
   };
   
   // jQuery plugin method, keeps jQuery chain intact.
-  jQuery.fn.tram = function (args) {
-    // Pass along element as first argument
-    args = [this].concat(slice.call(arguments));
-    // Directly instantiate Tram class, no tram chain!
-    new Tram(args);
+  jQuery.fn.tram = function (options) {
+    new Tram(this, options);
     return this;
   };
   
@@ -932,7 +923,7 @@
   if (support.transform) {
     // Add base properties if supported
     propertyMap['transform'] = [ Transform ];
-    // TODO propertyMap['transform-origin'] = [ Transform ];
+    // propertyMap['transform-origin'] = [ Transform ];
     
     // Transform sub-property map { name: [ valueType, expand ]}
     transformMap = {
