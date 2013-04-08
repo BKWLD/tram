@@ -26,7 +26,7 @@
     , domPrefixes = ['Webkit', 'Moz', 'O', 'ms']
     , cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-']
   ;
-  var testFeature = function (prop, skip) {
+  var testFeature = function (prop) {
     // unprefixed case
     if (prop in testDiv.style) return { dom: prop, css: prop };
     // test all prefixes
@@ -36,7 +36,6 @@
     }
     for (i = 0; i < domPrefixes.length; i++) {
       domProp = domPrefixes[i] + domSuffix;
-      if (skip && skip.test(domProp)) continue;
       if (domProp in testDiv.style) return { dom: domProp, css: cssPrefixes[i] + prop };
     }
   };
