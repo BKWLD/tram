@@ -302,6 +302,7 @@ window.tram = (function (jQuery) {
   
   var doc = document
     , win = window
+    , ua = navigator.userAgent
     , store = 'bkwld-tram-js'
     , slice = Array.prototype.slice
     , unitRegex = /[\-\.0-9]/g
@@ -325,7 +326,7 @@ window.tram = (function (jQuery) {
     , domPrefixes = ['Webkit', 'Moz', 'O', 'ms']
     , cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-']
   ;
-  var testFeature = function (prop) {
+  var testFeature = function (prop, skip) {
     // unprefixed case
     if (prop in testDiv.style) return { dom: prop, css: prop };
     // test all prefixes
@@ -335,6 +336,7 @@ window.tram = (function (jQuery) {
     }
     for (i = 0; i < domPrefixes.length; i++) {
       domProp = domPrefixes[i] + domSuffix;
+      if (skip && skip.test(domProp)) continue;
       if (domProp in testDiv.style) return { dom: domProp, css: cssPrefixes[i] + prop };
     }
   };
@@ -347,6 +349,9 @@ window.tram = (function (jQuery) {
     , backface: testFeature('backface-visibility')
     , timing: testFeature('transition-timing-function')
   };
+  
+  // Last resort disable
+  // if (/firefox/i.test(ua)) support.transition = false;
   
   // Modify easing variants for webkit clamp bug
   if (support.transition) {
@@ -399,7 +404,7 @@ window.tram = (function (jQuery) {
       var prop = this.props[name];
       if (!prop) {
         prop = this.props[name] = new Class.Bare();
-        prop.onChange = proxy(this, onChange);
+        // prop.onChange = proxy(this, onChange);
       }
       // Init settings + type + options
       prop.init(this.$el, settings, definition, options || {});
@@ -416,7 +421,7 @@ window.tram = (function (jQuery) {
       }
       // set transition style property on dom element
       result = result.join(',');
-      if (this.style === result) return;
+      if (!result || this.style === result) return;
       this.style = result;
       this.el.style[support.transition.dom] = result;
     }
@@ -446,6 +451,12 @@ window.tram = (function (jQuery) {
           if (prop.span > timespan) timespan = prop.span;
           // animate property value
           prop.animate(value);
+          
+          // TODO opacity is setting instantly...
+          win.requestAnimationFrame(function () {
+            prop.resolve();
+          });
+          
         });
         // call change handler once for all active props
         onChange.call(this);
@@ -489,6 +500,7 @@ window.tram = (function (jQuery) {
       eachProp.call(this, values, function (prop, value) {
         prop.stop();
       });
+      onChange.call(this);
     }
     
     // Public set() - chainable
@@ -498,6 +510,7 @@ window.tram = (function (jQuery) {
       eachProp.call(this, values, function (prop, value) {
         prop.set(value);
       });
+      onChange.call(this);
     }
     
     // Loop through valid properties and run iterator callback
@@ -631,13 +644,16 @@ window.tram = (function (jQuery) {
     
     // Deferred update to start CSS transition
     proto.defer = function (value) {
-      this.dfd && this.dfd.reject();
-      this.dfd = jQuery.Deferred();
-      this.dfd.resolveWith(this);
-      this.dfd.done(function () {
-        this.$el.css(this.name, value);
-      });
-      win.requestAnimationFrame(this.dfd.resolve);
+      // clearTimeout(this._defer);
+      // var self = this;
+      // this._defer = setTimeout(function () {
+      //   self.$el.css(self.name, value);
+      // }, 0);
+      this.nextStyle = value;
+    };
+    
+    proto.resolve = function () {
+      this.$el.css(this.name, this.nextStyle);
     };
     
     // Fallback tweening
@@ -664,15 +680,14 @@ window.tram = (function (jQuery) {
     // Stop animation
     proto.stop = function (emit) {
       emit = emit !== false; // default to true
-      this.dfd && this.dfd.reject();
+      clearTimeout(this._defer);
       this.tween && this.tween.destroy();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
-        var value = this.$el.css(this.name);
-        this.$el.css(this.name, value);
-        this.redraw();
-        emit && this.onChange();
+        this.$el.css(this.name, this.$el.css(this.name));
+        // this.redraw();
+        // emit && this.onChange();
       }
     };
     

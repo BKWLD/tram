@@ -19,21 +19,22 @@
     var $el = $('.test');
     
     tram($el)
-      .add('opacity 800ms ease-in-out')
-      .add('transform 0.5 ease-in-out')
+      .add('opacity 1 linear')
+      .add('transform 0.5 linear')
       .start({ opacity: 0.5, x: 100, y: 100 })
-      .then({ x: 200, y: 200, rotate: 45 })
+      .then({ x: 200, y: 200, rotate: 90 })
       .then(function (t) {
         console.log('almost...');
+        t.add('transform 0.3 ease-out-expo')
         t.next()
       })
-      .then({ x: 0, y: 0 })
+      .then({ x: 0, y: 0, rotate: 90 })
       .then(function (t) {
         console.log('done!');
       });
       
     $(document).on('click', function () {
-    	tram($el).stop();
+      tram($el).stop();
     });
     
   </script>
