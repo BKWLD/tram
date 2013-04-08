@@ -6,16 +6,16 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind Tram is to take all the nice things about CSS transitions, but define them using JavaScript instead of CSS. This gives us more control, reliable timers, and fallback support for older browsers.
 
-Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If you know of another library that offers these two things, then porting Tram would be trivial.
+Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If you use another library that offers these features, then porting Tram should be fairly trivial.
 
-Size report:
+File size:
 * dev ~`40 kb`
 * min ~`15 kb`
 * gzip ~`3 kb`
 
-*Please keep your arms and legs inside the tram at all times.*
-
 ## How it works
+
+*Please keep your arms and legs inside the tram at all times.*
 
 TODO explain features inline with examples
 
@@ -25,7 +25,7 @@ TODO document each method
 
 ## Properties
 
-Browser support for transitioning CSS properties is limited, so *tram.js* attempts to cover the most common cross-browser properties, and even adds a couple extras. This list was compiled using CSS animation specs [here][1] and [here][2].
+Browser support for transitioning DOM properties is limited, so Tram attempts to cover the most common cross-browser properties, plus a few extras. This list was compiled using CSS animation specs [here][1] and [here][2].
 
 ### Supported property names / values
 
@@ -82,7 +82,7 @@ Browser support for transitioning CSS properties is limited, so *tram.js* attemp
 // 'scroll-left'          // number (tween-only)
 ```
 
-**Note:** `dash-style` names are required in the `.add()` string, but other methods such as `.start()` and `.stop()` may use `camelCase` style.
+**Note:** `dash-style` names are required for `.add()`, but other methods like `.start()` and `.stop()` may use `camelCase`.
 
 [1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"
 [2]: http://www.w3.org/TR/css3-transitions/#properties-from-css- "w3.org"

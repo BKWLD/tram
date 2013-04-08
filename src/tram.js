@@ -1,6 +1,6 @@
   // --------------------------------------------------
   // Private vars
-  /*global jQuery, nextTick, P, easing, clamped */
+  /*global jQuery, P, easing, clamped */
   
   var doc = document
     , win = window
@@ -455,8 +455,6 @@
   
   var Transform = P(Property, function (proto, supr) {
     
-    var perspective = '1000px';
-    
     proto.init = function () {
       supr.init.apply(this, arguments);
       
@@ -466,10 +464,10 @@
       // Store transform state
       this.current = {};
       
-      // Set default perspective, if supported
+      // Default perspective, if supported
       if (transformMap.perspective) {
-        this.el.style[support.transform.dom] = 'perspective(' + perspective + ')';
-        this.current.perspective = perspective;
+        this.current.perspective = '1000px';
+        this.$el.css(this.name, this.style(this.current));
         this.redraw();
       }
     };
@@ -492,15 +490,8 @@
       // stop any active transition (without change event)
       this.stop(false);
       
-      // convert new prop values and initialize current
-      var values = {};
-      convertEach.call(this, props, function (name, value, type) {
-        values[name] = value;
-        // init empty value if current property does not exist
-        if (this.current[name] === undefined) {
-          this.current[name] = this.convert(0, type);
-        }
-      });
+      // convert new prop values and set defaults
+      var values = this.values(props);
       
       // create MultiTween to track values over time
       this.tween = new MultiTween({
@@ -526,15 +517,8 @@
       // stop any active transition or tween
       this.stop();
       
-      // convert new prop values and initialize current
-      var values = {};
-      convertEach.call(this, props, function (name, value, type) {
-        values[name] = value;
-        // init empty value if current property does not exist
-        if (this.current[name] === undefined) {
-          this.current[name] = this.convert(0, type);
-        }
-      });
+      // convert new prop values and set defaults
+      var values = this.values(props);
       
       // create MultiTween to track values over time
       this.tween = new MultiTween({
@@ -562,13 +546,28 @@
       return out;
     };
     
+    // Build values object and set defaults
+    proto.values = function (props) {
+      var values = {}, def;
+      convertEach.call(this, props, function (name, value, type) {
+        values[name] = value;
+        // set default value if current property does not exist
+        if (this.current[name] === undefined) {
+          def = 0; // default prop value
+          if (~name.indexOf('scale')) def = 1;
+          this.current[name] = this.convert(def, type);
+        }
+      });
+      return values;
+    };
+    
     // Loop through each prop and output name + converted value
     function convertEach(props, iterator, convert) {
-      var p, name, type, def, value;
+      var p, name, type, definition, value;
       for (p in props) {
-        def = transformMap[p];
-        type = def[0];
-        name = def[1] || p;
+        definition = transformMap[p];
+        type = definition[0];
+        name = definition[1] || p;
         value = this.convert(props[p], type);
         iterator.call(this, name, value, type);
       }

@@ -4,8 +4,6 @@
   // --------------------------------------------------
   sink('Duration', function(test, ok, before, after) {
 
-    // TODO zero duration
-
     test('async test 1', 1, function () {
       window.setTimeout(function () {
         ok(true, 'yep');

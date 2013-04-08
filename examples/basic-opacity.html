@@ -12,48 +12,54 @@
 </head>
 <body>
   <div class="test"></div>
-  <div class="test"></div>
-  <div class="test"></div>
   <script>
   
     var $el = $('.test');
     
-    $el.css('transform-origin', '0 0')
+    $el.css('transform-origin', '0 0');
     
     tram($el)
       .add('opacity 800ms ease-in-out')
-      .add('transform 1s ease', { tween: true })
+      .add('transform 1s ease', { tween: false })
       .start({ opacity: 0.5 })
-      .start({ x: 50, y: 50, scale: 0.5 })
-      
+      .start({ x: 100, y: 100, scale: 0.5 })
     
     $el.each(function (i, el) {
       tram(this)
-        .add('min-width 500ms ease-out-back ' + 200 * i, { tween: false })
-        .add('background 1s ease-out 500', { tween: false })
-        .start({ minWidth: 500, background: '#555' });
+        // .add('width 500ms ease-out-back ' + 200 * i, {  })
+        .add('background 1s ease-out 500')
+        .set({ width: 100 })
+        .start({ width: 500, background: '#555' });
     });
     
+    setTimeout(function () {
+      tram($el)
+        // .add('width 200ms ease-out 0')
+        .add('background 0.2 ease 0')
+        .add('transform 0.3')
+        .start({ x: 1, y: 1, scale: 0.5, width: 100, background: '' })
+    }, 500)
     
-    var clicks = 0;
-    $(document).on('mousedown touchstart', function () {
-      tram($el).stop()
+    // var clicks = 0;
+    // $(document).on('mousedown touchstart', function () {
+    //   tram($el).stop().start({ opacity: 1 })
       
-      clicks++;
+    //   clicks++;
       
-      if (clicks == 2) {
-        tram($el)
-          .add('min-width 200ms ease 0')
-          .add('background 0.2 ease 0')
-          .start({ perspective: 50, minWidth: 100, background: '' })
-      }
+    //   if (clicks == 2) {
+    //     tram($el)
+    //       .add('width 200ms ease 0')
+    //       .add('background 0.2 ease 0')
+    //       .add('transform 0.3')
+    //       .start({ x: 1, y: 1, scale: 0.5, width: 100, background: '' })
+    //   }
       
-      if (clicks == 3) {
-        clicks = 1;
-        tram($el)
-          .start({ minWidth: 500, background: '#000' })
-      }
-    });
+    //   if (clicks == 3) {
+    //     clicks = 1;
+    //     tram($el)
+    //       .start({ width: 500, background: '#000' })
+    //   }
+    // });
     
   </script>
 </body>
