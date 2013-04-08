@@ -6,12 +6,16 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind Tram is to take all the nice things about CSS transitions, but define them using JavaScript instead of CSS. This gives us more control, reliable timers, and fallback support for older browsers.
 
-Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If you use another library that offers these features, then porting Tram should be fairly trivial.
+Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If you use another library that offers those two things, then porting Tram should be fairly trivial.
 
 File size:
 * dev ~`40 kb`
 * min ~`15 kb`
 * gzip ~`3 kb`
+
+Supports AMD, CommonJS and plain old browser globals.
+
+Available on npm: `npm install tram`
 
 ## How it works
 
@@ -167,7 +171,19 @@ TODO describe transform shortcuts w/ examples
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
+* Consider adding Bower support
 * Consider px -> rem unit conversion support
+
+## Contributing
+
+1. If you'd like to contribute to this project, please submit all pull requests to the `dev` branch. Any pull requests sent to `master` will be closed. This is mostly to offset the convenience of having various dist/* files available on the master branch.
+
+2. Grunt CLI tools may be helpful. The following commands should start a watch script that concats source files on each save:  
+(from the root directory)  
+`npm install`  
+`make`  
+
+3. Once you're ready to send a pull request, please view `test/index.html` in your browser to confirm that all tests are passing.
 
 ## Thanks
 
