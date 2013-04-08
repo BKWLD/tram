@@ -153,12 +153,6 @@
           if (prop.span > timespan) timespan = prop.span;
           // animate property value
           prop.animate(value);
-          
-          // TODO opacity is setting instantly...
-          win.requestAnimationFrame(function () {
-            prop.resolve();
-          });
-          
         });
         // call change handler once for all active props
         onChange.call(this);
@@ -167,6 +161,14 @@
           this.timer = new Delay({ duration: timespan, context: this });
           if (fromQueue) this.timer.complete = next;
         }
+        
+        var self = this;
+        // TODO cancel the resolve on stop?
+        win.requestAnimationFrame(function () {
+          eachProp.call(self, options, function (prop, value) {
+            prop.resolve();
+          });
+        });
       }
     }
     
