@@ -379,6 +379,8 @@ window.tram = (function (jQuery) {
     // Public chainable methods
     chain('add', add);
     chain('start', start);
+    chain('then', then);
+    chain('next', next);
     chain('stop', stop);
     chain('set', set);
     
@@ -397,14 +399,13 @@ window.tram = (function (jQuery) {
       var prop = this.props[name];
       if (!prop) {
         prop = this.props[name] = new Class.Bare();
-        // Event handlers
         prop.onChange = proxy(this, onChange);
-        prop.onEnd = proxy(this, onEnd);
       }
       // Init settings + type + options
       prop.init(this.$el, settings, definition, options || {});
     }
     
+    // Handle change events from properties
     function onChange() {
       // build transition string from active props
       var p, prop, result = [];
@@ -420,43 +421,62 @@ window.tram = (function (jQuery) {
       this.el.style[support.transition.dom] = result;
     }
     
-    function onEnd() {
-      // TODO proceed to next item in queue
-    }
-    
     // Public start() - chainable
-    function start(options) {
-      // If the first argument is an array, use that as the arguments instead.
-      var args = jQuery.isArray(options) ? options.slice() : slice.call(arguments);
-      if (!args.length) return;
+    function start(options, fromQueue) {
+      if (!options) return;
       
-      var current = args.shift();
-      if (!current) return;
+      // Clear queue unless start was called from it
+      if (!fromQueue) {
+        this.timer && this.timer.destroy();
+        this.queue = [];
+      }
       
-      // TODO - Deal with existing queue. Replacing it entirely for now.
-      // Push any extra arguments into queue
-      if (args.length > 1) this.queue = args;
-      
-      // If current is a function, invoke it.
-      if (typeof current == 'function') {
-        current(this);
+      // If options is a function, invoke it.
+      if (typeof options == 'function') {
+        options(this);
         return;
       }
       
-      // If current is an object, start property tweens.
-      if (typeof current == 'object') {
+      // If options is an object, start property tweens.
+      if (typeof options == 'object') {
         // loop through each valid property
-        var timeSpan = 0;
-        eachProp.call(this, current, function (prop, value) {
+        var timespan = 0;
+        eachProp.call(this, options, function (prop, value) {
           // determine the longest time span (duration + delay)
-          if (prop.span > timeSpan) timeSpan = prop.span;
+          if (prop.span > timespan) timespan = prop.span;
           // animate property value
           prop.animate(value);
         });
         // call change handler once for all active props
         onChange.call(this);
-        // TODO proceed to next item in queue after timeSpan
+        // start timer for total transition timespan
+        if (timespan > 0) {
+          this.timer = new Delay({ duration: timespan, context: this });
+          if (fromQueue) this.timer.complete = next;
+        }
       }
+    }
+    
+    // Public then() - chainable
+    function then(options) {
+      if (!this.timer || !this.timer.active) {
+        return warn('No active transition timer. Must start() one first.');
+      }
+      // push options into queue
+      this.queue.push(options);
+      // set timer complete callback
+      this.timer.complete = next;
+    }
+    
+    // Public next() - chainable
+    function next() {
+      // stop current timer in case next() was called early
+      this.timer && this.timer.destroy();
+      // if the queue is empty do nothing
+      if (!this.queue.length) return;
+      // start next item in queue
+      var options = this.queue.shift();
+      start.call(this, options, true);
     }
     
     // Public stop() - chainable
@@ -471,6 +491,8 @@ window.tram = (function (jQuery) {
     
     // Public set() - chainable
     function set(values) {
+      this.timer && this.timer.destroy();
+      this.queue = [];
       eachProp.call(this, values, function (prop, value) {
         prop.set(value);
       });
@@ -524,9 +546,8 @@ window.tram = (function (jQuery) {
   // Tram class - extends Transition + wraps child instances for chaining.
   var Tram = P(Transition, function (proto) {
     
-    proto.init = function (args) {
-      var $elems = jQuery(args[0]);
-      var options = args.slice(1);
+    proto.init = function (element, options) {
+      var $elems = jQuery(element);
       
       // Invalid selector, do nothing.
       if (!$elems.length) return this;
@@ -547,7 +568,7 @@ window.tram = (function (jQuery) {
     function factory(el, options) {
       var t = jQuery.data(el, store) || jQuery.data(el, store, new Transition.Bare());
       if (!t.el) t.init(el);
-      if (options.length) return t.start(options);
+      if (options) return t.start(options);
       return t;
     }
   });
@@ -915,6 +936,7 @@ window.tram = (function (jQuery) {
         this.format(to, from);
       }
       
+      // Set start time for all Tween instances
       this.start = timeNow();
       
       // Start tween (unless autoplay disabled)
@@ -925,6 +947,7 @@ window.tram = (function (jQuery) {
     
     proto.play = function () {
       if (this.active) return;
+      if (!this.start) this.start = timeNow();
       this.active = true;
       addRender(this);
     };
@@ -1063,8 +1086,23 @@ window.tram = (function (jQuery) {
     }
   });
   
-  // DelayTween - simplified tween that acts as delay timer
-  // TODO
+  // Delay - simple delay timer that hooks into enterFrame loop
+  var Delay = P(Tween, function (proto, supr) {
+    
+    proto.init = function (options) {
+      this.duration = options.duration || 0;
+      this.complete = options.complete || noop;
+      this.context = options.context;
+      this.play();
+    };
+    
+    proto.render = function (now) {
+      var delta = now - this.start;
+      if (delta < this.duration) return;
+      this.complete.call(this.context);
+      this.destroy();
+    };
+  });
   
   // MultiTween - tween multiple properties on a single frame loop
   var MultiTween = P(Tween, function (proto, supr) {
@@ -1132,10 +1170,10 @@ window.tram = (function (jQuery) {
   // --------------------------------------------------
   // Main wrapper - returns a Tram instance with public chaining API.
   
-  function tram() {
+  function tram(element, options) {
     // Chain on the result of Tram.init() to optimize single case.
     var wrap = new Tram.Bare();
-    return wrap.init(slice.call(arguments));
+    return wrap.init(element, options);
   }
   
   // Global tram config
@@ -1162,11 +1200,8 @@ window.tram = (function (jQuery) {
   };
   
   // jQuery plugin method, keeps jQuery chain intact.
-  jQuery.fn.tram = function (args) {
-    // Pass along element as first argument
-    args = [this].concat(slice.call(arguments));
-    // Directly instantiate Tram class, no tram chain!
-    new Tram(args);
+  jQuery.fn.tram = function (options) {
+    new Tram(this, options);
     return this;
   };
   
@@ -1230,7 +1265,7 @@ window.tram = (function (jQuery) {
   if (support.transform) {
     // Add base properties if supported
     propertyMap['transform'] = [ Transform ];
-    // TODO propertyMap['transform-origin'] = [ Transform ];
+    // propertyMap['transform-origin'] = [ Transform ];
     
     // Transform sub-property map { name: [ valueType, expand ]}
     transformMap = {

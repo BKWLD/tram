@@ -171,6 +171,7 @@ TODO describe transform shortcuts w/ examples
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
+* Consider adding tram.delay() static utlity
 * Consider adding Bower support
 * Consider px -> rem unit conversion support
 
