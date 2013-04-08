@@ -4,9 +4,9 @@ Cross-browser CSS3 transitions in JavaScript.
 
 ## About
 
-The idea behind Tram is to take all the nice things about CSS transitions, and define them using JavaScript instead of CSS. This gives us more control, reliable timers, and fallback support for older browsers.
+The idea behind Tram is to take the performance and flexibility of CSS transitions and define them in JavaScript, offering a more powerful, expressive API with auto-stopping, sequencing, and cross-browser fallbacks.
 
-Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If you use another library that offers these two things, then porting Tram should be fairly trivial.
+Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If your library of choice offers these two things, then porting Tram to your library should be fairly trivial.
 
 File size:
 * dev ~`40 kb`
