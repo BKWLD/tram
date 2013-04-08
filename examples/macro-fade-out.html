@@ -14,34 +14,27 @@
 <body>
 
   <p>
-    Basic example of an opacity fade. Tap to animate each box.
+    Example of how macros can be defined and run.
   </p>
 
-  <div class="test wide"></div>
-  <div class="test wide"></div>
-  <div class="test wide"></div>
+  <div class="test"></div>
+  
+  Something below.
   <script>
+    
+    tram.macro('fade-out', function (t) {
+      t.add('opacity 500ms', { weak: true });
+      t.start({ opacity: 0 });
+      t.then(function () {
+        t.el.style.display = 'none';
+      });
+    });
   
     var $el = $('.test');
     
     tram($el)
-      .add('opacity 2s ease-out-quint')
-      .start({ opacity: 0.2 });
-    
-    function toggle(el, state) {
-      tram(el)
-        .add('opacity 400ms ease-out-expo')
-        .start({ opacity: state ? 1 : 0.2 });
-    }
-    
-    // quick toggle to see auto-stop in action
-    var ios = /ipad|iphone/i.test(navigator.userAgent);
-    $el.each(function (i, el) {
-      var clicked = false;
-      $(el).on(ios ? 'touchstart' : 'mousedown', function () {
-        toggle(el, clicked = !clicked);
-      });
-    });
+      .add('opacity 2s')
+      .start('fade-out');
     
   </script>
 </body>

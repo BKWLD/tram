@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.1.0-global
+  * tram.js v0.5.0-global
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -324,7 +324,7 @@ window.tram = (function (jQuery) {
     , domPrefixes = ['Webkit', 'Moz', 'O', 'ms']
     , cssPrefixes = ['-webkit-', '-moz-', '-o-', '-ms-']
   ;
-  var testFeature = function (prop, skip) {
+  var testFeature = function (prop) {
     // unprefixed case
     if (prop in testDiv.style) return { dom: prop, css: prop };
     // test all prefixes
@@ -334,7 +334,6 @@ window.tram = (function (jQuery) {
     }
     for (i = 0; i < domPrefixes.length; i++) {
       domProp = domPrefixes[i] + domSuffix;
-      if (skip && skip.test(domProp)) continue;
       if (domProp in testDiv.style) return { dom: domProp, css: cssPrefixes[i] + prop };
     }
   };
@@ -401,17 +400,21 @@ window.tram = (function (jQuery) {
       // Parse transition settings
       var settings = compact(('' + transition).split(space));
       var name = settings[0];
+      options = options || {};
       
       // Get property definition from map
       var definition = propertyMap[name];
       if (!definition) return warn('Unsupported property: ' + name);
+
+      // Ignore weak property additions
+      if (options.weak && this.props[name]) return;
       
       // Init property instance
       var Class = definition[0];
       var prop = this.props[name];
       if (!prop) prop = this.props[name] = new Class.Bare();
       // Init settings + type + options
-      prop.init(this.$el, settings, definition, options || {});
+      prop.init(this.$el, settings, definition, options);
     }
     
     // Update transition styles
@@ -425,7 +428,7 @@ window.tram = (function (jQuery) {
       }
       // set transition style property on dom element
       result = result.join(',');
-      if (!result || this.style === result) return;
+      if (this.style === result) return;
       this.style = result;
       this.el.style[support.transition.dom] = result;
     }
@@ -433,6 +436,7 @@ window.tram = (function (jQuery) {
     // Public start() - chainable
     function start(options, fromQueue) {
       if (!options) return;
+      var optionType = typeof options;
       
       // Clear queue unless start was called from it
       if (!fromQueue) {
@@ -440,14 +444,19 @@ window.tram = (function (jQuery) {
         this.queue = [];
       }
       
+      // If options is a string, check macros
+      if (optionType === 'string' && macros[options]) {
+        return start.call(this, macros[options]);
+      }
+      
       // If options is a function, invoke it.
-      if (typeof options == 'function') {
+      if (optionType === 'function') {
         options(this);
         return;
       }
       
       // If options is an object, start property tweens.
-      if (typeof options == 'object') {
+      if (optionType === 'object') {
         // loop through each valid property
         var timespan = 0;
         eachProp.call(this, options, function (prop, value) {
@@ -1185,12 +1194,10 @@ window.tram = (function (jQuery) {
   };
   
   // macro() static method
-  tram.macro = function () {
-    // TODO
-    // use string for macros?
-    // example:
-    // t.start({ x: 50 });
-    // t.then('fade-out');
+  var macros = {};
+  tram.macro = function (name, options) {
+    // store a simple macro for the .start() method to use
+    macros[name] = options;
   };
   
   // tween() static method
