@@ -302,9 +302,7 @@ window.tram = (function (jQuery) {
   
   var doc = document
     , win = window
-    , ua = navigator.userAgent
     , store = 'bkwld-tram-js'
-    , slice = Array.prototype.slice
     , unitRegex = /[\-\.0-9]/g
     , capsRegex = /[A-Z]/
     , typeNumber = 'number'
@@ -350,9 +348,6 @@ window.tram = (function (jQuery) {
     , timing: testFeature('transition-timing-function')
   };
   
-  // Last resort disable
-  // if (/firefox/i.test(ua)) support.transition = false;
-  
   // Modify easing variants for webkit clamp bug
   if (support.transition) {
     var timingProp = support.timing.dom;
@@ -365,6 +360,18 @@ window.tram = (function (jQuery) {
   
   // Done with test div, avoid IE memory leak.
   testDiv = null;
+  
+  // Animation timer shim with setTimeout fallback
+  var enterFrame = function () {
+    return win.requestAnimationFrame ||
+    win.webkitRequestAnimationFrame ||
+    win.mozRequestAnimationFrame ||
+    win.oRequestAnimationFrame ||
+    win.msRequestAnimationFrame ||
+    function (callback) {
+      win.setTimeout(callback, 16);
+    };
+  }();
   
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
@@ -402,16 +409,13 @@ window.tram = (function (jQuery) {
       // Init property instance
       var Class = definition[0];
       var prop = this.props[name];
-      if (!prop) {
-        prop = this.props[name] = new Class.Bare();
-        // prop.onChange = proxy(this, onChange);
-      }
+      if (!prop) prop = this.props[name] = new Class.Bare();
       // Init settings + type + options
       prop.init(this.$el, settings, definition, options || {});
     }
     
-    // Handle change events from properties
-    function onChange() {
+    // Update transition styles
+    function updateStyles() {
       // build transition string from active props
       var p, prop, result = [];
       for (p in this.props) {
@@ -452,20 +456,22 @@ window.tram = (function (jQuery) {
           // animate property value
           prop.animate(value);
         });
-        // call change handler once for all active props
-        onChange.call(this);
+        // update main transition styles for active props
+        updateStyles.call(this);
         // start timer for total transition timespan
         if (timespan > 0) {
           this.timer = new Delay({ duration: timespan, context: this });
           if (fromQueue) this.timer.complete = next;
         }
-        
-        var self = this;
-        // TODO cancel the resolve on stop?
-        win.requestAnimationFrame(function () {
-          eachProp.call(self, options, function (prop, value) {
-            prop.resolve();
+        // apply deferred styles after a single frame delay
+        var self = this, found = false, styles = {};
+        enterFrame(function () {
+          eachProp.call(self, options, function (prop) {
+            if (!prop.active) return;
+            found = true;
+            styles[prop.name] = prop.nextStyle;
           });
+          found && self.$el.css(styles);
         });
       }
     }
@@ -499,10 +505,10 @@ window.tram = (function (jQuery) {
       var values = {};
       if (property) values[property] = 1;
       else values = this.props;
-      eachProp.call(this, values, function (prop, value) {
+      eachProp.call(this, values, function (prop) {
         prop.stop();
       });
-      onChange.call(this);
+      updateStyles.call(this);
     }
     
     // Public set() - chainable
@@ -512,7 +518,7 @@ window.tram = (function (jQuery) {
       eachProp.call(this, values, function (prop, value) {
         prop.set(value);
       });
-      onChange.call(this);
+      updateStyles.call(this);
     }
     
     // Loop through valid properties and run iterator callback
@@ -637,25 +643,11 @@ window.tram = (function (jQuery) {
     
     // CSS transition
     proto.transition = function (value) {
-      // stop any active transition (without change event)
-      this.stop(false);
+      // stop any active transition or tween
+      this.stop();
       // set new value to start transition
       this.active = true;
-      this.defer(this.convert(value, this.type));
-    };
-    
-    // Deferred update to start CSS transition
-    proto.defer = function (value) {
-      // clearTimeout(this._defer);
-      // var self = this;
-      // this._defer = setTimeout(function () {
-      //   self.$el.css(self.name, value);
-      // }, 0);
-      this.nextStyle = value;
-    };
-    
-    proto.resolve = function () {
-      this.$el.css(this.name, this.nextStyle);
+      this.nextStyle = this.convert(value, this.type);
     };
     
     // Fallback tweening
@@ -680,16 +672,12 @@ window.tram = (function (jQuery) {
     };
     
     // Stop animation
-    proto.stop = function (emit) {
-      emit = emit !== false; // default to true
-      clearTimeout(this._defer);
+    proto.stop = function () {
       this.tween && this.tween.destroy();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
         this.$el.css(this.name, this.$el.css(this.name));
-        // this.redraw();
-        // emit && this.onChange();
       }
     };
     
@@ -829,8 +817,8 @@ window.tram = (function (jQuery) {
     };
     
     proto.transition = function (props) {
-      // stop any active transition (without change event)
-      this.stop(false);
+      // stop any active transition or tween
+      this.stop();
       
       // convert new prop values and set defaults
       var values = this.values(props);
@@ -852,7 +840,7 @@ window.tram = (function (jQuery) {
       
       // set new value to start transition
       this.active = true;
-      this.defer(this.style(temp));
+      this.nextStyle = this.style(temp);
     };
     
     proto.fallback = function (props) {
@@ -904,7 +892,7 @@ window.tram = (function (jQuery) {
     };
     
     // Loop through each prop and output name + converted value
-    function convertEach(props, iterator, convert) {
+    function convertEach(props, iterator) {
       var p, name, type, definition, value;
       for (p in props) {
         definition = transformMap[p];
@@ -1063,14 +1051,14 @@ window.tram = (function (jQuery) {
     var tweenList = [];
     function addRender(tween) {
       // if this is the first item, start the render loop
-      if (tweenList.push(tween) === 1) win.requestAnimationFrame(renderLoop);
+      if (tweenList.push(tween) === 1) enterFrame(renderLoop);
     }
     
     // Loop through all tweens on each frame
     function renderLoop() {
       var i, now, count = tweenList.length;
       if (!count) return;
-      win.requestAnimationFrame(renderLoop);
+      enterFrame(renderLoop);
       now = timeNow();
       for (i = count; i--;) {
         tweenList[i].render(now);
@@ -1098,7 +1086,7 @@ window.tram = (function (jQuery) {
   });
   
   // Delay - simple delay timer that hooks into frame loop
-  var Delay = P(Tween, function (proto, supr) {
+  var Delay = P(Tween, function (proto) {
     
     proto.init = function (options) {
       this.duration = options.duration || 0;
@@ -1169,7 +1157,7 @@ window.tram = (function (jQuery) {
       if (!this.tweens) return;
       
       // Destroy all child tweens
-      var i, tween, count = this.tweens.length;
+      var i, count = this.tweens.length;
       for (i = count; i--;) {
         this.tweens[i].destroy();
       }
@@ -1341,13 +1329,6 @@ window.tram = (function (jQuery) {
     return noop;
   }());
   
-  // Faux-bind helper (single arg for perf)
-  function proxy(context, method) {
-    return function(arg) {
-      return method.call(context, arg);
-    };
-  }
-  
   // Lo-Dash compact()
   // MIT license <http://lodash.com/license>
   // Creates an array with all falsey values of `array` removed
@@ -1364,22 +1345,6 @@ window.tram = (function (jQuery) {
     }
     return result;
   }
-  
-  // requestAnimationFrame polyfill by Erik Möller
-  // fixes from Paul Irish and Tino Zijdel
-  // Modified to remove unused features.
-
-  (function() {
-    var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !win.requestAnimationFrame; ++x) {
-      win.requestAnimationFrame = win[vendors[x]+'RequestAnimationFrame'];
-    }
-    if (!win.requestAnimationFrame) {
-      win.requestAnimationFrame = function(callback, element) {
-        return win.setTimeout(callback, 16);
-      };
-    }
-  }());
   
   // --------------------------------------------------
   // Export public module.

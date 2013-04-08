@@ -6,11 +6,11 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind Tram is to take the performance and flexibility of CSS transitions and define them in JavaScript - offering a more powerful, expressive API with auto-stopping, sequencing, and cross-browser fallbacks.
 
-Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If your library of choice offers these two things, then porting Tram to your library should be possible.
+Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If your library of choice offers these two things, then porting Tram to your library may be an option.
 
 File size:
-* dev ~`40 kb`
-* min ~`15 kb`
+* dev ~`42 kb`
+* min ~`16 kb`
 * gzip ~`3 kb`
 
 Supports AMD, CommonJS and plain old browser globals.
@@ -171,6 +171,7 @@ TODO describe transform shortcuts w/ examples
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
+* Consider pause() + resume() methods that do not clear queue
 * Consider adding tram.delay() static utlity
 * Consider adding Bower support
 * Consider px -> rem unit conversion support

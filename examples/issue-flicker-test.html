@@ -12,6 +12,10 @@
 </head>
 <body>
 
+   <p>
+    This may cause flickering / jumping in Safari + Firefox, in between steps. At worst, sequence steps may skip during CPU spikes- which is a result of using a frame-based timer instead of unreliable CSS transition events.
+   </p>
+ 
   <div class="test"></div>
   <div class="test"></div>
   <div class="test"></div>
@@ -35,10 +39,6 @@
       .then(function (t) {
         console.log('done!');
       });
-      
-    $(document).on('click', function () {
-      tram($el).stop();
-    });
     
   </script>
 </body>
