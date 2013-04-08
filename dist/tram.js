@@ -481,6 +481,8 @@ window.tram = (function (jQuery) {
     
     // Public stop() - chainable
     function stop(property) {
+      this.timer && this.timer.destroy();
+      this.queue = [];
       var values = {};
       if (property) values[property] = 1;
       else values = this.props;
@@ -624,15 +626,18 @@ window.tram = (function (jQuery) {
       this.stop(false);
       // set new value to start transition
       this.active = true;
-      this.defer(this, this.convert(value, this.type));
+      this.defer(this.convert(value, this.type));
     };
     
     // Deferred update to start CSS transition
-    proto.defer = function (self, value) {
-      clearTimeout(this._defer);
-      this._defer = setTimeout(function () {
-        self.$el.css(self.name, value);
-      }, 0);
+    proto.defer = function (value) {
+      this.dfd && this.dfd.reject();
+      this.dfd = jQuery.Deferred();
+      this.dfd.resolveWith(this);
+      this.dfd.done(function () {
+        this.$el.css(this.name, value);
+      });
+      win.requestAnimationFrame(this.dfd.resolve);
     };
     
     // Fallback tweening
@@ -659,13 +664,14 @@ window.tram = (function (jQuery) {
     // Stop animation
     proto.stop = function (emit) {
       emit = emit !== false; // default to true
-      clearTimeout(this._defer);
+      this.dfd && this.dfd.reject();
       this.tween && this.tween.destroy();
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
         var value = this.$el.css(this.name);
         this.$el.css(this.name, value);
+        this.redraw();
         emit && this.onChange();
       }
     };
@@ -829,7 +835,7 @@ window.tram = (function (jQuery) {
       
       // set new value to start transition
       this.active = true;
-      this.defer(this, this.style(temp));
+      this.defer(this.style(temp));
     };
     
     proto.fallback = function (props) {
@@ -1022,18 +1028,6 @@ window.tram = (function (jQuery) {
       null;
     };
     
-    // Animation timer shim with setTimeout fallback
-    var enterFrame = function () {
-      return win.requestAnimationFrame ||
-      win.webkitRequestAnimationFrame ||
-      win.mozRequestAnimationFrame ||
-      win.oRequestAnimationFrame ||
-      win.msRequestAnimationFrame ||
-      function (callback) {
-        win.setTimeout(callback, 16);
-      };
-    }();
-    
     // Timestamp shim with fallback
     var timeNow = function () {
       // use high-res timer if available
@@ -1052,14 +1046,14 @@ window.tram = (function (jQuery) {
     var tweenList = [];
     function addRender(tween) {
       // if this is the first item, start the render loop
-      if (tweenList.push(tween) === 1) enterFrame(renderLoop);
+      if (tweenList.push(tween) === 1) win.requestAnimationFrame(renderLoop);
     }
     
     // Loop through all tweens on each frame
     function renderLoop() {
       var i, now, count = tweenList.length;
       if (!count) return;
-      enterFrame(renderLoop);
+      win.requestAnimationFrame(renderLoop);
       now = timeNow();
       for (i = count; i--;) {
         tweenList[i].render(now);
@@ -1086,7 +1080,7 @@ window.tram = (function (jQuery) {
     }
   });
   
-  // Delay - simple delay timer that hooks into enterFrame loop
+  // Delay - simple delay timer that hooks into frame loop
   var Delay = P(Tween, function (proto, supr) {
     
     proto.init = function (options) {
@@ -1353,6 +1347,22 @@ window.tram = (function (jQuery) {
     }
     return result;
   }
+  
+  // requestAnimationFrame polyfill by Erik Möller
+  // fixes from Paul Irish and Tino Zijdel
+  // Modified to remove unused features.
+
+  (function() {
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for(var x = 0; x < vendors.length && !win.requestAnimationFrame; ++x) {
+      win.requestAnimationFrame = win[vendors[x]+'RequestAnimationFrame'];
+    }
+    if (!win.requestAnimationFrame) {
+      win.requestAnimationFrame = function(callback, element) {
+        return win.setTimeout(callback, 16);
+      };
+    }
+  }());
   
   // --------------------------------------------------
   // Export public module.

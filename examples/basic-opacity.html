@@ -20,17 +20,21 @@
     
     tram($el)
       .add('opacity 800ms ease-in-out')
-      .add('transform 300ms ease-in-out', { tween: false })
-      .start({ opacity: 0.5, x: 100, y: 100, scale: 0.5 })
-      .then({ x: 200, y: 200, scale: 0.3 })
+      .add('transform 0.5 ease-in-out')
+      .start({ opacity: 0.5, x: 100, y: 100 })
+      .then({ x: 200, y: 200, rotate: 45 })
       .then(function (t) {
         console.log('almost...');
         t.next()
       })
-      .then({ x: 0, y: 0, scale: 1 })
+      .then({ x: 0, y: 0 })
       .then(function (t) {
         console.log('done!');
       });
+      
+    $(document).on('click', function () {
+    	tram($el).stop();
+    });
     
   </script>
 </body>
