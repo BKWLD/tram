@@ -1,13 +1,13 @@
 body {
-	margin: 50px;
-	font-family: 'helvetica neue', helvetica, arial, sans-serif;
+  margin: 50px;
+  font-family: 'helvetica neue', helvetica, arial, sans-serif;
   font-size: 14px;
   color: #222;
 }
 
 h1 {
-	font-weight: normal;
-	color: #888;
+  font-weight: normal;
+  color: #888;
 }
 
 p {
@@ -15,15 +15,25 @@ p {
 }
 
 .test {
-	width: 100px;
-	height: 100px;
-	background: #68BFB6;
+  width: 100px;
+  height: 100px;
+  background: #68BFB6;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   tap-highlight-color: rgba(0,0,0,0);
 }
 
 .wide {
   width: 200px;
+}
+
+.row {
+  clear: both;
+  max-width: 700px;
+}
+
+.row .test {
+  float: left;
+  border: 2px solid white;
 }
 
 .alt {

@@ -312,8 +312,6 @@ window.tram = (function (jQuery) {
     , typeAngle = /(deg|rad|turn)$/
     , typeFancy = 'unitless'
     , space = ' '
-    , degrees = 'deg'
-    , pixels = 'px'
   ;
   
   // --------------------------------------------------
@@ -338,7 +336,7 @@ window.tram = (function (jQuery) {
     }
   };
   
-  // Define feature tests
+  // Run feature tests
   var support = tram.support = {
       bind: Function.prototype.bind
     , transform: testFeature('transform')
@@ -356,9 +354,6 @@ window.tram = (function (jQuery) {
       for (var x in clamped) easing[x][0] = clamped[x];
     }
   }
-  
-  // Done with test div, avoid IE memory leak.
-  testDiv = null;
   
   // Animation timer shim with setTimeout fallback
   var enterFrame = function () {
@@ -384,7 +379,8 @@ window.tram = (function (jQuery) {
       this.queue = [];
       this.style = '';
       // hide backface if supported, for better perf
-      if (support.backface) this.el.style[support.backface.dom] = 'hidden';
+      if (support.backface && config.hideBackface)
+        this.el.style[support.backface.dom] = 'hidden';
     };
     
     // Public chainable methods
@@ -630,14 +626,14 @@ window.tram = (function (jQuery) {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
-      // Use CSS transitions when supported, unless tween is set via options.
-      if (support.transition && options.tween !== true) {
+      // Animate using tween fallback if necessary, otherwise use transition.
+      if (config.fallback || options.fallback) {
+        this.animate = this.fallback;
+      } else {
         this.animate = this.transition;
         this.string = this.name + space + this.duration + 'ms' +
           (this.ease != 'ease' ? space + easing[this.ease][0] : '') +
           (this.delay ? space + this.delay + 'ms' : '');
-      } else {
-        this.animate = this.fallback;
       }
     };
     
@@ -715,17 +711,17 @@ window.tram = (function (jQuery) {
           warnType = 'hex or rgb string';
           break;
         case typeLength:
-          if (number) return value + pixels;
+          if (number) return value + config.defaultUnit;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit)';
           break;
         case typeLenPerc:
-          if (number) return value + pixels;
+          if (number) return value + config.defaultUnit;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit or %)';
           break;
         case typeAngle:
-          if (number) return value + degrees;
+          if (number) return value + config.defaultAngle;
           if (string && type.test(value)) return value;
           warnType = 'number(deg) or string(angle)';
           break;
@@ -1185,13 +1181,28 @@ window.tram = (function (jQuery) {
   }
   
   // Global tram config
-  tram.config = {
-      defaultUnit: pixels // default unit added to <length> types
-    , defaultAngle: degrees // default unit added to <angle> types
-    , remPixels: false // rems with pixel length fallback
-    , remFontSize: 16 // used by remPixels option
-    , gpuTransforms: true // always add gpu cache trick to transforms
+  var config = tram.config = {
+      defaultUnit: 'px' // default unit added to <length> types
+    , defaultAngle: 'deg' // default unit added to <angle> types
+    , hideBackface: true // always hide backface on elements
+    , fallback: !support.transition // boolean to globally set fallback mode
+    , agentTests: [] // array of userAgent test strings for sniffing
+    // , remPixels: false // rems with pixel length fallback
+    // , remFontSize: 16 // used by remPixels option
   };
+  
+  // fallback() static - browser sniff to force fallback mode
+  //  Example: tram.fallback('firefox');
+  //  Would match Firefox along with previously sniffed browsers.
+  tram.fallback = function (testString) {
+    // if no transition support, fallback is always true
+    if (!support.transition) return config.fallback = true;
+    config.agentTests.push('(' + testString + ')');
+    var pattern = new RegExp(config.agentTests.join('|'), 'i');
+    config.fallback = pattern.test(navigator.userAgent);
+  };
+  // Default sniffs for browsers that support transitions badly ;_;
+  tram.fallback('6.0.(2|3) Safari');
   
   // macro() static method
   var macros = {};

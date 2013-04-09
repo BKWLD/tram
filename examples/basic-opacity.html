@@ -6,10 +6,10 @@
   <title>tram.js example</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <link rel="stylesheet" href="../support/styles/example.css">
-  <!-- prefer local jQuery for dev -->
   <script src="../node_modules/jquery-browser/lib/jquery.js"></script>
   <script>window.jQuery || document.write('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"><\/script>')</script>
   <script src="../dist/tram.js"></script>
+  <script src="../support/utils/thumbs.js"></script>
 </head>
 <body>
 
@@ -17,29 +17,49 @@
     Basic example of an opacity fade. Tap to animate each box.
   </p>
 
-  <div class="test wide"></div>
-  <div class="test wide"></div>
-  <div class="test wide"></div>
+  <div class="row">
+    <div class="test wide"></div>
+    <div class="test wide"></div>
+  </div>
+  <div class="row">
+    <div class="test wide"></div>
+    <div class="test wide"></div>
+  </div>
+  <div class="row">
+    <div class="test wide"></div>
+    <div class="test wide"></div>
+  </div>
   <script>
   
     var $el = $('.test');
     
+    // intro fade in
     tram($el)
-      .add('opacity 2s ease-out-quint')
-      .start({ opacity: 0.2 });
+      .add('opacity 1s ease-in-out')
+      .set({ opacity: 0 })
+      .start({ opacity: 1 })
+      .then(function () {
+        console.log('done!');
+      });
     
-    function toggle(el, state) {
-      tram(el)
-        .add('opacity 400ms ease-out-expo')
-        .start({ opacity: state ? 1 : 0.2 });
+    // touch / release toggle
+    function toggle(instance, opt, state) {
+      instance
+        .add('opacity ' + opt)
+        .start({ opacity: state ? 0.2 : 1 });
     }
     
-    // quick toggle to see auto-stop in action
-    var ios = /ipad|iphone/i.test(navigator.userAgent);
     $el.each(function (i, el) {
-      var clicked = false;
-      $(el).on(ios ? 'touchstart' : 'mousedown', function () {
-        toggle(el, clicked = !clicked);
+      var instance = tram(el);
+      var mouseDown = false;
+      $(el).on('touchstart', function () {
+        mouseDown = true;
+        toggle(instance, '0 ease-out-quint', true);
+      });
+      $(el).on('touchend mouseout', function () {
+        if (!mouseDown) return;
+        mouseDown = false;
+        toggle(instance, '800 ease-in-out', false);
       });
     });
     
