@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.0-global
+  * tram.js v0.5.1-global
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -753,7 +753,7 @@ window.tram = (function (jQuery) {
       } else if (sec.test(string)) {
         n = parseFloat(string) * 1000;
       }
-      if (n < 0) n *= -1; // positive only plz
+      if (n < 0) n = 0; // no negative times
       return n === n ? n : safe; // protect from NaNs
     }
     
@@ -916,17 +916,15 @@ window.tram = (function (jQuery) {
     
     // Private vars
     var defaults = {
-        duration: 500
-      , ease: easing.ease[1]
-      , delay: 0
+        ease: easing.ease[1]
       , from: 0
       , to: 1
     };
     
     proto.init = function (options) {
       // Init timing props
-      this.duration = options.duration || defaults.duration;
-      this.delay = options.delay || defaults.delay;
+      this.duration = options.duration || 0;
+      this.delay = options.delay || 0;
       
       // Use ease function or key value from easing map
       var ease = options.ease || defaults.ease;
