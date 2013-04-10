@@ -9,4 +9,4 @@ dev:
 # Build minified + combined files
 .PHONY: build
 build:
-	$(GRUNT) build
+	$(GRUNT) build && git add dist/*
