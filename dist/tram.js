@@ -984,7 +984,7 @@ window.tram = (function (jQuery) {
         // calculate eased position
         var position = this.ease(delta, 0, 1, this.duration);
         value = this.startRGB ? interpolate(this.startRGB, this.endRGB, position)
-          : this.begin + (position * this.change);
+          : round(this.begin + (position * this.change));
         if (this.unit) value += this.unit;
         this.value = value;
         this.update.call(this.context, value);
@@ -1076,6 +1076,12 @@ window.tram = (function (jQuery) {
         tweenList.length = index;
         if (rest.length) tweenList = tweenList.concat(rest);
       }
+    }
+    
+    // Round number to limit decimals
+    var factor = 1000;
+    function round(value) {
+      return Math.round(value * factor) / factor;
     }
     
     // Interpolate rgb colors based on `position`, returns hex string

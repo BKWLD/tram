@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>tram.js example</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="../support/styles/example.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../node_modules/jquery-browser/lib/jquery.js"><\/script>')</script>
+  <script src="../dist/tram.js"></script>
+</head>
+<body>
+
+  <p>
+    Example of transforms 2D + 3D. Hover or tap the boxes.
+  </p>
+  
+  <div class="row">2D</div>
+  <div class="row">
+    <div class="outer"><div class="inner"></div></div>
+    <div class="outer"><div class="inner"></div></div>
+  </div>
+  <div class="row">
+    <div class="outer"><div class="inner"></div></div>
+    <div class="outer"><div class="inner"></div></div>
+  </div>
+  
+  <div class="row">3D</div>
+  <div class="row">
+    <div class="outer ddd"><div class="inner"></div></div>
+    <div class="outer ddd"><div class="inner"></div></div>
+  </div>
+  <div class="row">
+    <div class="outer ddd"><div class="inner"></div></div>
+    <div class="outer ddd"><div class="inner"></div></div>
+  </div>
+  
+  <script>
+    
+    var $outer = $('.outer');
+    var $inner = $('.inner');
+    
+    // define the transitions
+    tram($inner)
+      .add('transform 500ms ease-out-quint')
+      .add('background 200ms ease')
+      .set({ perspective: 300 });
+    
+    // configure values
+    var on2d = { rotate: 20, background: '#bada55' };
+    var on3d = { rotateY: 60, background: '#bada55' };
+    var off  = { rotate: 0, background: '', rotateY: 0 };
+    
+    // element on / off events
+    var touch = 'ontouchstart' in window;
+    $outer.each(function (i, el) {
+    	var $this = $(el);
+      var instance = tram($this.children('.inner'));
+      var on = $this.hasClass('ddd') ? on3d : on2d;
+      $this.on(touch ? 'touchstart' : 'mouseover', function () {
+        instance.start(on);
+      }).on(touch ? 'touchend' : 'mouseout', function () {
+        instance.start(off);
+      });
+    });
+    
+  </script>
+</body>
+</html>

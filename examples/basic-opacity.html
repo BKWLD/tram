@@ -42,19 +42,19 @@
         console.log('done!');
       });
     
-    // toggle each element on / off animation
+    // element on / off events
     function toggle(instance, opt, state) {
       instance
         .add('opacity ' + opt)
         .start({ opacity: state ? 0.2 : 1 });
     }
-    
+    var touch = 'ontouchstart' in window;
     $el.each(function (i, el) {
       var instance = tram(el);
-      $(el).on('mouseover touchstart', function () {
+      $(el).on(touch ? 'touchstart' : 'mouseover', function () {
         toggle(instance, '0 ease-out-quint', true);
       });
-      $(el).on('mouseout touchend', function () {
+      $(el).on(touch ? 'touchend' : 'mouseout', function () {
         toggle(instance, '800 ease-in-out', false);
       });
     });

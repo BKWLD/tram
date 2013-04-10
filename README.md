@@ -167,11 +167,10 @@ TODO describe transform shortcuts w/ examples
 ## TODO
 
 * Add scrollTop and scrollLeft as tween-only props
-* Add fallback({ x: 'left' }) method for non-supported props
+* Add remap({ x: 'left' }) method for shimming properties
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
 * Confirm 'backface:hidden' is enough for gpu acceleration
-* Consider pause() + resume() methods that do not clear queue
 * Consider adding tram.delay() static utlity
 * Consider adding Bower support
 * Consider px -> rem unit conversion support

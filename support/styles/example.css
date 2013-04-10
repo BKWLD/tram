@@ -14,12 +14,39 @@ p {
   max-width: 700px;
 }
 
-.test {
+.funbox {
+  position: relative;
+  width: 300px;
+  height: 400px;
+  background: #cecece;
+  overflow: hidden;
+}
+
+.funbox:active {
+  background: #999;
+}
+
+.test, .outer, .inner {
   width: 100px;
   height: 100px;
   background: #68BFB6;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   tap-highlight-color: rgba(0,0,0,0);
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.abs {
+  position: absolute;
+}
+
+.outer {
+  background: #555;
+}
+
+.outer .inner {
+  background: #57889D;
 }
 
 .wide {
@@ -29,9 +56,15 @@ p {
 .row {
   clear: both;
   max-width: 700px;
+  *zoom: 1;
+}
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
 }
 
-.row .test {
+.row > div {
   float: left;
   border: 2px solid white;
 }
