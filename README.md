@@ -6,22 +6,89 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind Tram is to take the performance and flexibility of CSS transitions and define them in JavaScript - offering a more powerful, expressive API with auto-stopping, sequencing, and cross-browser fallbacks.
 
-Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If your library of choice offers these two things, then porting Tram to your library may be an option.
+Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If your library of choice offers these two things, then porting Tram to your library may be possible.
+
+Available on npm: `npm install tram`
 
 File size:
 * dev ~`42 kb`
 * min ~`16 kb`
 * gzip ~`3 kb`
 
-Supports AMD, CommonJS and plain old browser globals.
-
-Available on npm: `npm install tram`
-
 ## How it works
+
+On first load, Tram will use feature detection to determine whether 
+the browser supports CSS transitions. If yes, Tram will manage styles
+and trust the browser to handle the frame by frame animation.
+If no, Tram will set styles on each frame, using its own tweening
+engine powered by [requestAnimationFrame][1] and [performance.now()][2].
 
 *Please keep your arms and legs inside the tram at all times.*
 
-TODO explain features inline with examples
+```js
+// Tram can be loaded via AMD, CommonJS or browser globals.
+var tram = require('tram');
+var tram = window.tram;
+var tram = $.tram;
+
+// Let's start with an element. Tram can accept direct DOM nodes
+// and jQuery wrapped elements.
+var element = $('.passenger');
+var element = document.querySelector('.passenger');
+
+// When you're ready to transition an element, you must first wrap
+// your element using the tram() method. This stores an instance of
+// the 'Tram' class in element data, used for auto-stop and other state.
+tram(element);
+
+// You may optionally save a reference to this instance, which may help
+// performance for large groups of elements.
+var myTram = tram(element);
+
+// Time to define a transition for your element(s). For CSS3 users,
+// this syntax may look familiar.
+tram(element).add('opacity 500ms ease-out');
+
+// Now that a transition is defined, it is stored in element data.
+// You may override settings later, for example:
+tram(element).add('opacity 2s'); // changed the duration to 2 seconds
+
+// Time to animate your element. This is done using the start() method.
+tram(element).start({ opacity: 0.5 });
+
+// If you'd like to listen for the transition end event, use then().
+// Note that all of Tram's methods are chainable.
+tram(element)
+  .start({ opacity: 0.5 })
+  .then(function () { console.log('done!') });
+
+// Sequencing is also available by using then(). For example:
+tram(element)
+  .start({ opacity: 0.5 })
+  .then({ opacity: 1 })
+  .then({ opacity: 0 });
+
+// Tram provides some virtual properties to help with CSS3 transforms.
+tram(element)
+  .add('transform 1s ease-out-quint')
+  .start({ x: 100, rotate: 45 }); // aka translateX(100px) rotate(45deg)
+
+// If you need to set style values right away, use the set() method.
+// This will stop any transitions, and immediately set the values.
+tram(element).set({ x: 0, opacity: 1 });
+
+// Stopping a transition may be done using the stop() method. This also
+// happens automatically whenever start() or set() are called.
+tram(element).stop('transform'); // specific property
+tram(element).stop(); // stops all property transitions
+
+// That's about it. For more advanced features + options, please refer
+// to the docs below, or check out the /examples/ directory.
+```
+
+[1]: http://paulirish.com/2011/requestanimationframe-for-smart-animating/ "requestAnimationFrame"
+
+[2]: http://updates.html5rocks.com/2012/05/requestAnimationFrame-API-now-with-sub-millisecond-precision "performance.now()"
 
 ## Methods
 
@@ -29,7 +96,7 @@ TODO document each method
 
 ## Properties
 
-Browser support for transitioning DOM properties is limited, so Tram attempts to cover the most common cross-browser properties, plus a few extras. This list was compiled using CSS animation specs [here][1] and [here][2].
+Browser support for transitioning DOM properties is limited, so Tram attempts to cover the most common cross-browser properties, plus a few extras. This list was compiled using CSS animation specs [here][3] and [here][4].
 
 ### Supported property names / values
 
@@ -88,8 +155,8 @@ Browser support for transitioning DOM properties is limited, so Tram attempts to
 
 **Note:** `dash-style` names are required for `.add()`, but other methods like `.start()` and `.stop()` may use `camelCase`.
 
-[1]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"
-[2]: http://www.w3.org/TR/css3-transitions/#properties-from-css- "w3.org"
+[3]: http://oli.jp/2010/css-animatable-properties/ "oli.jp"
+[4]: http://www.w3.org/TR/css3-transitions/#properties-from-css- "w3.org"
 
 ### Transforms
 
@@ -167,6 +234,7 @@ TODO describe transform shortcuts w/ examples
 ## TODO
 
 * Add scrollTop and scrollLeft as tween-only props
+* Expose enterFrame and timeNow functions
 * Add remap({ x: 'left' }) method for shimming properties
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
