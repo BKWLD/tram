@@ -32,7 +32,7 @@ var tram = window.tram;
 var tram = $.tram;
 
 // Let's start with an element. Tram can accept direct DOM nodes,
-// jQuery sets of objects, and arrays of elements.
+// jQuery sets, and arrays of elements.
 var element = $('.passenger');
 var element = document.querySelector('.passenger');
 
