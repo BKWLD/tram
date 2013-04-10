@@ -31,33 +31,36 @@ var tram = require('tram');
 var tram = window.tram;
 var tram = $.tram;
 
-// Let's start with an element. Tram can accept direct DOM nodes
-// and jQuery wrapped elements.
+// Let's start with an element. Tram can accept direct DOM nodes,
+// jQuery sets of objects, and arrays of elements.
 var element = $('.passenger');
 var element = document.querySelector('.passenger');
 
-// When you're ready to transition an element, you must first wrap
-// your element using the tram() method. This stores an instance of
-// the 'Tram' class in element data, used for auto-stop and other state.
+// Before you add a transition to an element, you must first wrap it
+// with the tram() method. This stores a Tram class instance in the
+// element data, which is used for auto-stop and other state.
 tram(element);
 
 // You may optionally save a reference to this instance, which may help
-// performance for large groups of elements.
+// performance for a large group of elements.
 var myTram = tram(element);
 
-// Time to define a transition for your element(s). For CSS3 users,
-// this syntax may look familiar.
+// Each property must now be defined using the add() method. 
+// This should feel very familiar to CSS3 transition shorthand:
+// 'property-name duration easing-function delay'
 tram(element).add('opacity 500ms ease-out');
 
-// Now that a transition is defined, it is stored in element data.
+// Once a transition is defined, it is stored in element data.
 // You may override settings later, for example:
-tram(element).add('opacity 2s'); // changed the duration to 2 seconds
+tram(element).add('opacity 2s'); // changed duration to 2 seconds
 
-// Time to animate your element. This is done using the start() method.
+// To begin a transition on your element, the start() method is used.
+// When start is called, it will look for matching property names
+// and begin animating using the supported mode.
 tram(element).start({ opacity: 0.5 });
 
 // If you'd like to listen for the transition end event, use then().
-// Note that all of Tram's methods are chainable.
+// Note that all of Tram's wrapper methods are chainable.
 tram(element)
   .start({ opacity: 0.5 })
   .then(function () { console.log('done!') });
@@ -71,7 +74,7 @@ tram(element)
 // Tram provides some virtual properties to help with CSS3 transforms.
 tram(element)
   .add('transform 1s ease-out-quint')
-  .start({ x: 100, rotate: 45 }); // aka translateX(100px) rotate(45deg)
+  .start({ x: 100, rotate: 45 }); // aka: translateX(100px) rotate(45deg)
 
 // If you need to set style values right away, use the set() method.
 // This will stop any transitions, and immediately set the values.
