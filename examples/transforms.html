@@ -55,7 +55,7 @@
     // element on / off events
     var touch = 'ontouchstart' in window;
     $outer.each(function (i, el) {
-    	var $this = $(el);
+      var $this = $(el);
       var instance = tram($this.children('.inner'));
       var on = $this.hasClass('ddd') ? on3d : on2d;
       $this.on(touch ? 'touchstart' : 'mouseover', function () {
