@@ -25,69 +25,74 @@ engine powered by [requestAnimationFrame][1] and [performance.now()][2].
 
 *Please keep your arms and legs inside the tram at all times.*
 
+### Basic usage
+
+Tram can be loaded via AMD, CommonJS or browser globals.
 ```js
-// Tram can be loaded via AMD, CommonJS or browser globals.
-var tram = require('tram');
 var tram = window.tram;
-var tram = $.tram;
+// or
+var tram = require('tram');
+```
 
-// Let's start with an element. Tram can accept direct DOM nodes,
-// jQuery sets, and arrays of elements.
-var element = $('.passenger');
-var element = document.querySelector('.passenger');
-
-// Before you add a transition to an element, you must first wrap it
-// with the tram() method. This stores a Tram class instance in the
-// element data, which is used for auto-stop and other state.
+Before you add a transition to an element, you must first wrap it with the `tram()` method. This stores a Tram class instance in the element data, which is used for auto-stop and other state.
+```js
 tram(element);
+```
 
-// You may optionally save a reference to this instance, which may help
-// performance for a large group of elements.
-var myTram = tram(element);
+You may optionally save a reference to this instance, which may help performance for a large group of elements.
+```js
+var myTram = tram(element); // optional
+```
 
-// Each property must now be defined using the add() method. 
-// This should feel very familiar to CSS3 transition shorthand:
-// 'property-name duration easing-function delay'
+Each property must now be defined using the `add()` method. This should feel very familiar to CSS3 transition shorthand: `property-name duration easing-function delay`
+```js
 tram(element).add('opacity 500ms ease-out');
+```
 
-// Once a transition is defined, it is stored in element data.
-// You may override settings later, for example:
+Once a transition is defined, it is stored in element data. You may override settings later, for example:
+```js
 tram(element).add('opacity 2s'); // changed duration to 2 seconds
+```
 
-// To begin a transition on your element, the start() method is used.
-// When start is called, it will look for matching property names
-// and begin animating using the supported mode.
+To begin a transition on your element, the `start()` method is used.
+```js
 tram(element).start({ opacity: 0.5 });
+```
 
-// If you'd like to listen for the transition end event, use then().
-// Note that all of Tram's wrapper methods are chainable.
+If you'd like to listen for the transition end event, use `then()` and supply a function:
+```js
 tram(element)
   .start({ opacity: 0.5 })
   .then(function () { console.log('done!') });
+```
 
-// Sequencing is also available by using then(). For example:
+Sequencing is also available by using `then()`. For example:
+```js
 tram(element)
   .start({ opacity: 0.5 })
   .then({ opacity: 1 })
   .then({ opacity: 0 });
+```
 
-// Tram provides some virtual properties to help with CSS3 transforms.
+Tram provides some virtual properties to help with CSS3 transforms.
+```js
 tram(element)
   .add('transform 1s ease-out-quint')
   .start({ x: 100, rotate: 45 }); // aka: translateX(100px) rotate(45deg)
-
-// If you need to set style values right away, use the set() method.
-// This will stop any transitions, and immediately set the values.
-tram(element).set({ x: 0, opacity: 1 });
-
-// Stopping a transition may be done using the stop() method. This also
-// happens automatically whenever start() or set() are called.
-tram(element).stop('transform'); // specific property
-tram(element).stop(); // stops all property transitions
-
-// That's about it. For more advanced features + options, please refer
-// to the docs below, or check out the /examples/ directory.
 ```
+
+If you need to set style values right away, use the `set()` method. This will stop any transitions, and immediately set the values.
+```js
+tram(element).set({ x: 0, opacity: 1 });
+```
+
+Stopping a transition may be done using the `stop()` method. This also happens automatically whenever `start()` or `set()` are called.
+```js
+tram(element).stop('opacity'); // specific property
+tram(element).stop(); // stops all property transitions
+```
+
+That's about it. For more, check out the [examples](examples) or refer to the docs below.
 
 [1]: http://paulirish.com/2011/requestanimationframe-for-smart-animating/ "requestAnimationFrame"
 
