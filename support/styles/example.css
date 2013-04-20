@@ -12,6 +12,9 @@ h1 {
 
 p {
   max-width: 700px;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .funbox {
@@ -23,7 +26,7 @@ p {
 }
 
 .funbox:active {
-  background: #999;
+  background: #c0c0c0;
 }
 
 .test, .outer, .inner {
@@ -71,4 +74,8 @@ p {
 
 .alt {
   background: #57889D;
+}
+
+.hide {
+  display: none;
 }
