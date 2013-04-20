@@ -442,19 +442,13 @@ window.tram = (function (jQuery) {
       // If options is an object, start property tweens.
       if (optionType == 'object') {
         
-        // TODO
-        // stop current properties before start
-        // eachProp.call(this, options, function (prop) {
-        //   prop.stop();
-        // });
-        // updateStyles.call(this);
-        
         // loop through each valid property
         var timespan = 0;
         eachProp.call(this, options, function (prop, value) {
           // determine the longest time span (duration + delay)
           if (prop.span > timespan) timespan = prop.span;
-          // animate property value
+          // stop current, then begin animation
+          prop.stop();
           prop.animate(value);
         });
         // update main transition styles for active props
@@ -672,8 +666,6 @@ window.tram = (function (jQuery) {
     
     // Set value immediately
     proto.set = function (value) {
-      // stop any active transition or tween
-      this.stop();
       value = this.convert(value, this.type);
       this.$el.css(this.name, value);
       this.redraw();
@@ -681,8 +673,6 @@ window.tram = (function (jQuery) {
     
     // CSS transition
     proto.transition = function (value) {
-      // stop any active transition or tween
-      this.stop();
       // set new value to start transition
       this.active = true;
       this.nextStyle = this.convert(value, this.type);
@@ -690,8 +680,6 @@ window.tram = (function (jQuery) {
     
     // Fallback tweening
     proto.fallback = function (value) {
-      // stop any active transition or tween
-      this.stop();
       // start a new tween
       this.tween = new Tween({
           from: this.convert(this.$el.css(this.name), this.type)
@@ -841,9 +829,6 @@ window.tram = (function (jQuery) {
     };
     
     proto.set = function (props) {
-      // stop any active transition or tween
-      this.stop();
-      
       // convert new props and store current values
       convertEach.call(this, props, function (name, value) {
         this.current[name] = value;
@@ -855,9 +840,6 @@ window.tram = (function (jQuery) {
     };
     
     proto.transition = function (props) {
-      // stop any active transition or tween
-      this.stop();
-      
       // convert new prop values and set defaults
       var values = this.values(props);
       
@@ -882,9 +864,6 @@ window.tram = (function (jQuery) {
     };
     
     proto.fallback = function (props) {
-      // stop any active transition or tween
-      this.stop();
-      
       // convert new prop values and set defaults
       var values = this.values(props);
       
