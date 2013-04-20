@@ -370,11 +370,13 @@ window.tram = (function (jQuery) {
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
   
+  // TODO replace $.css() with jQuery.style (for setting) and jQuery.css (for getting) to optimize our usage with single elements.
+  
   var Transition = P(function(proto) {
     
     proto.init = function (el) {
-      this.el = el;
       this.$el = jQuery(el);
+      this.el = this.$el[0];
       this.props = {};
       this.queue = [];
       this.style = '';
@@ -390,6 +392,8 @@ window.tram = (function (jQuery) {
     chain('next', next);
     chain('stop', stop);
     chain('set', set);
+    chain('show', show);
+    chain('hide', hide);
     
     // Public add() - chainable
     function add(transition, options) {
@@ -413,22 +417,6 @@ window.tram = (function (jQuery) {
       prop.init(this.$el, settings, definition, options);
     }
     
-    // Update transition styles
-    function updateStyles() {
-      // build transition string from active props
-      var p, prop, result = [];
-      for (p in this.props) {
-        prop = this.props[p];
-        if (!prop.active) continue;
-        result.push(prop.string);
-      }
-      // set transition style property on dom element
-      result = result.join(',');
-      if (this.style === result) return;
-      this.style = result;
-      this.el.style[support.transition.dom] = result;
-    }
-    
     // Public start() - chainable
     function start(options, fromQueue) {
       if (!options) return;
@@ -441,18 +429,26 @@ window.tram = (function (jQuery) {
       }
       
       // If options is a string, check macros
-      if (optionType === 'string' && macros[options]) {
+      if (optionType == 'string' && macros[options]) {
         return start.call(this, macros[options]);
       }
       
       // If options is a function, invoke it.
-      if (optionType === 'function') {
-        options(this);
+      if (optionType == 'function') {
+        options.call(this, this);
         return;
       }
       
       // If options is an object, start property tweens.
-      if (optionType === 'object') {
+      if (optionType == 'object') {
+        
+        // TODO
+        // stop current properties before start
+        // eachProp.call(this, options, function (prop) {
+        //   prop.stop();
+        // });
+        // updateStyles.call(this);
+        
         // loop through each valid property
         var timespan = 0;
         eachProp.call(this, options, function (prop, value) {
@@ -463,6 +459,7 @@ window.tram = (function (jQuery) {
         });
         // update main transition styles for active props
         updateStyles.call(this);
+        
         // start timer for total transition timespan
         if (timespan > 0) {
           this.timer = new Delay({ duration: timespan, context: this });
@@ -504,12 +501,18 @@ window.tram = (function (jQuery) {
     }
     
     // Public stop() - chainable
-    function stop(property) {
+    function stop(options) {
       this.timer && this.timer.destroy();
       this.queue = [];
-      var values = {};
-      if (property) values[property] = 1;
-      else values = this.props;
+      var values;
+      if (typeof options == 'string') {
+        values = {};
+        values[options] = 1;
+      } else if (typeof options == 'object') {
+        values = options;
+      } else {
+        values = this.props;
+      }
       eachProp.call(this, values, function (prop) {
         prop.stop();
       });
@@ -518,12 +521,42 @@ window.tram = (function (jQuery) {
     
     // Public set() - chainable
     function set(values) {
-      this.timer && this.timer.destroy();
-      this.queue = [];
+      stop.call(this, values);
+      
+      // TODO set non-property values via jQuery, and lazily create properties if necessary
       eachProp.call(this, values, function (prop, value) {
         prop.set(value);
       });
-      updateStyles.call(this);
+    }
+    
+    // Public show() - chainable
+    function show(display) {
+      // Show an element by setting its display
+      if (typeof display != 'string') display = 'block';
+      this.el.style.display = display;
+    }
+    
+    // Public hide() - chainable
+    function hide() {
+      // Stop all transitions before hiding the element
+      stop.call(this);
+      this.el.style.display = 'none';
+    }
+    
+    // Update transition styles
+    function updateStyles() {
+      // build transition string from active props
+      var p, prop, result = [];
+      for (p in this.props) {
+        prop = this.props[p];
+        if (!prop.active) continue;
+        result.push(prop.string);
+      }
+      // set transition style property on dom element
+      result = result.join(',');
+      if (this.style === result) return;
+      this.style = result;
+      this.el.style[support.transition.dom] = result;
     }
     
     // Loop through valid properties and run iterator callback

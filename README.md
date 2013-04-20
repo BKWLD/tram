@@ -89,6 +89,7 @@ tram(element).set({ x: 0, opacity: 1 });
 Stopping a transition may be done using the `stop()` method. This also happens automatically whenever `start()` or `set()` are called.
 ```js
 tram(element).stop('opacity'); // specific property
+tram(element).stop({ opacity: true, x: true }); // multiple properties
 tram(element).stop(); // stops all property transitions
 ```
 
