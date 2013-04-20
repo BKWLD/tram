@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.2-commonjs
+  * tram.js v0.5.3-commonjs
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -371,11 +371,13 @@ module.exports = (function () {
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
   
+  // TODO replace $.css() with jQuery.style (for setting) and jQuery.css (for getting) to optimize our usage with single elements.
+  
   var Transition = P(function(proto) {
     
     proto.init = function (el) {
-      this.el = el;
       this.$el = jQuery(el);
+      this.el = this.$el[0];
       this.props = {};
       this.queue = [];
       this.style = '';
@@ -391,6 +393,8 @@ module.exports = (function () {
     chain('next', next);
     chain('stop', stop);
     chain('set', set);
+    chain('show', show);
+    chain('hide', hide);
     
     // Public add() - chainable
     function add(transition, options) {
@@ -414,22 +418,6 @@ module.exports = (function () {
       prop.init(this.$el, settings, definition, options);
     }
     
-    // Update transition styles
-    function updateStyles() {
-      // build transition string from active props
-      var p, prop, result = [];
-      for (p in this.props) {
-        prop = this.props[p];
-        if (!prop.active) continue;
-        result.push(prop.string);
-      }
-      // set transition style property on dom element
-      result = result.join(',');
-      if (this.style === result) return;
-      this.style = result;
-      this.el.style[support.transition.dom] = result;
-    }
-    
     // Public start() - chainable
     function start(options, fromQueue) {
       if (!options) return;
@@ -442,28 +430,31 @@ module.exports = (function () {
       }
       
       // If options is a string, check macros
-      if (optionType === 'string' && macros[options]) {
+      if (optionType == 'string' && macros[options]) {
         return start.call(this, macros[options]);
       }
       
       // If options is a function, invoke it.
-      if (optionType === 'function') {
-        options(this);
+      if (optionType == 'function') {
+        options.call(this, this);
         return;
       }
       
       // If options is an object, start property tweens.
-      if (optionType === 'object') {
+      if (optionType == 'object') {
+        
         // loop through each valid property
         var timespan = 0;
         eachProp.call(this, options, function (prop, value) {
           // determine the longest time span (duration + delay)
           if (prop.span > timespan) timespan = prop.span;
-          // animate property value
+          // stop current, then begin animation
+          prop.stop();
           prop.animate(value);
         });
         // update main transition styles for active props
         updateStyles.call(this);
+        
         // start timer for total transition timespan
         if (timespan > 0) {
           this.timer = new Delay({ duration: timespan, context: this });
@@ -505,12 +496,18 @@ module.exports = (function () {
     }
     
     // Public stop() - chainable
-    function stop(property) {
+    function stop(options) {
       this.timer && this.timer.destroy();
       this.queue = [];
-      var values = {};
-      if (property) values[property] = 1;
-      else values = this.props;
+      var values;
+      if (typeof options == 'string') {
+        values = {};
+        values[options] = 1;
+      } else if (typeof options == 'object') {
+        values = options;
+      } else {
+        values = this.props;
+      }
       eachProp.call(this, values, function (prop) {
         prop.stop();
       });
@@ -519,12 +516,42 @@ module.exports = (function () {
     
     // Public set() - chainable
     function set(values) {
-      this.timer && this.timer.destroy();
-      this.queue = [];
+      stop.call(this, values);
+      
+      // TODO set non-property values via jQuery, and lazily create properties if necessary
       eachProp.call(this, values, function (prop, value) {
         prop.set(value);
       });
-      updateStyles.call(this);
+    }
+    
+    // Public show() - chainable
+    function show(display) {
+      // Show an element by setting its display
+      if (typeof display != 'string') display = 'block';
+      this.el.style.display = display;
+    }
+    
+    // Public hide() - chainable
+    function hide() {
+      // Stop all transitions before hiding the element
+      stop.call(this);
+      this.el.style.display = 'none';
+    }
+    
+    // Update transition styles
+    function updateStyles() {
+      // build transition string from active props
+      var p, prop, result = [];
+      for (p in this.props) {
+        prop = this.props[p];
+        if (!prop.active) continue;
+        result.push(prop.string);
+      }
+      // set transition style property on dom element
+      result = result.join(',');
+      if (this.style === result) return;
+      this.style = result;
+      this.el.style[support.transition.dom] = result;
     }
     
     // Loop through valid properties and run iterator callback
@@ -640,8 +667,6 @@ module.exports = (function () {
     
     // Set value immediately
     proto.set = function (value) {
-      // stop any active transition or tween
-      this.stop();
       value = this.convert(value, this.type);
       this.$el.css(this.name, value);
       this.redraw();
@@ -649,8 +674,6 @@ module.exports = (function () {
     
     // CSS transition
     proto.transition = function (value) {
-      // stop any active transition or tween
-      this.stop();
       // set new value to start transition
       this.active = true;
       this.nextStyle = this.convert(value, this.type);
@@ -658,8 +681,6 @@ module.exports = (function () {
     
     // Fallback tweening
     proto.fallback = function (value) {
-      // stop any active transition or tween
-      this.stop();
       // start a new tween
       this.tween = new Tween({
           from: this.convert(this.$el.css(this.name), this.type)
@@ -809,9 +830,6 @@ module.exports = (function () {
     };
     
     proto.set = function (props) {
-      // stop any active transition or tween
-      this.stop();
-      
       // convert new props and store current values
       convertEach.call(this, props, function (name, value) {
         this.current[name] = value;
@@ -823,9 +841,6 @@ module.exports = (function () {
     };
     
     proto.transition = function (props) {
-      // stop any active transition or tween
-      this.stop();
-      
       // convert new prop values and set defaults
       var values = this.values(props);
       
@@ -850,9 +865,6 @@ module.exports = (function () {
     };
     
     proto.fallback = function (props) {
-      // stop any active transition or tween
-      this.stop();
-      
       // convert new prop values and set defaults
       var values = this.values(props);
       
