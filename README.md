@@ -11,9 +11,9 @@ Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and
 Available on npm: `npm install tram`
 
 File size:
-* dev ~`42 kb`
+* dev ~`43 kb`
 * min ~`16 kb`
-* gzip ~`3 kb`
+* gzip ~`4 kb`
 
 ## How it works
 

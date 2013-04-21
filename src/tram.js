@@ -72,8 +72,6 @@
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
   
-  // TODO replace $.css() with jQuery.style (for setting) and jQuery.css (for getting) to optimize our usage with single elements.
-  
   var Transition = P(function(proto) {
     
     proto.init = function (el) {
@@ -169,7 +167,7 @@
             found = true;
             styles[prop.name] = prop.nextStyle;
           });
-          found && self.$el.css(styles);
+          found && self.$el.css(styles); // set styles object
         });
       }
     }
@@ -369,7 +367,7 @@
     // Set value immediately
     proto.set = function (value) {
       value = this.convert(value, this.type);
-      this.$el.css(this.name, value);
+      setStyle(this.el, this.name, value);
       this.redraw();
     };
     
@@ -384,7 +382,7 @@
     proto.fallback = function (value) {
       // start a new tween
       this.tween = new Tween({
-          from: this.convert(this.$el.css(this.name), this.type)
+          from: this.convert(getStyle(this.el, this.name), this.type)
         , to: this.convert(value, this.type)
         , duration: this.duration
         , delay: this.delay
@@ -396,7 +394,7 @@
     
     // Update css value (called from tween)
     proto.update = function (value) {
-      this.$el.css(this.name, value);
+      setStyle(this.el, this.name, value);
     };
     
     // Stop animation
@@ -405,7 +403,7 @@
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
-        this.$el.css(this.name, this.$el.css(this.name));
+        setStyle(this.el, this.name, getStyle(this.el, this.name));
       }
     };
     
@@ -504,7 +502,7 @@
       
       // Store original computed value to allow tweening to ''
       if (this.original) return;
-      this.original = this.convert(this.$el.css(this.name), typeColor);
+      this.original = this.convert(getStyle(this.el, this.name), typeColor);
     };
   });
   
@@ -525,7 +523,7 @@
       // Default perspective, if supported
       if (transformMap.perspective) {
         this.current.perspective = '1000px';
-        this.$el.css(this.name, this.style(this.current));
+        setStyle(this.el, this.name, this.style(this.current));
         this.redraw();
       }
     };
@@ -537,7 +535,7 @@
       });
       
       // set element style immediately
-      this.$el.css(this.name, this.style(this.current));
+      setStyle(this.el, this.name, this.style(this.current));
       this.redraw();
     };
     
@@ -583,7 +581,7 @@
     
     // Update current values (called from MultiTween)
     proto.update = function () {
-      this.$el.css(this.name, this.style(this.current));
+      setStyle(this.el, this.name, this.style(this.current));
     };
     
     // Get combined style string from props
@@ -934,11 +932,18 @@
     return new Tween(options);
   };
   
+  // --------------------------------------------------
+  // jQuery methods
+
   // jQuery plugin method, keeps jQuery chain intact.
   jQuery.fn.tram = function (options) {
     new Tram(this, options);
     return this;
   };
+  
+  // Shortcuts for internal jQuery style getter / setter
+  var setStyle = jQuery.style;
+  var getStyle = jQuery.css;
   
   // --------------------------------------------------
   // Property maps + unit values
