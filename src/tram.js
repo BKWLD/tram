@@ -58,7 +58,7 @@
   }
   
   // Animation timer shim with setTimeout fallback
-  var enterFrame = function () {
+  var enterFrame = tram.frame = function () {
     return win.requestAnimationFrame ||
     win.webkitRequestAnimationFrame ||
     win.mozRequestAnimationFrame ||
@@ -66,6 +66,20 @@
     win.msRequestAnimationFrame ||
     function (callback) {
       win.setTimeout(callback, 16);
+    };
+  }();
+  
+  // Timestamp shim with fallback
+  var timeNow = tram.now = function () {
+    // use high-res timer if available
+    var perf = win.performance,
+      perfNow = perf && (perf.now || perf.webkitNow || perf.msNow || perf.mozNow);
+    if (perfNow && support.bind) {
+      return perfNow.bind(perf);
+    }
+    // fallback to epoch-based timestamp
+    return Date.now || function () {
+      return +(new Date);
     };
   }();
   
@@ -747,20 +761,6 @@
       this.context =
       null;
     };
-    
-    // Timestamp shim with fallback
-    var timeNow = function () {
-      // use high-res timer if available
-      var perf = win.performance,
-        perfNow = perf && (perf.now || perf.webkitNow || perf.msNow || perf.mozNow);
-      if (perfNow && support.bind) {
-        return perfNow.bind(perf);
-      }
-      // fallback to epoch-based timestamp
-      return Date.now || function () {
-        return +(new Date);
-      };
-    }();
     
     // Add a tween to the render list
     var tweenList = [];
