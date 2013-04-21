@@ -932,6 +932,11 @@
     return new Tween(options);
   };
   
+  // delay() static method
+  tram.delay = function (callback, duration, context) {
+    return new Delay({ complete: callback, duration: duration, context: context });
+  };
+  
   // --------------------------------------------------
   // jQuery methods
 
