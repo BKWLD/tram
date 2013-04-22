@@ -25,6 +25,17 @@ p {
   overflow: hidden;
 }
 
+.bloat {
+  position: absolute;
+  width: 1000px;
+  height: 1000px;
+  background: url(pattern.png);
+}
+
+.scroll {
+  overflow: scroll;
+}
+
 .funbox:active {
   background: #c0c0c0;
 }

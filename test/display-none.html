@@ -22,10 +22,6 @@
     
     var test = $('.test');
     
-    tram(test)
-      .add('opacity 500ms ease-out')
-      .add('transform 500ms ease-out');
-    
     function first() {
       tram(test).show().set({ opacity: 0, y: 50 });
       tram(test).start({ opacity: 1, y: 0 });
