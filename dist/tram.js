@@ -394,7 +394,7 @@ window.tram = (function (jQuery) {
       this.style = '';
       // hide backface if supported, for better perf
       if (support.backface && config.hideBackface)
-        this.el.style[support.backface.dom] = 'hidden';
+        setStyle(this.el, support.backface.css, 'hidden');
     };
     
     // Public chainable methods
@@ -700,7 +700,7 @@ window.tram = (function (jQuery) {
     // Set value immediately
     proto.set = function (value) {
       value = this.convert(value, this.type);
-      setStyle(this.el, this.name, value);
+      this.update(value);
       this.redraw();
     };
     
@@ -730,7 +730,7 @@ window.tram = (function (jQuery) {
       return getStyle(this.el, this.name);
     };
     
-    // Update element style value (called from tween)
+    // Update element style value
     proto.update = function (value) {
       setStyle(this.el, this.name, value);
     };
@@ -1114,12 +1114,13 @@ window.tram = (function (jQuery) {
     
     // Loop through all tweens on each frame
     function renderLoop() {
-      var i, now, count = tweenList.length;
+      var i, now, tween, count = tweenList.length;
       if (!count) return;
       enterFrame(renderLoop);
       now = timeNow();
       for (i = count; i--;) {
-        tweenList[i].render(now);
+        tween = tweenList[i];
+        tween && tween.render(now);
       }
     }
     
