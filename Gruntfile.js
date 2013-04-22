@@ -56,6 +56,12 @@ module.exports = function(grunt) {
           'support/commonjs/2.js'
         ],
         dest: distFile + '-cjs' + js
+      },
+      
+      readme: {
+        options: { banner: 'v<%= pkg.version %>\n\n' },
+        src: ['README.md'],
+        dest: 'index.md'
       }
     },
     
@@ -77,6 +83,17 @@ module.exports = function(grunt) {
         files: ['src/*.js'],
         tasks: ['clean', 'concat:global']
       }
+    },
+    
+    markdown: {
+      all: {
+        files: ['index.md'],
+        dest: './',
+        options: {
+          gfm: true,
+          highlight: 'auto'
+        }
+      }
     }
   });
   
@@ -84,16 +101,21 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-markdown');
   
   // Default task - trigger global concat and watch for dev.
   grunt.registerTask('default', ['clean', 'concat:global', 'watch']);
   
   // Build task - concat and minify all.
-  grunt.registerTask('build', ['clean', 'concat', 'uglify']);
+  grunt.registerTask('build', ['clean', 'concat', 'uglify', 'markdown', 'clean-readme']);
   
-  // Clean task
+  // Clean tasks
   grunt.registerTask('clean', 'Clean dist files.', function () {
     grunt.file.delete(distPath);
+    grunt.log.ok();
+  });
+  grunt.registerTask('clean-readme', 'Clean readme index file.', function () {
+    grunt.file.delete('index.md');
     grunt.log.ok();
   });
   

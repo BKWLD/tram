@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.5-global
+  * tram.js v0.5.6-global
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
