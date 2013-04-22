@@ -6,7 +6,7 @@ Cross-browser CSS3 transitions in JavaScript.
 
 The idea behind Tram is to take the performance and flexibility of CSS transitions and define them in JavaScript - offering a more powerful, expressive API with auto-stopping, sequencing, and cross-browser fallbacks.
 
-Tram currently depends on jQuery, for two reasons: (1) Per-element data API, and (2) cross-browser css getters / setters. If your library of choice offers these two things, then porting Tram to your library may be possible.
+Tram currently depends on jQuery for a few reasons: (1) Per-element data API, (2) Cross-browser CSS getters/setters, and (3) scrollTop/Left offset helpers. Keep these features in mind when making custom jQuery builds or porting tram to your library.
 
 Available on npm: `npm install tram`
 
@@ -152,14 +152,14 @@ Browser support for transitioning DOM properties is limited, so Tram attempts to
 'max-height'           // length, percentage
 'line-height'          // number, length, percentage
 'transform'            // (see transform info below)
+'scroll-top'           // number (tween-only)
+'scroll-left'          // number (tween-only)
 
 // TODO - planned support
 // 'background-position'  // [x, y] length, percentage
 // 'transform-origin'     // [x, y] length, percentage
 // 'clip'                 // [x, y, w, h] rectangle
 // 'crop'                 // [x, y, w, h] rectangle
-// 'scroll-top'           // number (tween-only)
-// 'scroll-left'          // number (tween-only)
 ```
 
 **Note:** `dash-style` names are required for `.add()`, but other methods like `.start()` and `.stop()` may use `camelCase`.

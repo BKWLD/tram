@@ -417,7 +417,7 @@
     proto.fallback = function (value) {
       // start a new tween
       this.tween = new Tween({
-          from: this.convert(getStyle(this.el, this.name), this.type)
+          from: this.convert(this.get(), this.type)
         , to: this.convert(value, this.type)
         , duration: this.duration
         , delay: this.delay
@@ -427,7 +427,12 @@
       });
     };
     
-    // Update css value (called from tween)
+    // Get current element style
+    proto.get = function () {
+      return getStyle(this.el, this.name);
+    };
+    
+    // Update element style value (called from tween)
     proto.update = function (value) {
       setStyle(this.el, this.name, value);
     };
@@ -438,7 +443,7 @@
       // Reset property to stop CSS transition
       if (this.active) {
         this.active = false;
-        setStyle(this.el, this.name, getStyle(this.el, this.name));
+        setStyle(this.el, this.name, this.get());
       }
     };
     
@@ -537,7 +542,26 @@
       
       // Store original computed value to allow tweening to ''
       if (this.original) return;
-      this.original = this.convert(getStyle(this.el, this.name), typeColor);
+      this.original = this.convert(this.get(), typeColor);
+    };
+  });
+  
+  // --------------------------------------------------
+  // Scroll prop
+  
+  var Scroll = P(Property, function (proto, supr) {
+    
+    proto.init = function () {
+      supr.init.apply(this, arguments);
+      this.animate = this.fallback;
+    };
+    
+    proto.get = function () {
+      return this.$el[this.name]();
+    };
+    
+    proto.update = function (value) {
+      this.$el[this.name](value);
     };
   });
   
@@ -1022,6 +1046,8 @@
     , 'min-height'           : [ Property, typeLenPerc ]
     , 'max-height'           : [ Property, typeLenPerc ]
     , 'line-height'          : [ Property, typeFancy ]
+    , 'scroll-top'           : [ Scroll, typeNumber, 'scrollTop' ]
+    , 'scroll-left'          : [ Scroll, typeNumber, 'scrollLeft' ]
     // , 'background-position'  : [ Property, typeLenPerc ]
   };
   
