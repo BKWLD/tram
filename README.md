@@ -242,7 +242,6 @@ TODO describe transform shortcuts w/ examples
 
 ## TODO
 
-* Add scrollTop and scrollLeft as tween-only props
 * Add remap({ x: 'left' }) method for shimming properties
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'

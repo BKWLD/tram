@@ -20,6 +20,10 @@
     <div class="bloat"></div>
   </div>
   
+  <div class="funbox scroll">
+    <div class="bloat"></div>
+  </div>
+  
   <script>
     
     var $funbox = $('.funbox');
@@ -28,9 +32,14 @@
     var maxLeft = $bloat.width() - $funbox.width();
     
     tram($funbox)
+    	.set({ scrollTop: maxTop, scrollLeft: maxLeft })
       .add('scroll-top 2s ease-out-quint')
       .add('scroll-left 2s ease-in-out')
-      .start({ scrollTop: maxTop, scrollLeft: maxLeft });
+      .start({ scrollTop: 0, scrollLeft: 0 });
+    
+    tram(window)
+    	.start({ scrollTop: 100 })
+    	.then({ scrollTop: 0 });
     
   </script>
 </body>
