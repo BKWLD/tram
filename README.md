@@ -246,7 +246,6 @@ TODO describe transform shortcuts w/ examples
 * Add remap({ x: 'left' }) method for shimming properties
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
-* Confirm 'backface:hidden' is enough for gpu acceleration
 * Consider adding Bower support
 * Consider px -> rem unit conversion support
 

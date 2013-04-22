@@ -129,6 +129,7 @@
       if (!prop) prop = this.props[name] = new Class.Bare();
       // Init settings + type + options
       prop.init(this.$el, settings, definition, options);
+      return prop; // return for internal use
     }
     
     // Public start() - chainable
@@ -189,7 +190,7 @@
     // Public then() - chainable
     function then(options) {
       if (!this.timer || !this.timer.active) {
-        return warn('No active transition timer. Must start() one first.');
+        return warn('No active transition timer. Use start() before then().');
       }
       // push options into queue
       this.queue.push(options);
@@ -209,7 +210,7 @@
     }
     
     // Public stop() - chainable
-    function stop(options) {
+    function stop(options, memo) {
       this.timer && this.timer.destroy();
       this.queue = [];
       var values;
@@ -221,20 +222,14 @@
       } else {
         values = this.props;
       }
-      eachProp.call(this, values, function (prop) {
-        prop.stop();
-      });
+      eachProp.call(this, values, stopProp);
       updateStyles.call(this);
     }
     
     // Public set() - chainable
     function set(values) {
       stop.call(this, values);
-      
-      // TODO set non-property values via jQuery, and lazily create properties if necessary
-      eachProp.call(this, values, function (prop, value) {
-        prop.set(value);
-      });
+      eachProp.call(this, values, setProp, setExtras);
     }
     
     // Public show() - chainable
@@ -267,31 +262,57 @@
       this.el.style[support.transition.dom] = result;
     }
     
-    // Loop through valid properties and run iterator callback
-    function eachProp(collection, iterator) {
-      var p, value
-        , transform = this.props.transform
-        , transMatch = false
-        , transProps = {}
+    // Loop through valid properties, auto-create them, and run iterator callback
+    function eachProp(collection, iterator, ejector) {
+      // skip auto-add during stop()
+      var autoAdd = iterator !== stopProp
+        , name
+        , prop
+        , value
+        , matches = {}
+        , extras
       ;
-      for (p in collection) {
-        value = collection[p];
-        // check for special Transform sub-properties
-        if (transform && p in transformMap) {
-          transProps[p] = value;
-          transMatch = true;
+      // find valid properties in collection
+      for (name in collection) {
+        value = collection[name];
+        // match transform sub-properties
+        if (name in transformMap) {
+          if (!matches.transform) matches.transform = {};
+          matches.transform[name] = value;
           continue;
         }
-        // check for camelCase property name + convert to dashed
-        if (capsRegex.test(p)) p = toDashed(p);
-        // iterate with valid property / value
-        if (p in this.props && p in propertyMap) {
-          iterator.call(this, this.props[p], value);
+        // convert camelCase to dashed
+        if (capsRegex.test(name)) name = toDashed(name);
+        // match base properties
+        if (name in propertyMap) {
+          matches[name] = value;
+          continue;
         }
+        // otherwise, add property to extras
+        if (!extras) extras = {};
+        extras[name] = value;
       }
-      // iterate with transform prop / sub-prop values
-      if (transMatch) iterator.call(this, transform, transProps);
+      // iterate on each matched property, auto-adding them
+      for (name in matches) {
+        value = matches[name];
+        prop = this.props[name];
+        if (!prop) {
+          // skip auto-add during stop()
+          if (!autoAdd) continue;
+          // auto-add property instances
+          prop = add.call(this, name);
+        }
+        // iterate on each property
+        iterator.call(this, prop, value);
+      }
+      // finally, eject the extras into space
+      if (ejector && extras) ejector.call(this, extras);
     }
+    
+    // Loop iterators
+    function stopProp(prop) { prop.stop(); }
+    function setProp(prop, value) { prop.set(value); }
+    function setExtras(extras) { this.$el.css(extras); }
     
     // Define a chainable method that takes children into account
     function chain(name, method) {
