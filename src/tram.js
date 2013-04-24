@@ -59,12 +59,13 @@
   
   // Animation timer shim with setTimeout fallback
   var enterFrame = tram.frame = function () {
-    return win.requestAnimationFrame ||
-    win.webkitRequestAnimationFrame ||
-    win.mozRequestAnimationFrame ||
-    win.oRequestAnimationFrame ||
-    win.msRequestAnimationFrame ||
-    function (callback) {
+    var raf = win.requestAnimationFrame ||
+      win.webkitRequestAnimationFrame ||
+      win.mozRequestAnimationFrame ||
+      win.oRequestAnimationFrame ||
+      win.msRequestAnimationFrame;
+    if (raf && support.bind) return raf.bind(win);
+    return function (callback) {
       win.setTimeout(callback, 16);
     };
   }();

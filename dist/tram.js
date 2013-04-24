@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.6-global
+  * tram.js v0.5.7-global
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -302,7 +302,7 @@ window.tram = (function (jQuery) {
   
   var doc = document
     , win = window
-    , store = 'bkwld-tram-js'
+    , store = 'bkwld-tram'
     , unitRegex = /[\-\.0-9]/g
     , capsRegex = /[A-Z]/
     , typeNumber = 'number'
@@ -357,12 +357,13 @@ window.tram = (function (jQuery) {
   
   // Animation timer shim with setTimeout fallback
   var enterFrame = tram.frame = function () {
-    return win.requestAnimationFrame ||
-    win.webkitRequestAnimationFrame ||
-    win.mozRequestAnimationFrame ||
-    win.oRequestAnimationFrame ||
-    win.msRequestAnimationFrame ||
-    function (callback) {
+    var raf = win.requestAnimationFrame ||
+      win.webkitRequestAnimationFrame ||
+      win.mozRequestAnimationFrame ||
+      win.oRequestAnimationFrame ||
+      win.msRequestAnimationFrame;
+    if (raf && support.bind) return raf.bind(win);
+    return function (callback) {
       win.setTimeout(callback, 16);
     };
   }();
@@ -1277,7 +1278,7 @@ window.tram = (function (jQuery) {
   };
   
   // delay() static method
-  tram.delay = function (callback, duration, context) {
+  tram.delay = function (duration, callback, context) {
     return new Delay({ complete: callback, duration: duration, context: context });
   };
   
