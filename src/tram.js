@@ -4,7 +4,7 @@
   
   var doc = document
     , win = window
-    , store = 'bkwld-tram-js'
+    , store = 'bkwld-tram'
     , unitRegex = /[\-\.0-9]/g
     , capsRegex = /[A-Z]/
     , typeNumber = 'number'
@@ -979,7 +979,7 @@
   };
   
   // delay() static method
-  tram.delay = function (callback, duration, context) {
+  tram.delay = function (duration, callback, context) {
     return new Delay({ complete: callback, duration: duration, context: context });
   };
   
