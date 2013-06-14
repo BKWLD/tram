@@ -687,6 +687,8 @@ window.tram = (function (jQuery) {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
+      this.unit = options.unit || config.defaultUnit;
+      this.angle = options.angle || config.defaultAngle;
       // Animate using tween fallback if necessary, otherwise use transition.
       if (config.fallback || options.fallback) {
         this.animate = this.fallback;
@@ -771,17 +773,17 @@ window.tram = (function (jQuery) {
           warnType = 'hex or rgb string';
           break;
         case typeLength:
-          if (number) return value + config.defaultUnit;
+          if (number) return value + this.unit;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit)';
           break;
         case typeLenPerc:
-          if (number) return value + config.defaultUnit;
+          if (number) return value + this.unit;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit or %)';
           break;
         case typeAngle:
-          if (number) return value + config.defaultAngle;
+          if (number) return value + this.angle;
           if (string && type.test(value)) return value;
           warnType = 'number(deg) or string(angle)';
           break;
@@ -1263,7 +1265,7 @@ window.tram = (function (jQuery) {
     config.fallback = pattern.test(navigator.userAgent);
   };
   // Default sniffs for browsers that support transitions badly ;_;
-  tram.fallback('6.0.(2|3) Safari');
+  tram.fallback('6.0.[2-5] Safari');
   
   // macro() static method
   var macros = {};
