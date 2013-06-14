@@ -12,9 +12,16 @@ Available on npm: `npm install tram`
 
 File size:
 
-* dev ~`43 kb`
+* dev ~`45 kb`
 * min ~`16 kb`
 * gzip ~`4 kb`
+
+## Examples
+
+* [basic-opacity](http://bkwld.github.io/tram/examples/basic-opacity.html)
+* [scroll-top-left](http://bkwld.github.io/tram/examples/scroll-top-left.html)
+* [sequencing](http://bkwld.github.io/tram/examples/sequencing.html)
+* [transforms](http://bkwld.github.io/tram/examples/transforms.html)
 
 ## How it works
 
