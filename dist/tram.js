@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.6-global
+  * tram.js v0.5.7-global
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -302,7 +302,7 @@ window.tram = (function (jQuery) {
   
   var doc = document
     , win = window
-    , store = 'bkwld-tram-js'
+    , store = 'bkwld-tram'
     , unitRegex = /[\-\.0-9]/g
     , capsRegex = /[A-Z]/
     , typeNumber = 'number'
@@ -357,12 +357,13 @@ window.tram = (function (jQuery) {
   
   // Animation timer shim with setTimeout fallback
   var enterFrame = tram.frame = function () {
-    return win.requestAnimationFrame ||
-    win.webkitRequestAnimationFrame ||
-    win.mozRequestAnimationFrame ||
-    win.oRequestAnimationFrame ||
-    win.msRequestAnimationFrame ||
-    function (callback) {
+    var raf = win.requestAnimationFrame ||
+      win.webkitRequestAnimationFrame ||
+      win.mozRequestAnimationFrame ||
+      win.oRequestAnimationFrame ||
+      win.msRequestAnimationFrame;
+    if (raf && support.bind) return raf.bind(win);
+    return function (callback) {
       win.setTimeout(callback, 16);
     };
   }();
@@ -686,6 +687,8 @@ window.tram = (function (jQuery) {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
+      this.unit = options.unit || config.defaultUnit;
+      this.angle = options.angle || config.defaultAngle;
       // Animate using tween fallback if necessary, otherwise use transition.
       if (config.fallback || options.fallback) {
         this.animate = this.fallback;
@@ -770,17 +773,17 @@ window.tram = (function (jQuery) {
           warnType = 'hex or rgb string';
           break;
         case typeLength:
-          if (number) return value + config.defaultUnit;
+          if (number) return value + this.unit;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit)';
           break;
         case typeLenPerc:
-          if (number) return value + config.defaultUnit;
+          if (number) return value + this.unit;
           if (string && type.test(value)) return value;
           warnType = 'number(px) or string(unit or %)';
           break;
         case typeAngle:
-          if (number) return value + config.defaultAngle;
+          if (number) return value + this.angle;
           if (string && type.test(value)) return value;
           warnType = 'number(deg) or string(angle)';
           break;
@@ -1262,7 +1265,7 @@ window.tram = (function (jQuery) {
     config.fallback = pattern.test(navigator.userAgent);
   };
   // Default sniffs for browsers that support transitions badly ;_;
-  tram.fallback('6.0.(2|3) Safari');
+  tram.fallback('6.0.[2-5] Safari');
   
   // macro() static method
   var macros = {};
@@ -1277,7 +1280,7 @@ window.tram = (function (jQuery) {
   };
   
   // delay() static method
-  tram.delay = function (callback, duration, context) {
+  tram.delay = function (duration, callback, context) {
     return new Delay({ complete: callback, duration: duration, context: context });
   };
   
