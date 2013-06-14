@@ -965,7 +965,7 @@
     config.fallback = pattern.test(navigator.userAgent);
   };
   // Default sniffs for browsers that support transitions badly ;_;
-  tram.fallback('6.0.(2|3) Safari');
+  tram.fallback('6.0.[2-5] Safari');
   
   // macro() static method
   var macros = {};
