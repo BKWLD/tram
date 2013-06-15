@@ -21,25 +21,19 @@
   <script>
     
     var test = $('.test');
+    
     tram(test)
-      .add('transform 400ms', { fallback: false, unit: '%', angle: 'rad' });
+      .add('transform 600ms ease-out-quint 400', { unit: '%', angle: 'rad' })
+      .set({ x: 100 })
+      .start({ x: 0 });
     
-    function first() {
-      tram(test).start({ x: 50, y: 50, rotate: 2 });
+    tram.delay(200, next);
+    
+    function next() {
+      tram(test)
+        .add('transform 400ms ease 0')
+        .start({ x: 200, y: 200, rotate: 3 });
     }
-    
-    function second() {
-      tram(test).start({ x: '200%', y: '200%', rotate: 0 });
-    }
-    
-    var touch = 'ontouchstart' in window;
-    var clicks = 0;
-    $(document).on(touch ? 'touchstart' : 'mousedown', function () {
-      switch (++clicks) {
-        case 1: first(); break;
-        case 2: second(); clicks = 0; break;
-      }
-    });
     
   </script>
 </body>
