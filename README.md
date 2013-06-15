@@ -21,6 +21,7 @@ File size:
 * [basic-opacity](http://bkwld.github.io/tram/examples/basic-opacity.html)
 * [scroll-top-left](http://bkwld.github.io/tram/examples/scroll-top-left.html)
 * [sequencing](http://bkwld.github.io/tram/examples/sequencing.html)
+* [modify-settings](http://bkwld.github.io/tram/examples/modify-settings.html)
 * [transforms](http://bkwld.github.io/tram/examples/transforms.html)
 
 ## How it works
