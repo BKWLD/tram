@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.7-commonjs
+  * tram.js v0.5.8-commonjs
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -688,8 +688,8 @@ module.exports = (function () {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
-      this.unit = options.unit || config.defaultUnit;
-      this.angle = options.angle || config.defaultAngle;
+      this.unit = options.unit || this.unit || config.defaultUnit;
+      this.angle = options.angle || this.angle || config.defaultAngle;
       // Animate using tween fallback if necessary, otherwise use transition.
       if (config.fallback || options.fallback) {
         this.animate = this.fallback;
@@ -1022,6 +1022,8 @@ module.exports = (function () {
       } else {
         this.format(to, from);
       }
+      // Store value + unit in case it's accessed before delay is up
+      this.value = this.begin + this.unit;
       
       // Set start time for all Tween instances
       this.start = timeNow();
@@ -1058,15 +1060,13 @@ module.exports = (function () {
         var position = this.ease(delta, 0, 1, this.duration);
         value = this.startRGB ? interpolate(this.startRGB, this.endRGB, position)
           : round(this.begin + (position * this.change));
-        if (this.unit) value += this.unit;
-        this.value = value;
+        this.value = value + this.unit;
         this.update.call(this.context, value);
         return;
       }
       // we're done, set final value and destroy
       value = this.endHex || this.begin + this.change;
-      if (this.unit) value += this.unit;
-      this.value = value;
+      this.value = value + this.unit;
       this.update.call(this.context, value);
       this.complete.call(this.context);
       this.destroy();
