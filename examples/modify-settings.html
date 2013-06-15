@@ -13,28 +13,20 @@
 <body>
 
   <p>
-    Example of how macros can be defined and run.
+    Modify transition settings during a queued sequence. 
   </p>
 
   <div class="test"></div>
   
-  Something below.
-  
   <script>
     
-    tram.macro('fade-out', function (t) {
-      t.add('opacity 500ms', { weak: true });
-      t.start({ opacity: 0 });
-      t.then(function () {
-        t.el.style.display = 'none';
-      });
-    });
-  
-    var $el = $('.test');
+    var test = $('.test');
     
-    tram($el)
-      .add('opacity 2s')
-      .start('fade-out');
+    tram(test)
+      .add('transform 400ms ease')
+      .start({ x: 200 })
+      .then('transform 800ms ease-in-out-expo')
+      .then({ x: 0 });
     
   </script>
 </body>

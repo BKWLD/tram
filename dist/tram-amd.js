@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.8-amd
+  * tram.js v0.5.9-amd
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -432,7 +432,7 @@ define(['jquery'], function (jQuery) {
     }
     
     // Public start() - chainable
-    function start(options, fromQueue) {
+    function start(options, fromQueue, queueArgs) {
       if (!options) return;
       var optionType = typeof options;
       
@@ -442,9 +442,10 @@ define(['jquery'], function (jQuery) {
         this.queue = [];
       }
       
-      // If options is a string, check macros
-      if (optionType == 'string' && macros[options]) {
-        return start.call(this, macros[options]);
+      // If options is a string, invoke add() to modify transition settings
+      if (optionType == 'string' && fromQueue) {
+        add.call(this, options, (queueArgs && queueArgs[1]));
+        return next.call(this);
       }
       
       // If options is a function, invoke it.
@@ -492,7 +493,7 @@ define(['jquery'], function (jQuery) {
         return warn('No active transition timer. Use start() before then().');
       }
       // push options into queue
-      this.queue.push(options);
+      this.queue.push({ options: options, args: arguments });
       // set timer complete callback
       this.timer.complete = next;
     }
@@ -504,8 +505,8 @@ define(['jquery'], function (jQuery) {
       // if the queue is empty do nothing
       if (!this.queue.length) return;
       // start next item in queue
-      var options = this.queue.shift();
-      start.call(this, options, true);
+      var queued = this.queue.shift();
+      start.call(this, queued.options, true, queued.args);
     }
     
     // Public stop() - chainable
