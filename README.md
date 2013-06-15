@@ -265,7 +265,7 @@ TODO describe transform shortcuts w/ examples
 `npm install`  
 `make`  
 
-3. Once you're ready to send a pull request, please view `test/index.html` in your browser to confirm that all tests are passing.
+3. Once you're ready to send a pull request, please view `test/suite.html` in your browser to confirm that all tests are passing.
 
 ## Thanks
 
