@@ -320,7 +320,7 @@
     function chain(name, method) {
       proto[name] = function () {
         if (this.children) return eachChild.call(this, method, arguments);
-        method.apply(this, arguments);
+        this.el && method.apply(this, arguments);
         return this;
       };
     }
