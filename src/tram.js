@@ -104,6 +104,7 @@
     // Public chainable methods
     chain('add', add);
     chain('start', start);
+    chain('wait', wait);
     chain('then', then);
     chain('next', next);
     chain('stop', stop);
@@ -146,6 +147,13 @@
         this.active = false;
       }
       
+      // If options is a number, wait for a delay and continue queue.
+      if (optionType == 'number' && fromQueue) {
+        this.timer = new Delay({ duration: options, context: this, complete: next });
+        this.active = true;
+        return;
+      }
+      
       // If options is a string, invoke add() to modify transition settings
       if (optionType == 'string' && fromQueue) {
         add.call(this, options, (queueArgs && queueArgs[1]));
@@ -169,6 +177,9 @@
           // stop current, then begin animation
           prop.stop();
           prop.animate(value);
+        }, function (extras) {
+          // look for wait property and use it to override timespan
+          if ('wait' in extras) timespan = validTime(extras.wait, 0);
         });
         // update main transition styles for active props
         updateStyles.call(this);
@@ -192,10 +203,23 @@
       }
     }
     
+    // Public wait() - chainable
+    function wait(time) {
+      time = validTime(time, 0);
+      // if start() has ocurred, simply push wait into queue
+      if (this.active) {
+        this.queue.push({ options: time });
+      } else {
+        // otherwise, start a timer. wait() is starting the sequence.
+        this.timer = new Delay({ duration: time, context: this, complete: next });
+        this.active = true;
+      }
+    }
+    
     // Public then() - chainable
     function then(options) {
       if (!this.active) {
-        return warn('No active transition timer. Use start() before then().');
+        return warn('No active transition timer. Use start() or wait() before then().');
       }
       // push options into queue
       this.queue.push({ options: options, args: arguments });
@@ -509,23 +533,6 @@
     proto.redraw = function () {
       this.el.offsetHeight;
     };
-    
-    // Normalize time values
-    var ms = /ms/, sec = /s|\./;
-    function validTime(string, current, safe) {
-      if (current !== undefined) safe = current;
-      if (string === undefined) return safe;
-      var n = safe;
-      // if string contains 'ms' or contains no suffix
-      if (ms.test(string) || !sec.test(string)) {
-        n = parseInt(string, 10);
-      // otherwise if string contains 's' or a decimal point
-      } else if (sec.test(string)) {
-        n = parseFloat(string) * 1000;
-      }
-      if (n < 0) n = 0; // no negative times
-      return n === n ? n : safe; // protect from NaNs
-    }
     
     // Make sure ease exists
     function validEase(ease, current, safe) {
@@ -1122,6 +1129,23 @@
   
   function unitWarning(name, from, to) {
     warn('Units do not match [' + name + ']: ' + from + ', ' + to);
+  }
+  
+  // Normalize time values
+  var milli = /ms/, seconds = /s|\./;
+  function validTime(string, current, safe) {
+    if (current !== undefined) safe = current;
+    if (string === undefined) return safe;
+    var n = safe;
+    // if string contains 'ms' or contains no suffix
+    if (milli.test(string) || !seconds.test(string)) {
+      n = parseInt(string, 10);
+    // otherwise if string contains 's' or a decimal point
+    } else if (seconds.test(string)) {
+      n = parseFloat(string) * 1000;
+    }
+    if (n < 0) n = 0; // no negative times
+    return n === n ? n : safe; // protect from NaNs
   }
   
   // Log warning message if supported
