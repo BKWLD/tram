@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>tram.js example</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="../support/styles/example.css">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../node_modules/jquery-browser/lib/jquery.js"><\/script>')</script>
+  <script src="../dist/tram.js"></script>
+</head>
+<body>
+
+  <p> Wait in between steps. </p>
+  <div class="test test1"></div>
+  
+  <script>
+    
+    tram('.test1')
+      .start({ width: 200 })
+      .wait(200)
+      .then({ width: 300 });
+    
+  </script>
+
+  <p> Override the duration of a step, using the `wait` property. </p>
+  <div class="test test2"></div>
+  
+  <script>
+    
+    tram('.test2')
+      .add('background 3s ease')
+      .start({ background: '#6070AB', wait: '500ms' })
+      .then({ width: 300 });
+    
+  </script>
+  
+  <p> Wait before starting a sequence. `start()` is inferred.</p>
+  <div class="test test3"></div>
+  
+  <script>
+    
+    tram('.test3')
+      .wait(2000)
+      .then({ width: 300, background: '#9368AB' });
+    
+  </script>
+</body>
+</html>
