@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.9-commonjs
+  * tram.js v0.5.10-commonjs
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -619,7 +619,7 @@ module.exports = (function () {
     function chain(name, method) {
       proto[name] = function () {
         if (this.children) return eachChild.call(this, method, arguments);
-        method.apply(this, arguments);
+        this.el && method.apply(this, arguments);
         return this;
       };
     }
