@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.5.10-amd
+  * tram.js v0.6.0-amd
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -393,6 +393,7 @@ define(['jquery'], function (jQuery) {
       this.props = {};
       this.queue = [];
       this.style = '';
+      this.active = false;
       // hide backface if supported, for better perf
       if (support.backface && config.hideBackface)
         setStyle(this.el, support.backface.css, 'hidden');
@@ -401,6 +402,7 @@ define(['jquery'], function (jQuery) {
     // Public chainable methods
     chain('add', add);
     chain('start', start);
+    chain('wait', wait);
     chain('then', then);
     chain('next', next);
     chain('stop', stop);
@@ -440,6 +442,14 @@ define(['jquery'], function (jQuery) {
       if (!fromQueue) {
         this.timer && this.timer.destroy();
         this.queue = [];
+        this.active = false;
+      }
+      
+      // If options is a number, wait for a delay and continue queue.
+      if (optionType == 'number' && fromQueue) {
+        this.timer = new Delay({ duration: options, context: this, complete: next });
+        this.active = true;
+        return;
       }
       
       // If options is a string, invoke add() to modify transition settings
@@ -465,6 +475,9 @@ define(['jquery'], function (jQuery) {
           // stop current, then begin animation
           prop.stop();
           prop.animate(value);
+        }, function (extras) {
+          // look for wait property and use it to override timespan
+          if ('wait' in extras) timespan = validTime(extras.wait, 0);
         });
         // update main transition styles for active props
         updateStyles.call(this);
@@ -472,6 +485,7 @@ define(['jquery'], function (jQuery) {
         // start timer for total transition timespan
         if (timespan > 0) {
           this.timer = new Delay({ duration: timespan, context: this });
+          this.active = true;
           if (fromQueue) this.timer.complete = next;
         }
         // apply deferred styles after a single frame delay
@@ -487,10 +501,23 @@ define(['jquery'], function (jQuery) {
       }
     }
     
+    // Public wait() - chainable
+    function wait(time) {
+      time = validTime(time, 0);
+      // if start() has ocurred, simply push wait into queue
+      if (this.active) {
+        this.queue.push({ options: time });
+      } else {
+        // otherwise, start a timer. wait() is starting the sequence.
+        this.timer = new Delay({ duration: time, context: this, complete: next });
+        this.active = true;
+      }
+    }
+    
     // Public then() - chainable
     function then(options) {
-      if (!this.timer || !this.timer.active) {
-        return warn('No active transition timer. Use start() before then().');
+      if (!this.active) {
+        return warn('No active transition timer. Use start() or wait() before then().');
       }
       // push options into queue
       this.queue.push({ options: options, args: arguments });
@@ -502,6 +529,7 @@ define(['jquery'], function (jQuery) {
     function next() {
       // stop current timer in case next() was called early
       this.timer && this.timer.destroy();
+      this.active = false;
       // if the queue is empty do nothing
       if (!this.queue.length) return;
       // start next item in queue
@@ -513,6 +541,7 @@ define(['jquery'], function (jQuery) {
     function stop(options, memo) {
       this.timer && this.timer.destroy();
       this.queue = [];
+      this.active = false;
       var values;
       if (typeof options == 'string') {
         values = {};
@@ -802,23 +831,6 @@ define(['jquery'], function (jQuery) {
     proto.redraw = function () {
       this.el.offsetHeight;
     };
-    
-    // Normalize time values
-    var ms = /ms/, sec = /s|\./;
-    function validTime(string, current, safe) {
-      if (current !== undefined) safe = current;
-      if (string === undefined) return safe;
-      var n = safe;
-      // if string contains 'ms' or contains no suffix
-      if (ms.test(string) || !sec.test(string)) {
-        n = parseInt(string, 10);
-      // otherwise if string contains 's' or a decimal point
-      } else if (sec.test(string)) {
-        n = parseFloat(string) * 1000;
-      }
-      if (n < 0) n = 0; // no negative times
-      return n === n ? n : safe; // protect from NaNs
-    }
     
     // Make sure ease exists
     function validEase(ease, current, safe) {
@@ -1415,6 +1427,23 @@ define(['jquery'], function (jQuery) {
   
   function unitWarning(name, from, to) {
     warn('Units do not match [' + name + ']: ' + from + ', ' + to);
+  }
+  
+  // Normalize time values
+  var milli = /ms/, seconds = /s|\./;
+  function validTime(string, current, safe) {
+    if (current !== undefined) safe = current;
+    if (string === undefined) return safe;
+    var n = safe;
+    // if string contains 'ms' or contains no suffix
+    if (milli.test(string) || !seconds.test(string)) {
+      n = parseInt(string, 10);
+    // otherwise if string contains 's' or a decimal point
+    } else if (seconds.test(string)) {
+      n = parseFloat(string) * 1000;
+    }
+    if (n < 0) n = 0; // no negative times
+    return n === n ? n : safe; // protect from NaNs
   }
   
   // Log warning message if supported
