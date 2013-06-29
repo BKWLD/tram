@@ -95,6 +95,7 @@
       this.props = {};
       this.queue = [];
       this.style = '';
+      this.active = false;
       // hide backface if supported, for better perf
       if (support.backface && config.hideBackface)
         setStyle(this.el, support.backface.css, 'hidden');
@@ -142,6 +143,7 @@
       if (!fromQueue) {
         this.timer && this.timer.destroy();
         this.queue = [];
+        this.active = false;
       }
       
       // If options is a string, invoke add() to modify transition settings
@@ -174,6 +176,7 @@
         // start timer for total transition timespan
         if (timespan > 0) {
           this.timer = new Delay({ duration: timespan, context: this });
+          this.active = true;
           if (fromQueue) this.timer.complete = next;
         }
         // apply deferred styles after a single frame delay
@@ -191,7 +194,7 @@
     
     // Public then() - chainable
     function then(options) {
-      if (!this.timer || !this.timer.active) {
+      if (!this.active) {
         return warn('No active transition timer. Use start() before then().');
       }
       // push options into queue
@@ -204,6 +207,7 @@
     function next() {
       // stop current timer in case next() was called early
       this.timer && this.timer.destroy();
+      this.active = false;
       // if the queue is empty do nothing
       if (!this.queue.length) return;
       // start next item in queue
@@ -215,6 +219,7 @@
     function stop(options, memo) {
       this.timer && this.timer.destroy();
       this.queue = [];
+      this.active = false;
       var values;
       if (typeof options == 'string') {
         values = {};
