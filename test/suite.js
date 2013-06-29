@@ -1,32 +1,70 @@
 (function () {
-  /*global tram, sink, start*/
+  /*global $, tram, sink, start*/
+  var $test = $('#test');
   
   // --------------------------------------------------
-  sink('Duration', function(test, ok, before, after) {
+  sink('Timing', function(test, ok, before, after) {
 
-    test('async test 1', 1, function () {
-      window.setTimeout(function () {
-        ok(true, 'yep');
-      }, 10);
+    test('Transition should take roughly 300ms', 1, function () {
+      var start = tram.now();
+      tram($test)
+        .add('opacity 300ms ease 0')
+        .start({ opacity: 1 })
+        .then(function () {
+          var diff = tram.now() - start;
+          ok(diff < 330, 'Elapsed: ' + diff + 'ms');
+        });
+    });
+    
+    test('Fallback should take roughly 300ms', 1, function () {
+      var start = tram.now();
+      tram($test)
+        .add('opacity 300ms ease 0', { fallback: true })
+        .start({ opacity: 1 })
+        .then(function () {
+          var diff = tram.now() - start;
+          ok(diff < 330, 'Elapsed: ' + diff + 'ms');
+        });
+    });
+    
+    test('300ms transition with 100ms delay', 1, function () {
+      var start = tram.now();
+      tram($test)
+        .add('opacity 300ms ease 100ms')
+        .start({ opacity: 1 })
+        .then(function () {
+          var diff = tram.now() - start;
+          ok(diff < 430, 'Elapsed: ' + diff + 'ms');
+        });
+    });
+    
+  });
+
+  // --------------------------------------------------
+  sink('Properties', function(test, ok, before, after) {
+
+    test('set() should set value immediately', 1, function () {
+      tram($test).set({ opacity: 0.5 });
+      ok(+$test.css('opacity') === 0.5, '');
     });
     
   });
   
   // --------------------------------------------------
-  sink('TODO', function(test, ok, before, after) {
+  sink('Error Handling', function(test, ok, before, after) {
 
-    test('test', 1, function () {
-      ok(true, 'yep');
+    test('Invalid selectors should fail silently', 1, function () {
+      try {
+        tram($('#undefined')).set({ x: 0 });
+        tram('#undefined').set({ x: 0 });
+        tram('#undefined').then({ x: 0 });
+        ok(true, '');
+      } catch (e) {
+        ok(false, e);
+      }
     });
     
-  });
-  
-  // --------------------------------------------------
-  sink('TODO', function(test, ok, before, after) {
-
-    test('test', 1, function () {
-      ok(true, 'yep');
-    });
+    // TODO catch tram's warnings.
     
   });
   
