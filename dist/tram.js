@@ -373,9 +373,7 @@ window.tram = (function (jQuery) {
     // use high-res timer if available
     var perf = win.performance,
       perfNow = perf && (perf.now || perf.webkitNow || perf.msNow || perf.mozNow);
-    if (perfNow && support.bind) {
-      return perfNow.bind(perf);
-    }
+    if (perfNow && support.bind) return perfNow.bind(perf);
     // fallback to epoch-based timestamp
     return Date.now || function () {
       return +(new Date);
