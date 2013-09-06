@@ -75,9 +75,7 @@
     // use high-res timer if available
     var perf = win.performance,
       perfNow = perf && (perf.now || perf.webkitNow || perf.msNow || perf.mozNow);
-    if (perfNow && support.bind) {
-      return perfNow.bind(perf);
-    }
+    if (perfNow && support.bind) return perfNow.bind(perf);
     // fallback to epoch-based timestamp
     return Date.now || function () {
       return +(new Date);
@@ -1002,10 +1000,9 @@
   // --------------------------------------------------
   // jQuery methods
 
-  // jQuery plugin method, keeps jQuery chain intact.
+  // jQuery plugin method, diverts chain to Tram object.
   jQuery.fn.tram = function (options) {
-    new Tram(this, options);
-    return this;
+    return tram.call(null, this, options);
   };
   
   // Shortcuts for internal jQuery style getter / setter
