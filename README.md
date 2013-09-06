@@ -200,6 +200,8 @@ TODO describe transform shortcuts w/ examples
 
 ### Easings
 
+A useful site with demos of most of these is [easings.net](http://easings.net/)
+
 ```js
 // Defaults
 'ease'

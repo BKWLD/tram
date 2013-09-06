@@ -1,5 +1,5 @@
 /*!
-  * tram.js v0.6.0-global
+  * tram.js v0.6.1-global
   * Cross-browser CSS3 transitions in JavaScript.
   * https://github.com/bkwld/tram
   * MIT License
@@ -1298,10 +1298,9 @@ window.tram = (function (jQuery) {
   // --------------------------------------------------
   // jQuery methods
 
-  // jQuery plugin method, keeps jQuery chain intact.
+  // jQuery plugin method, diverts chain to Tram object.
   jQuery.fn.tram = function (options) {
-    new Tram(this, options);
-    return this;
+    return tram.call(null, this, options);
   };
   
   // Shortcuts for internal jQuery style getter / setter
