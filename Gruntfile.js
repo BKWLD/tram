@@ -59,7 +59,7 @@ module.exports = function(grunt) {
       },
       
       readme: {
-        options: { banner: '<a style="float:right" href="https://github.com/bkwld/tram">[view on github]</a> v<%= pkg.version %>\n\n' },
+        options: { banner: '<a style="float:right" href="<%= pkg.homepage %>">[view on github]</a> v<%= pkg.version %>\n\n' },
         src: ['README.md'],
         dest: 'index.md'
       }
