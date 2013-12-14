@@ -5,11 +5,11 @@ module.exports = function(grunt) {
     , distPath = 'dist/'
     , distFile = distPath + '<%= pkg.name %>'
     , banner = '/*!\n' +
-      '  * <%= pkg.name %>.js v<%= pkg.version %><%= flag %>\n' +
-      '  * <%= pkg.description %>\n' +
-      '  * <%= pkg.homepage %>\n' +
-      '  * <%= pkg.license %> License\n' +
-      '  */\n'
+      ' * <%= pkg.name %>.js v<%= pkg.version %><%= flag %>\n' +
+      ' * <%= pkg.description %>\n' +
+      ' * <%= pkg.homepage %>\n' +
+      ' * <%= pkg.license %> License\n' +
+      ' */\n'
     , bannerFlag = function (flag) {
       return banner.replace('<%= flag %>', flag);
     }
