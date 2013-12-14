@@ -1,9 +1,9 @@
 /*!
-  * tram.js v0.6.1-global
-  * Cross-browser CSS3 transitions in JavaScript.
-  * https://github.com/bkwld/tram
-  * MIT License
-  */
+ * tram.js v0.6.1-global
+ * Cross-browser CSS3 transitions in JavaScript.
+ * https://github.com/bkwld/tram
+ * MIT License
+ */
 window.tram = (function (jQuery) {
 
   /*!
