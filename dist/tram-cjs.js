@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.6.1-commonjs
+ * tram.js v0.6.2-commonjs
  * Cross-browser CSS3 transitions in JavaScript.
  * https://github.com/bkwld/tram
  * MIT License
@@ -892,9 +892,9 @@ module.exports = (function () {
       // Store transform state
       this.current = {};
       
-      // Default perspective, if supported
-      if (transformMap.perspective) {
-        this.current.perspective = '1000px';
+      // Set default perspective, if specified
+      if (transformMap.perspective && config.perspective) {
+        this.current.perspective = config.perspective;
         setStyle(this.el, this.name, this.style(this.current));
         this.redraw();
       }
@@ -1260,6 +1260,7 @@ module.exports = (function () {
       defaultUnit: 'px' // default unit added to <length> types
     , defaultAngle: 'deg' // default unit added to <angle> types
     , hideBackface: true // always hide backface on elements
+    , perspective: '' // optional default perspective value e.g. '1000px'
     , fallback: !support.transition // boolean to globally set fallback mode
     , agentTests: [] // array of userAgent test strings for sniffing
     // , remPixels: false // rems with pixel length fallback
