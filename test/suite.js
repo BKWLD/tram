@@ -42,7 +42,7 @@
 
   // --------------------------------------------------
   sink('Properties', function(test, ok, before, after) {
-
+    
     test('set() should set value immediately', 1, function () {
       tram($test).set({ opacity: 0.5 });
       ok(+$test.css('opacity') === 0.5, '');
@@ -50,6 +50,27 @@
     
   });
   
+  // --------------------------------------------------
+  sink('Display: none', function(test, ok, before, after) {
+    before(function () {
+      // Reset to zero / none
+      $test.css({ opacity: 0, display: 'none' });
+    });
+    
+    test('set().redraw() should update display value before transition', 1, function () {
+      setTimeout(function () {
+        tram($test).set({ display: 'block' }).redraw()
+          .add('opacity 300ms ease 100ms')
+          .start({ opacity: 1 });
+        
+        setTimeout(function () {
+          ok(+$test.css('opacity') < 1, '');
+        }, 20);
+      }, 0);
+    });
+    
+  });
+
   // --------------------------------------------------
   sink('Error Handling', function(test, ok, before, after) {
 
