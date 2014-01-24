@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.6.2-amd
+ * tram.js v0.6.3-amd
  * Cross-browser CSS3 transitions in JavaScript.
  * https://github.com/bkwld/tram
  * MIT License
@@ -407,6 +407,7 @@ define(['jquery'], function (jQuery) {
     chain('set', set);
     chain('show', show);
     chain('hide', hide);
+    chain('redraw', redraw);
     
     // Public add() - chainable
     function add(transition, options) {
@@ -571,6 +572,11 @@ define(['jquery'], function (jQuery) {
       // Stop all transitions before hiding the element
       stop.call(this);
       this.el.style.display = 'none';
+    }
+    
+    // Public redraw() - chainable
+    function redraw() {
+      this.el.offsetHeight;
     }
     
     // Update transition styles
