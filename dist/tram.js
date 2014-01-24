@@ -407,6 +407,7 @@ window.tram = (function (jQuery) {
     chain('set', set);
     chain('show', show);
     chain('hide', hide);
+    chain('redraw', redraw);
     
     // Public add() - chainable
     function add(transition, options) {
@@ -571,6 +572,11 @@ window.tram = (function (jQuery) {
       // Stop all transitions before hiding the element
       stop.call(this);
       this.el.style.display = 'none';
+    }
+    
+    // Public redraw() - chainable
+    function redraw() {
+      this.el.offsetHeight;
     }
     
     // Update transition styles
