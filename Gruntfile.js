@@ -14,12 +14,12 @@ module.exports = function(grunt) {
       return banner.replace('<%= flag %>', flag);
     }
   ;
-  
+
   // Grunt configuration
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     pjs: grunt.file.readJSON('node_modules/pjs/package.json'),
-    
+
     concat: {
       options: {
         banner: banner
@@ -57,14 +57,14 @@ module.exports = function(grunt) {
         ],
         dest: distFile + '-cjs' + js
       },
-      
+
       readme: {
         options: { banner: '<a style="float:right" href="<%= pkg.homepage %>">[view on github]</a> v<%= pkg.version %>\n\n' },
         src: ['README.md'],
         dest: 'index.md'
       }
     },
-    
+
     uglify: {
       options: {
         banner: bannerFlag('-global'),
@@ -77,14 +77,14 @@ module.exports = function(grunt) {
         dest: distFile + '-min' + js
       }
     },
-    
+
     watch: {
       scripts: {
         files: ['src/*.js'],
         tasks: ['clean', 'concat:global']
       }
     },
-    
+
     markdown: {
       all: {
         files: ['index.md'],
@@ -96,19 +96,19 @@ module.exports = function(grunt) {
       }
     }
   });
-  
+
   // Load the plugin tasks
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-markdown');
-  
+
   // Default task - trigger global concat and watch for dev.
   grunt.registerTask('default', ['clean', 'concat:global', 'watch']);
-  
+
   // Build task - concat and minify all.
   grunt.registerTask('build', ['clean', 'concat', 'uglify', 'markdown', 'clean-readme']);
-  
+
   // Clean tasks
   grunt.registerTask('clean', 'Clean dist files.', function () {
     grunt.file.delete(distPath);
@@ -118,5 +118,5 @@ module.exports = function(grunt) {
     grunt.file.delete('index.md');
     grunt.log.ok();
   });
-  
+
 };

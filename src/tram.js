@@ -1,7 +1,7 @@
   // --------------------------------------------------
   // Private vars
   /*global jQuery, P, easing, clamped */
-  
+
   var doc = document
     , win = window
     , store = 'bkwld-tram'
@@ -15,10 +15,10 @@
     , typeFancy = 'unitless'
     , space = ' '
   ;
-  
+
   // --------------------------------------------------
   // Private functions
-  
+
   // Simple feature detect, returns both dom + css prefixed names
   var testDiv = doc.createElement('a')
     , domPrefixes = ['Webkit', 'Moz', 'O', 'ms']
@@ -37,7 +37,7 @@
       if (domProp in testDiv.style) return { dom: domProp, css: cssPrefixes[i] + prop };
     }
   };
-  
+
   // Run feature tests
   var support = tram.support = {
       bind: Function.prototype.bind
@@ -46,7 +46,7 @@
     , backface: testFeature('backface-visibility')
     , timing: testFeature('transition-timing-function')
   };
-  
+
   // Modify easing variants for webkit clamp bug
   if (support.transition) {
     var timingProp = support.timing.dom;
@@ -56,7 +56,7 @@
       for (var x in clamped) easing[x][0] = clamped[x];
     }
   }
-  
+
   // Animation timer shim with setTimeout fallback
   var enterFrame = tram.frame = function () {
     var raf = win.requestAnimationFrame ||
@@ -69,7 +69,7 @@
       win.setTimeout(callback, 16);
     };
   }();
-  
+
   // Timestamp shim with fallback
   var timeNow = tram.now = function () {
     // use high-res timer if available
@@ -81,12 +81,12 @@
       return +(new Date);
     };
   }();
-  
+
   // --------------------------------------------------
   // Transition class - public API returned from the tram() wrapper.
-  
+
   var Transition = P(function(proto) {
-    
+
     proto.init = function (el) {
       this.$el = jQuery(el);
       this.el = this.$el[0];
@@ -98,7 +98,7 @@
       if (support.backface && config.hideBackface)
         setStyle(this.el, support.backface.css, 'hidden');
     };
-    
+
     // Public chainable methods
     chain('add', add);
     chain('start', start);
@@ -110,21 +110,21 @@
     chain('show', show);
     chain('hide', hide);
     chain('redraw', redraw);
-    
+
     // Public add() - chainable
     function add(transition, options) {
       // Parse transition settings
       var settings = compact(('' + transition).split(space));
       var name = settings[0];
       options = options || {};
-      
+
       // Get property definition from map
       var definition = propertyMap[name];
       if (!definition) return warn('Unsupported property: ' + name);
 
       // Ignore weak property additions
       if (options.weak && this.props[name]) return;
-      
+
       // Init property instance
       var Class = definition[0];
       var prop = this.props[name];
@@ -133,41 +133,46 @@
       prop.init(this.$el, settings, definition, options);
       return prop; // return for internal use
     }
-    
+
     // Public start() - chainable
     function start(options, fromQueue, queueArgs) {
       if (!options) return;
       var optionType = typeof options;
-      
+
       // Clear queue unless start was called from it
       if (!fromQueue) {
         this.timer && this.timer.destroy();
         this.queue = [];
         this.active = false;
       }
-      
+
       // If options is a number, wait for a delay and continue queue.
       if (optionType == 'number' && fromQueue) {
         this.timer = new Delay({ duration: options, context: this, complete: next });
         this.active = true;
         return;
       }
-      
+
       // If options is a string, invoke add() to modify transition settings
       if (optionType == 'string' && fromQueue) {
-        add.call(this, options, (queueArgs && queueArgs[1]));
+        switch (options) {
+          case 'hide': hide.call(this); break;
+          case 'stop': stop.call(this); break;
+          case 'redraw': redraw.call(this); break;
+          default: add.call(this, options, (queueArgs && queueArgs[1]));
+        }
         return next.call(this);
       }
-      
+
       // If options is a function, invoke it.
       if (optionType == 'function') {
         options.call(this, this);
         return;
       }
-      
+
       // If options is an object, start property tweens.
       if (optionType == 'object') {
-        
+
         // loop through each valid property
         var timespan = 0;
         eachProp.call(this, options, function (prop, value) {
@@ -182,7 +187,7 @@
         });
         // update main transition styles for active props
         updateStyles.call(this);
-        
+
         // start timer for total transition timespan
         if (timespan > 0) {
           this.timer = new Delay({ duration: timespan, context: this });
@@ -201,7 +206,7 @@
         });
       }
     }
-    
+
     // Public wait() - chainable
     function wait(time) {
       time = validTime(time, 0);
@@ -214,7 +219,7 @@
         this.active = true;
       }
     }
-    
+
     // Public then() - chainable
     function then(options) {
       if (!this.active) {
@@ -225,7 +230,7 @@
       // set timer complete callback
       this.timer.complete = next;
     }
-    
+
     // Public next() - chainable
     function next() {
       // stop current timer in case next() was called early
@@ -237,7 +242,7 @@
       var queued = this.queue.shift();
       start.call(this, queued.options, true, queued.args);
     }
-    
+
     // Public stop() - chainable
     function stop(options, memo) {
       this.timer && this.timer.destroy();
@@ -255,32 +260,32 @@
       eachProp.call(this, values, stopProp);
       updateStyles.call(this);
     }
-    
+
     // Public set() - chainable
     function set(values) {
       stop.call(this, values);
       eachProp.call(this, values, setProp, setExtras);
     }
-    
+
     // Public show() - chainable
     function show(display) {
       // Show an element by setting its display
       if (typeof display != 'string') display = 'block';
       this.el.style.display = display;
     }
-    
+
     // Public hide() - chainable
     function hide() {
       // Stop all transitions before hiding the element
       stop.call(this);
       this.el.style.display = 'none';
     }
-    
+
     // Public redraw() - chainable
     function redraw() {
       this.el.offsetHeight;
     }
-    
+
     // Update transition styles
     function updateStyles() {
       // build transition string from active props
@@ -296,7 +301,7 @@
       this.style = result;
       this.el.style[support.transition.dom] = result;
     }
-    
+
     // Loop through valid properties, auto-create them, and run iterator callback
     function eachProp(collection, iterator, ejector) {
       // skip auto-add during stop()
@@ -343,12 +348,12 @@
       // finally, eject the extras into space
       if (ejector && extras) ejector.call(this, extras);
     }
-    
+
     // Loop iterators
     function stopProp(prop) { prop.stop(); }
     function setProp(prop, value) { prop.set(value); }
     function setExtras(extras) { this.$el.css(extras); }
-    
+
     // Define a chainable method that takes children into account
     function chain(name, method) {
       proto[name] = function () {
@@ -357,7 +362,7 @@
         return this;
       };
     }
-    
+
     // Iterate through children and apply the method, return for chaining
     function eachChild(method, args) {
       var i, count = this.children.length;
@@ -367,19 +372,19 @@
       return this;
     }
   });
-  
+
   // Tram class - extends Transition + wraps child instances for chaining.
   var Tram = P(Transition, function (proto) {
-    
+
     proto.init = function (element, options) {
       var $elems = jQuery(element);
-      
+
       // Invalid selector, do nothing.
       if (!$elems.length) return this;
-      
+
       // Single case - return single Transition instance
       if ($elems.length === 1) return factory($elems[0], options);
-      
+
       // Store multiple instances for chaining
       var children = [];
       $elems.each(function (index, el) {
@@ -388,7 +393,7 @@
       this.children = children;
       return this;
     };
-    
+
     // Retrieve instance from data or create a new one.
     function factory(el, options) {
       var t = jQuery.data(el, store) || jQuery.data(el, store, new Transition.Bare());
@@ -397,18 +402,18 @@
       return t;
     }
   });
-  
+
   // --------------------------------------------------
   // Property class - get/set property values
-  
+
   var Property = P(function (proto) {
-    
+
     var defaults = {
         duration: 500
       , ease: 'ease'
       , delay: 0
     };
-    
+
     proto.init = function ($el, settings, definition, options) {
       // Initialize or extend settings
       this.$el = $el;
@@ -435,21 +440,21 @@
           (this.delay ? space + this.delay + 'ms' : '');
       }
     };
-    
+
     // Set value immediately
     proto.set = function (value) {
       value = this.convert(value, this.type);
       this.update(value);
       this.redraw();
     };
-    
+
     // CSS transition
     proto.transition = function (value) {
       // set new value to start transition
       this.active = true;
       this.nextStyle = this.convert(value, this.type);
     };
-    
+
     // Fallback tweening
     proto.fallback = function (value) {
       // start a new tween
@@ -463,17 +468,17 @@
         , context: this
       });
     };
-    
+
     // Get current element style
     proto.get = function () {
       return getStyle(this.el, this.name);
     };
-    
+
     // Update element style value
     proto.update = function (value) {
       setStyle(this.el, this.name, value);
     };
-    
+
     // Stop animation
     proto.stop = function () {
       this.tween && this.tween.destroy();
@@ -483,7 +488,7 @@
         setStyle(this.el, this.name, this.get());
       }
     };
-    
+
     // Convert value to expected type
     proto.convert = function (value, type) {
       var warnType
@@ -533,17 +538,17 @@
       typeWarning(warnType, value);
       return value;
     };
-    
+
     proto.redraw = function () {
       this.el.offsetHeight;
     };
-    
+
     // Make sure ease exists
     function validEase(ease, current, safe) {
       if (current !== undefined) safe = current;
       return ease in easing ? ease : safe;
     }
-    
+
     // Convert rgb and short hex to long hex
     function cssToHex(c) {
       var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
@@ -551,54 +556,54 @@
         .replace(/#(\w)(\w)(\w)$/, '#$1$1$2$2$3$3');
     }
   });
-  
+
   // --------------------------------------------------
   // Color prop
-  
+
   var Color = P(Property, function (proto, supr) {
-    
+
     proto.init = function () {
       supr.init.apply(this, arguments);
-      
+
       // Store original computed value to allow tweening to ''
       if (this.original) return;
       this.original = this.convert(this.get(), typeColor);
     };
   });
-  
+
   // --------------------------------------------------
   // Scroll prop
-  
+
   var Scroll = P(Property, function (proto, supr) {
-    
+
     proto.init = function () {
       supr.init.apply(this, arguments);
       this.animate = this.fallback;
     };
-    
+
     proto.get = function () {
       return this.$el[this.name]();
     };
-    
+
     proto.update = function (value) {
       this.$el[this.name](value);
     };
   });
-  
+
   // --------------------------------------------------
   // Transform prop w/ sub-properties
-  
+
   var Transform = P(Property, function (proto, supr) {
-    
+
     proto.init = function () {
       supr.init.apply(this, arguments);
-      
+
       // If a current state exists, return here
       if (this.current) return;
-      
+
       // Store transform state
       this.current = {};
-      
+
       // Set default perspective, if specified
       if (transformMap.perspective && config.perspective) {
         this.current.perspective = config.perspective;
@@ -606,22 +611,22 @@
         this.redraw();
       }
     };
-    
+
     proto.set = function (props) {
       // convert new props and store current values
       convertEach.call(this, props, function (name, value) {
         this.current[name] = value;
       });
-      
+
       // set element style immediately
       setStyle(this.el, this.name, this.style(this.current));
       this.redraw();
     };
-    
+
     proto.transition = function (props) {
       // convert new prop values and set defaults
       var values = this.values(props);
-      
+
       // create MultiTween to track values over time
       this.tween = new MultiTween({
           current: this.current
@@ -630,22 +635,22 @@
         , delay: this.delay
         , ease: this.ease
       });
-      
+
       // build temp object for final transition values
       var p, temp = {};
       for (p in this.current) {
         temp[p] = p in values ? values[p] : this.current[p];
       }
-      
+
       // set new value to start transition
       this.active = true;
       this.nextStyle = this.style(temp);
     };
-    
+
     proto.fallback = function (props) {
       // convert new prop values and set defaults
       var values = this.values(props);
-      
+
       // create MultiTween to track values over time
       this.tween = new MultiTween({
           current: this.current
@@ -657,12 +662,12 @@
         , context: this
       });
     };
-    
+
     // Update current values (called from MultiTween)
     proto.update = function () {
       setStyle(this.el, this.name, this.style(this.current));
     };
-    
+
     // Get combined style string from props
     proto.style = function (props) {
       var p, out = '';
@@ -671,7 +676,7 @@
       }
       return out;
     };
-    
+
     // Build values object and set defaults
     proto.values = function (props) {
       var values = {}, def;
@@ -686,7 +691,7 @@
       });
       return values;
     };
-    
+
     // Loop through each prop and output name + converted value
     function convertEach(props, iterator) {
       var p, name, type, definition, value;
@@ -699,35 +704,35 @@
       }
     }
   });
-  
+
   // --------------------------------------------------
   // Tween class - tweens values over time, based on frame timers.
-  
+
   var Tween = P(function (proto) {
-    
+
     // Private vars
     var defaults = {
         ease: easing.ease[1]
       , from: 0
       , to: 1
     };
-    
+
     proto.init = function (options) {
       // Init timing props
       this.duration = options.duration || 0;
       this.delay = options.delay || 0;
-      
+
       // Use ease function or key value from easing map
       var ease = options.ease || defaults.ease;
       if (easing[ease]) ease = easing[ease][1];
       if (typeof ease != 'function') ease = defaults.ease;
       this.ease = ease;
-      
+
       this.update = options.update || noop;
       this.complete = options.complete || noop;
       this.context = options.context || this;
       this.name = options.name;
-      
+
       // Format value and determine units
       var from = options.from;
       var to = options.to;
@@ -742,29 +747,29 @@
       }
       // Store value + unit in case it's accessed before delay is up
       this.value = this.begin + this.unit;
-      
+
       // Set start time for all Tween instances
       this.start = timeNow();
-      
+
       // Start tween (unless autoplay disabled)
       if (options.autoplay !== false) {
         this.play();
       }
     };
-    
+
     proto.play = function () {
       if (this.active) return;
       if (!this.start) this.start = timeNow();
       this.active = true;
       addRender(this);
     };
-    
+
     proto.stop = function () {
       if (!this.active) return;
       this.active = false;
       removeRender(this);
     };
-    
+
     proto.render = function (now) {
       var value, delta = now - this.start;
       // skip render during delay
@@ -789,7 +794,7 @@
       this.complete.call(this.context);
       this.destroy();
     };
-    
+
     // Format string values for tween
     proto.format = function (to, from) {
       // cast strings
@@ -816,7 +821,7 @@
       this.begin = this.value = from;
       this.change = to - from;
     };
-    
+
     // Clean up for garbage collection
     proto.destroy = function () {
       this.stop();
@@ -826,14 +831,14 @@
       this.context =
       null;
     };
-    
+
     // Add a tween to the render list
     var tweenList = [];
     function addRender(tween) {
       // if this is the first item, start the render loop
       if (tweenList.push(tween) === 1) enterFrame(renderLoop);
     }
-    
+
     // Loop through all tweens on each frame
     function renderLoop() {
       var i, now, tween, count = tweenList.length;
@@ -845,7 +850,7 @@
         tween && tween.render(now);
       }
     }
-    
+
     // Remove tween from render list
     function removeRender(tween) {
       var rest, index = jQuery.inArray(tween, tweenList);
@@ -855,13 +860,13 @@
         if (rest.length) tweenList = tweenList.concat(rest);
       }
     }
-    
+
     // Round number to limit decimals
     var factor = 1000;
     function round(value) {
       return Math.round(value * factor) / factor;
     }
-    
+
     // Interpolate rgb colors based on `position`, returns hex string
     function interpolate(start, end, position) {
       return rgbToHex(
@@ -871,17 +876,17 @@
       );
     }
   });
-  
+
   // Delay - simple delay timer that hooks into frame loop
   var Delay = P(Tween, function (proto) {
-    
+
     proto.init = function (options) {
       this.duration = options.duration || 0;
       this.complete = options.complete || noop;
       this.context = options.context;
       this.play();
     };
-    
+
     proto.render = function (now) {
       var delta = now - this.start;
       if (delta < this.duration) return;
@@ -889,15 +894,15 @@
       this.destroy();
     };
   });
-  
+
   // MultiTween - tween multiple properties on a single frame loop
   var MultiTween = P(Tween, function (proto, supr) {
-    
+
     proto.init = function (options) {
       // configure basic options
       this.context = options.context;
       this.update = options.update;
-      
+
       // create child tweens for each changed property
       this.tweens = [];
       this.current = options.current; // store direct reference
@@ -918,7 +923,7 @@
       // begin MultiTween render
       this.play();
     };
-    
+
     proto.render = function (now) {
       // render each child tween
       var i, tween, count = this.tweens.length;
@@ -934,15 +939,15 @@
       }
       // destroy and stop render if no longer alive
       if (!alive) return this.destroy();
-      
+
       // call update method
       this.update && this.update.call(this.context);
     };
-    
+
     proto.destroy = function () {
       supr.destroy.call(this);
       if (!this.tweens) return;
-      
+
       // Destroy all child tweens
       var i, count = this.tweens.length;
       for (i = count; i--;) {
@@ -952,16 +957,16 @@
       this.current = null;
     };
   });
-  
+
   // --------------------------------------------------
   // Main wrapper - returns a Tram instance with public chaining API.
-  
+
   function tram(element, options) {
     // Chain on the result of Tram.init() to optimize single case.
     var wrap = new Tram.Bare();
     return wrap.init(element, options);
   }
-  
+
   // Global tram config
   var config = tram.config = {
       defaultUnit: 'px' // default unit added to <length> types
@@ -973,7 +978,7 @@
     // , remPixels: false // rems with pixel length fallback
     // , remFontSize: 16 // used by remPixels option
   };
-  
+
   // fallback() static - browser sniff to force fallback mode
   //  Example: tram.fallback('firefox');
   //  Would match Firefox along with previously sniffed browsers.
@@ -986,24 +991,17 @@
   };
   // Default sniffs for browsers that support transitions badly ;_;
   tram.fallback('6.0.[2-5] Safari');
-  
-  // macro() static method
-  var macros = {};
-  tram.macro = function (name, options) {
-    // store a simple macro for the .start() method to use
-    macros[name] = options;
-  };
-  
-  // tween() static method
+
+  // tram.tween() static method
   tram.tween = function (options) {
     return new Tween(options);
   };
-  
-  // delay() static method
+
+  // tram.delay() static method
   tram.delay = function (duration, callback, context) {
     return new Delay({ complete: callback, duration: duration, context: context });
   };
-  
+
   // --------------------------------------------------
   // jQuery methods
 
@@ -1011,19 +1009,19 @@
   jQuery.fn.tram = function (options) {
     return tram.call(null, this, options);
   };
-  
+
   // Shortcuts for internal jQuery style getter / setter
   var setStyle = jQuery.style;
   var getStyle = jQuery.css;
-  
+
   // --------------------------------------------------
   // Property maps + unit values
-  
+
   // Prefixed property names
   var prefixed = {
     'transform': support.transform && support.transform.css
   };
-  
+
   // Main Property map { name: [ Class, valueType, expand ]}
   var propertyMap = {
       'color'                : [ Color, typeColor ]
@@ -1071,15 +1069,15 @@
     , 'scroll-left'          : [ Scroll, typeNumber, 'scrollLeft' ]
     // , 'background-position'  : [ Property, typeLenPerc ]
   };
-  
+
   // Transform property maps
   var transformMap = {};
-  
+
   if (support.transform) {
     // Add base properties if supported
     propertyMap['transform'] = [ Transform ];
     // propertyMap['transform-origin'] = [ Transform ];
-    
+
     // Transform sub-property map { name: [ valueType, expand ]}
     transformMap = {
         x:            [ typeLenPerc, 'translateX' ]
@@ -1095,7 +1093,7 @@
       , skewY:        [ typeAngle ]
     };
   }
-  
+
   // Add 3D transform props if supported
   if (support.transform && support.backface) {
     transformMap.z           = [ typeLenPerc, 'translateZ' ];
@@ -1103,16 +1101,16 @@
     transformMap.scaleZ      = [ typeNumber ];
     transformMap.perspective = [ typeLength ];
   }
-  
+
   // --------------------------------------------------
   // Utils
-  
+
   function toDashed(string) {
     return string.replace(/[A-Z]/g, function (letter) {
       return '-' + letter.toLowerCase();
     });
   }
-  
+
   function hexToRgb(hex) {
     var n = parseInt(hex.slice(1), 16);
     var r = (n >> 16) & 255;
@@ -1120,21 +1118,21 @@
     var b = n & 255;
     return [r,g,b];
   }
-  
+
   function rgbToHex(r, g, b) {
     return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
   }
-  
+
   function noop() {}
-  
+
   function typeWarning(exp, val) {
     warn('Type warning: Expected: [' + exp + '] Got: [' + typeof val + '] ' + val);
   }
-  
+
   function unitWarning(name, from, to) {
     warn('Units do not match [' + name + ']: ' + from + ', ' + to);
   }
-  
+
   // Normalize time values
   var milli = /ms/, seconds = /s|\./;
   function validTime(string, current, safe) {
@@ -1151,7 +1149,7 @@
     if (n < 0) n = 0; // no negative times
     return n === n ? n : safe; // protect from NaNs
   }
-  
+
   // Log warning message if supported
   var warn = (function () {
     var warn = 'warn';
@@ -1159,7 +1157,7 @@
     if (console && console[warn]) return function (msg) { console[warn](msg); };
     return noop;
   }());
-  
+
   // Lo-Dash compact()
   // MIT license <http://lodash.com/license>
   // Creates an array with all falsey values of `array` removed
@@ -1176,7 +1174,7 @@
     }
     return result;
   }
-  
+
   // --------------------------------------------------
   // Export public module.
   return jQuery.tram = tram;
