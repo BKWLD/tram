@@ -1,0 +1,31 @@
+{
+  "name": "tram",
+  "description": "Cross-browser CSS3 transitions in JavaScript",
+  "keywords": [
+    "animation",
+    "motion",
+    "css",
+    "tween",
+    "transition",
+    "transform"
+  ],
+  "version": "0.6.4",
+  "homepage": "https://github.com/BKWLD/tram",
+  "authors": [
+    "Dan Rogers <dan@danro.net>",
+    "Robert Reinhard <info@bkwld.com>"
+  ],
+  "license": "MIT",
+  "main": "dist/tram-umd.js",
+  "dependencies": {
+    "jquery": "*",
+  },
+  "ignore": [
+    "**/.*",
+    "support",
+    "src",
+    "examples",
+    "test",
+    "*"
+  ]
+}
