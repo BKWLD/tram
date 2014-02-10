@@ -9,7 +9,7 @@
     "transition",
     "transform"
   ],
-  "version": "0.6.4",
+  "version": "0.7.0",
   "homepage": "https://github.com/BKWLD/tram",
   "authors": [
     "Dan Rogers <dan@danro.net>",
