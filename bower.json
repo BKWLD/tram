@@ -27,6 +27,9 @@
     "examples",
     "test",
     "node_modules",
-    "/*.*"
+    "*.json",
+    "*.html",
+    "*.md",
+    "Gruntfile.js"
   ]
 }
