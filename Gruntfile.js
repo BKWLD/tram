@@ -57,6 +57,17 @@ module.exports = function(grunt) {
         ],
         dest: distFile + '-cjs' + js
       },
+      umd: {
+        options: { banner: bannerFlag('-umd') },
+        src: [
+          'support/umd/1.js',
+          'src/p.js',
+          'src/easing.js',
+          'src/<%= pkg.name %>.js',
+          'support/umd/2.js'
+        ],
+        dest: distFile + '-umd' + js
+      },
 
       readme: {
         options: { banner: '<a style="float:right" href="<%= pkg.homepage %>">[view on github]</a> v<%= pkg.version %>\n\n' },

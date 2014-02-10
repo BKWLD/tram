@@ -36,7 +36,7 @@ engine powered by [requestAnimationFrame][1] and [performance.now()][2].
 
 ### Basic usage
 
-Tram can be loaded via AMD, CommonJS or browser globals.
+Tram can be loaded via AMD, CommonJS, browser globals, or all of the above ([via UMD](https://github.com/umdjs/umd)).
 ```js
 var tram = window.tram;
 // or
