@@ -9,6 +9,7 @@ The idea behind Tram is to take the performance and flexibility of CSS transitio
 Tram currently depends on jQuery for a few reasons: (1) Per-element data API, (2) Cross-browser CSS getters/setters, and (3) scrollTop/Left offset helpers. Keep these features in mind when making custom jQuery builds or porting tram to your library.
 
 Available on npm: `npm install tram`
+Available on bower: `bower install BKWLD/tram`
 
 File size:
 
@@ -26,7 +27,7 @@ File size:
 
 ## How it works
 
-On first load, Tram will use feature detection to determine whether 
+On first load, Tram will use feature detection to determine whether
 the browser supports CSS transitions. If yes, Tram will manage styles
 and trust the browser to handle the frame by frame animation.
 If no, Tram will set styles on each frame, using its own tweening
@@ -253,20 +254,17 @@ A useful site with demos of most of these is [easings.net](http://easings.net/)
 
 ## TODO
 
-* Add remap({ x: 'left' }) method for shimming properties
 * Add .get(prop) method to return current value
 * Support array values for props like 'background-position'
-* Consider adding Bower support
-* Consider px -> rem unit conversion support
 
 ## Contributing
 
 1. If you'd like to contribute to this project, please submit all pull requests to the `dev` branch. Any pull requests sent to `master` will be closed. This is mostly to offset the convenience of having various dist/* files available on the master branch.
 
-2. Grunt CLI tools may be helpful. The following commands should start a watch script that concats source files on each save:  
-(from the root directory)  
-`npm install`  
-`make`  
+2. Grunt CLI tools may be helpful. The following commands should start a watch script that concats source files on each save:
+(from the root directory)
+`npm install grunt -g`
+`grunt`
 
 3. Once you're ready to send a pull request, please view `test/suite.html` in your browser to confirm that all tests are passing.
 
@@ -274,12 +272,12 @@ A useful site with demos of most of these is [easings.net](http://easings.net/)
 
 Special thanks to the following open source authors + libraries.
 
-@ded - https://github.com/ded/morpheus  
-@rstacruz - https://github.com/rstacruz/jquery.transit  
-@visionmedia - https://github.com/visionmedia/move.js  
+@ded - https://github.com/ded/morpheus
+@rstacruz - https://github.com/rstacruz/jquery.transit
+@visionmedia - https://github.com/visionmedia/move.js
 @jayferd - https://github.com/jayferd/pjs
 
-## MIT License 
+## MIT License
 
 This code may be freely distributed under the [MIT license](http://danro.mit-license.org/).
 

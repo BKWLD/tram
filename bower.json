@@ -27,6 +27,7 @@
     "examples",
     "test",
     "node_modules",
+    ".nojekyll",
     "*.json",
     "*.html",
     "*.md",
