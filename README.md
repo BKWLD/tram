@@ -9,7 +9,7 @@ The idea behind Tram is to take the performance and flexibility of CSS transitio
 Tram currently depends on jQuery for a few reasons: (1) Per-element data API, (2) Cross-browser CSS getters/setters, and (3) scrollTop/Left offset helpers. Keep these features in mind when making custom jQuery builds or porting tram to your library.
 
 Available on npm: `npm install tram`  
-Available on bower: `bower install BKWLD/tram`  
+Available on bower: `bower install tram`  
 
 File size:
 
