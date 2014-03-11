@@ -1,6 +1,6 @@
 /*!
- * tram.js v0.7.0-global
- * Cross-browser CSS3 transitions in JavaScript.
+ * tram.js v0.7.1-global
+ * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
  */
@@ -542,7 +542,7 @@ window.tram = (function (jQuery) {
     }
 
     // Public stop() - chainable
-    function stop(options, memo) {
+    function stop(options, jump) {
       this.timer && this.timer.destroy();
       this.queue = [];
       this.active = false;
@@ -550,12 +550,13 @@ window.tram = (function (jQuery) {
       if (typeof options == 'string') {
         values = {};
         values[options] = 1;
-      } else if (typeof options == 'object') {
+      } else if (typeof options == 'object' && options != null) {
         values = options;
       } else {
         values = this.props;
       }
-      eachProp.call(this, values, stopProp);
+      var stopIterator = jump ? stopJump : stopProp;
+      eachProp.call(this, values, stopIterator);
       updateStyles.call(this);
     }
 
@@ -603,7 +604,7 @@ window.tram = (function (jQuery) {
     // Loop through valid properties, auto-create them, and run iterator callback
     function eachProp(collection, iterator, ejector) {
       // skip auto-add during stop()
-      var autoAdd = iterator !== stopProp
+      var autoAdd = iterator !== stopProp && iterator !== stopJump
         , name
         , prop
         , value
@@ -649,6 +650,7 @@ window.tram = (function (jQuery) {
 
     // Loop iterators
     function stopProp(prop) { prop.stop(); }
+    function stopJump(prop) { prop.stop(true); }
     function setProp(prop, value) { prop.set(value); }
     function setExtras(extras) { this.$el.css(extras); }
 
@@ -778,12 +780,17 @@ window.tram = (function (jQuery) {
     };
 
     // Stop animation
-    proto.stop = function () {
-      this.tween && this.tween.destroy();
-      // Reset property to stop CSS transition
+    proto.stop = function (jump) {
+      // Stop CSS transition if active
       if (this.active) {
         this.active = false;
-        setStyle(this.el, this.name, this.get());
+        setStyle(this.el, this.name, jump ? this.nextStyle : this.get());
+      }
+      // Stop tween if it exists
+      var tween = this.tween;
+      if (tween) {
+        jump && tween.render(tween.start + tween.delay + tween.duration);
+        tween.destroy();
       }
     };
 
@@ -1123,11 +1130,8 @@ window.tram = (function (jQuery) {
     // Clean up for garbage collection
     proto.destroy = function () {
       this.stop();
-      this.ease =
-      this.update =
-      this.complete =
-      this.context =
-      null;
+      this.context = null;
+      this.ease = this.update = this.complete = noop;
     };
 
     // Add a tween to the render list
