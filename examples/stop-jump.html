@@ -22,6 +22,7 @@
 
     tram('.test1')
       .add('width 2s')
+      .set({ width: 80 })
       .start({ width: 300 });
 
     tram.delay(400, function () {
@@ -37,6 +38,7 @@
 
     tram('.test2')
       .add('width 2s')
+      .set({ width: 80 })
       .start({ width: 300 });
 
     tram.delay(400, function () {

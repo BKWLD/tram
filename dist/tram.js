@@ -555,9 +555,14 @@ window.tram = (function (jQuery) {
       } else {
         values = this.props;
       }
-      var stopIterator = jump ? stopJump : stopProp;
-      eachProp.call(this, values, stopIterator);
-      updateStyles.call(this);
+      if (jump) {
+        eachProp.call(this, values, pauseProp);
+        updateStyles.call(this);
+        eachProp.call(this, values, jumpProp);
+      } else {
+        eachProp.call(this, values, stopProp);
+        updateStyles.call(this);
+      }
     }
 
     // Public set() - chainable
@@ -603,14 +608,16 @@ window.tram = (function (jQuery) {
 
     // Loop through valid properties, auto-create them, and run iterator callback
     function eachProp(collection, iterator, ejector) {
-      // skip auto-add during stop()
-      var autoAdd = iterator !== stopProp && iterator !== stopJump
-        , name
-        , prop
-        , value
-        , matches = {}
-        , extras
-      ;
+      // skip auto-add during stop() or pause/jump to end
+      var autoAdd =
+        iterator !== stopProp &&
+        iterator !== pauseProp &&
+        iterator !== jumpProp;
+      var name;
+      var prop;
+      var value;
+      var matches = {};
+      var extras;
       // find valid properties in collection
       for (name in collection) {
         value = collection[name];
@@ -650,7 +657,8 @@ window.tram = (function (jQuery) {
 
     // Loop iterators
     function stopProp(prop) { prop.stop(); }
-    function stopJump(prop) { prop.stop(true); }
+    function pauseProp(prop) { prop.pause(); }
+    function jumpProp(prop) { prop.stop(true); }
     function setProp(prop, value) { prop.set(value); }
     function setExtras(extras) { this.$el.css(extras); }
 
@@ -728,6 +736,7 @@ window.tram = (function (jQuery) {
       this.delay = validTime(settings[3], this.delay, defaults.delay);
       this.span = this.duration + this.delay;
       this.active = false;
+      this.nextStyle = null;
       this.unit = options.unit || this.unit || config.defaultUnit;
       this.angle = options.angle || this.angle || config.defaultAngle;
       // Animate using tween fallback if necessary, otherwise use transition.
@@ -779,14 +788,25 @@ window.tram = (function (jQuery) {
       setStyle(this.el, this.name, value);
     };
 
-    // Stop animation
-    proto.stop = function (jump) {
-      // Stop CSS transition if active
+    // Pause animation before jumping to end
+    proto.pause = function () {
       if (this.active) {
         this.active = false;
-        setStyle(this.el, this.name, jump ? this.nextStyle : this.get());
+        this.update(this.get());
+        this.redraw(); // Redraw is necessary for Firefox before jumping to end
       }
-      // Stop tween if it exists
+    };
+
+    // Stop animation
+    proto.stop = function (jump) {
+      // Stop CSS transition
+      var nextStyle = this.nextStyle;
+      if (this.active || nextStyle) {
+        this.active = false;
+        this.nextStyle = null;
+        this.update(jump ? nextStyle : this.get());
+      }
+      // Stop fallback tween
       var tween = this.tween;
       if (tween) {
         jump && tween.render(tween.start + tween.delay + tween.duration);
