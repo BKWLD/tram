@@ -58,6 +58,31 @@
       ok(+$test.css('opacity') === 0.5, '');
     });
 
+    test('stop(null, true) should stop and jump to the end', 1, function () {
+      _tram
+        .set({ opacity: 0 })
+        .add('opacity 300ms ease 0')
+        .start({ opacity: 1 });
+
+      setTimeout(function () {
+        _tram.stop(null, true);
+        console.log($test.css('opacity'));
+        ok(+$test.css('opacity') === 1, '');
+      }, 100);
+    });
+
+    test('stop(null, true) should stop and jump to the end (fallback)', 1, function () {
+      _tram
+        .set({ opacity: 0 })
+        .add('opacity 300ms ease 0', { fallback: true })
+        .start({ opacity: 1 });
+
+      setTimeout(function () {
+        _tram.stop(null, true);
+        ok(+$test.css('opacity') === 1, '');
+      }, 100);
+    });
+
     test('then(string) should change transition settings', 1, function () {
       _tram
         .add('opacity 200ms')
