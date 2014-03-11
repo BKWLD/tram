@@ -793,7 +793,7 @@ window.tram = (function (jQuery) {
       if (this.active) {
         this.active = false;
         this.update(this.get());
-        this.redraw(); // Redraw is necessary for Firefox before jumping to end
+        this.redraw(); // Redraw is necessary for Firefox to immediately pause transition
       }
     };
 
