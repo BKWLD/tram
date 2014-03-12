@@ -6,28 +6,29 @@
   <title>tram.js example</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <link rel="stylesheet" href="../support/styles/example.css">
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="../node_modules/jquery-browser/lib/jquery.js"><\/script>')</script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../node_modules/jquery/dist/jquery.min.js"><\/script>')</script>
   <script src="../dist/tram.js"></script>
 </head>
 <body>
 
   <p>
-    Modify transition settings during a queued sequence. 
+    Modify transition settings during a queued sequence.
   </p>
 
   <div class="test"></div>
-  
+
   <script>
-    
+
     var test = $('.test');
-    
+
     tram(test)
-      .add('transform 400ms ease')
-      .start({ x: 200 })
+      .add('transform 500ms ease')
+      .set({ x: 0 })
+      .start({ x: 200, wait: 400 })
       .then('transform 800ms ease-in-out-expo')
       .then({ x: 0 });
-    
+
   </script>
 </body>
 </html>

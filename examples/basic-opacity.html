@@ -6,8 +6,8 @@
   <title>tram.js example</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <link rel="stylesheet" href="../support/styles/example.css">
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="../node_modules/jquery-browser/lib/jquery.js"><\/script>')</script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../node_modules/jquery/dist/jquery.min.js"><\/script>')</script>
   <script src="../dist/tram.js"></script>
 </head>
 <body>
@@ -28,11 +28,11 @@
     <div class="test wide"></div>
     <div class="test wide"></div>
   </div>
-  
+
   <script>
-    
+
     var $el = $('.test');
-    
+
     // intro fade in + callback
     tram($el)
       .add('opacity 1s ease-in-out')
@@ -41,7 +41,7 @@
       .then(function () {
         console.log('done!');
       });
-    
+
     // element on / off events
     function toggle(instance, opt, state) {
       instance
@@ -58,7 +58,7 @@
         toggle(instance, '800 ease-in-out', false);
       });
     });
-    
+
   </script>
 </body>
 </html>
