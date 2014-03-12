@@ -6,8 +6,8 @@
   <title>tram.js example</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <link rel="stylesheet" href="../support/styles/example.css">
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="../node_modules/jquery-browser/lib/jquery.js"><\/script>')</script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../node_modules/jquery/dist/jquery.min.js"><\/script>')</script>
   <script src="../dist/tram.js"></script>
 </head>
 <body>
@@ -15,16 +15,16 @@
   <p>
     Sequencing demo. Click or tap to change the sequence.
   </p>
-  
+
   <div class="funbox">
     <div class="abs test"></div>
   </div>
-  
+
   <script>
-    
+
     var $funbox = $('.funbox');
     var $test = $('.test');
-    
+
     // define transitions
     tram($test)
       .add('background 0.7s ease')
@@ -32,10 +32,10 @@
       .add('height 500ms ease-out-back')
       .add('transform 300ms ease-out-quint')
     ;
-    
+
     // start first sequence
     funtime();
-    
+
     // sequences
     function funtime() {
       tram($test)
@@ -46,7 +46,7 @@
         .then(funtime)
       ;
     }
-    
+
     function happytime() {
       tram($test)
         .start({ x: 100, y: 100, width: 200, height: 200, background: '#FF374E' })
@@ -56,14 +56,14 @@
         .then(happytime)
       ;
     }
-    
+
     function breaktime() {
       tram($test)
         .start({ rotate: 0, background: '' })
         .then(funtime)
       ;
     }
-    
+
     function slower() {
       tram($test)
         .add('width 1s')
@@ -71,7 +71,7 @@
         .add('transform 800ms')
       ;
     }
-    
+
     function faster() {
       tram($test)
         .add('width 500ms')
@@ -79,7 +79,7 @@
         .add('transform 300ms')
       ;
     }
-    
+
     // click events
     var touch = 'ontouchstart' in window;
     var clicks = 0;
@@ -91,7 +91,7 @@
         case 4: faster(); clicks = 0; break;
       }
     });
-    
+
   </script>
 </body>
 </html>

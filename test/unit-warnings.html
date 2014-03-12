@@ -6,8 +6,8 @@
   <title>tram.js example</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <link rel="stylesheet" href="../support/styles/example.css">
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="../node_modules/jquery-browser/lib/jquery.js"><\/script>')</script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../node_modules/jquery/dist/jquery.min.js"><\/script>')</script>
   <script src="../dist/tram.js"></script>
 </head>
 <body>
@@ -17,24 +17,24 @@
   </p>
 
   <div class="test"></div>
-  
+
   <script>
-    
+
     var test = $('.test');
-    
+
     tram(test)
       .add('transform 600ms ease-out-quint 400', { unit: '%', angle: 'rad' })
       .set({ x: 100 })
       .start({ x: 0 });
-    
+
     tram.delay(200, next);
-    
+
     function next() {
       tram(test)
         .add('transform 400ms ease 0')
         .start({ x: 200, y: 200, rotate: 3 });
     }
-    
+
   </script>
 </body>
 </html>
