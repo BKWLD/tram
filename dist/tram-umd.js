@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.7.1-umd
+ * tram.js v0.7.2-umd
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
@@ -827,7 +827,7 @@
       }
       // Stop fallback tween
       var tween = this.tween;
-      if (tween) {
+      if (tween && tween.active) {
         jump && tween.render(tween.start + tween.delay + tween.duration);
         tween.destroy();
       }
