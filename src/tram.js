@@ -510,7 +510,7 @@
       }
       // Stop fallback tween
       var tween = this.tween;
-      if (tween) {
+      if (tween && tween.active) {
         jump && tween.render(tween.start + tween.delay + tween.duration);
         tween.destroy();
       }
