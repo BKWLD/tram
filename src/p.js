@@ -87,7 +87,7 @@
 
         return C;
       };
-      
+
       return C.open(definition);
     }
 
