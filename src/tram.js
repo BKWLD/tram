@@ -503,10 +503,10 @@
     proto.stop = function (jump) {
       // Stop CSS transition
       var nextStyle = this.nextStyle;
-      if (this.active || nextStyle) {
+      if (this.active || nextStyle || jump) {
         this.active = false;
         this.nextStyle = null;
-        this.update(jump ? nextStyle : this.get());
+        this.update(jump ? nextStyle : this.get(), jump);
       }
       // Stop fallback tween
       var tween = this.tween;
@@ -691,8 +691,9 @@
     };
 
     // Update current values (called from MultiTween)
-    proto.update = function () {
-      setStyle(this.el, this.name, this.style(this.current));
+    proto.update = function (value, force) {
+      value = force ? value : this.style(this.current);
+      setStyle(this.el, this.name, value);
     };
 
     // Get combined style string from props
