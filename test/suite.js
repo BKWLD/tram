@@ -47,6 +47,24 @@
   });
 
   // --------------------------------------------------
+  sink('Performance', function(test, ok, before, after) {
+
+    test('Tweens should clear context when finished', 1, function () {
+      var tween = tram.tween({
+        from: 0,
+        to: 1,
+        duration: 100,
+        complete: function () {
+          setTimeout(function () {
+            ok(tween.context == null, 'Tween context is null');
+          }, 1);
+        }
+      });
+    });
+
+  });
+
+  // --------------------------------------------------
   sink('Methods', function(test, ok, before, after) {
 
     before(function () {
