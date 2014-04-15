@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.7.4-global
+ * tram.js v0.7.5-global
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
@@ -311,6 +311,7 @@ window.tram = (function (jQuery) {
     , typeLenPerc = /(em|cm|mm|in|pt|pc|px|%)$/
     , typeAngle = /(deg|rad|turn)$/
     , typeFancy = 'unitless'
+    , allowAuto = /^(width|height)$/
     , space = ' '
   ;
 
@@ -542,7 +543,7 @@ window.tram = (function (jQuery) {
     }
 
     // Public stop() - chainable
-    function stop(options, jump) {
+    function stop(options) {
       this.timer && this.timer.destroy();
       this.queue = [];
       this.active = false;
@@ -555,14 +556,8 @@ window.tram = (function (jQuery) {
       } else {
         values = this.props;
       }
-      if (jump) {
-        eachProp.call(this, values, pauseProp);
-        updateStyles.call(this);
-        eachProp.call(this, values, jumpProp);
-      } else {
-        eachProp.call(this, values, stopProp);
-        updateStyles.call(this);
-      }
+      eachProp.call(this, values, stopProp);
+      updateStyles.call(this);
     }
 
     // Public set() - chainable
@@ -608,11 +603,8 @@ window.tram = (function (jQuery) {
 
     // Loop through valid properties, auto-create them, and run iterator callback
     function eachProp(collection, iterator, ejector) {
-      // skip auto-add during stop() or pause/jump to end
-      var autoAdd =
-        iterator !== stopProp &&
-        iterator !== pauseProp &&
-        iterator !== jumpProp;
+      // skip auto-add during stop()
+      var autoAdd = iterator !== stopProp;
       var name;
       var prop;
       var value;
@@ -657,8 +649,6 @@ window.tram = (function (jQuery) {
 
     // Loop iterators
     function stopProp(prop) { prop.stop(); }
-    function pauseProp(prop) { prop.pause(); }
-    function jumpProp(prop) { prop.stop(true); }
     function setProp(prop, value) { prop.set(value); }
     function setExtras(extras) { this.$el.css(extras); }
 
@@ -737,6 +727,7 @@ window.tram = (function (jQuery) {
       this.span = this.duration + this.delay;
       this.active = false;
       this.nextStyle = null;
+      this.auto = allowAuto.test(this.name);
       this.unit = options.unit || this.unit || config.defaultUnit;
       this.angle = options.angle || this.angle || config.defaultAngle;
       // Animate using tween fallback if necessary, otherwise use transition.
@@ -761,15 +752,23 @@ window.tram = (function (jQuery) {
     proto.transition = function (value) {
       // set new value to start transition
       this.active = true;
-      this.nextStyle = this.convert(value, this.type);
+      value = this.convert(value, this.type);
+      if (this.auto) {
+        // when transitioning from 'auto', we must always reset to computed
+        this.update(this.get());
+        if (value == 'auto') value = getAuto.call(this);
+      }
+      this.nextStyle = value;
     };
 
     // Fallback tweening
     proto.fallback = function (value) {
-      // start a new tween
+      var from = this.el.style[this.name] || this.convert(this.get(), this.type);
+      value = this.convert(value, this.type);
+      if (this.auto && value == 'auto') value = getAuto.call(this);
       this.tween = new Tween({
-          from: this.convert(this.get(), this.type)
-        , to: this.convert(value, this.type)
+          from: from
+        , to: value
         , duration: this.duration
         , delay: this.delay
         , ease: this.ease
@@ -788,34 +787,22 @@ window.tram = (function (jQuery) {
       setStyle(this.el, this.name, value);
     };
 
-    // Pause animation before jumping to end
-    proto.pause = function () {
-      if (this.active) {
-        this.active = false;
-        this.update(this.get());
-        this.redraw(); // Redraw is necessary for Firefox to immediately pause transition
-      }
-    };
-
     // Stop animation
-    proto.stop = function (jump) {
+    proto.stop = function () {
       // Stop CSS transition
-      var nextStyle = this.nextStyle;
-      if (this.active || nextStyle || jump) {
+      if (this.active || this.nextStyle) {
         this.active = false;
         this.nextStyle = null;
-        this.update(jump ? nextStyle : this.get(), jump);
+        setStyle(this.el, this.name, this.get());
       }
       // Stop fallback tween
       var tween = this.tween;
-      if (tween && tween.context) {
-        jump && tween.render(tween.start + tween.delay + tween.duration);
-        tween.destroy();
-      }
+      if (tween && tween.context) tween.destroy();
     };
 
     // Convert value to expected type
     proto.convert = function (value, type) {
+      if (value == 'auto' && this.auto) return value;
       var warnType
         , number = typeof value == 'number'
         , string = typeof value == 'string'
@@ -867,6 +854,15 @@ window.tram = (function (jQuery) {
     proto.redraw = function () {
       this.el.offsetHeight;
     };
+
+    // Calculate expected value for animating towards 'auto'
+    function getAuto() {
+      var oldVal = this.get();
+      this.update('auto');
+      var newVal = this.get();
+      this.update(oldVal);
+      return newVal;
+    }
 
     // Make sure ease exists
     function validEase(ease, current, safe) {
@@ -989,9 +985,8 @@ window.tram = (function (jQuery) {
     };
 
     // Update current values (called from MultiTween)
-    proto.update = function (value, force) {
-      value = force ? value : this.style(this.current);
-      setStyle(this.el, this.name, value);
+    proto.update = function () {
+      setStyle(this.el, this.name, this.style(this.current));
     };
 
     // Get combined style string from props
@@ -1110,13 +1105,13 @@ window.tram = (function (jQuery) {
         value = this.startRGB ? interpolate(this.startRGB, this.endRGB, position)
           : round(this.begin + (position * this.change));
         this.value = value + this.unit;
-        this.update.call(this.context, value);
+        this.update.call(this.context, this.value);
         return;
       }
       // we're done, set final value and destroy
       value = this.endHex || this.begin + this.change;
       this.value = value + this.unit;
-      this.update.call(this.context, value);
+      this.update.call(this.context, this.value);
       this.complete.call(this.context);
       this.destroy();
     };

@@ -23,7 +23,7 @@ File size:
 * [scroll-top-left](http://bkwld.github.io/tram/examples/scroll-top-left.html)
 * [sequencing](http://bkwld.github.io/tram/examples/sequencing.html)
 * [modify-settings](http://bkwld.github.io/tram/examples/modify-settings.html)
-* [stop-jump](http://bkwld.github.io/tram/examples/stop-jump.html)
+* [to-from-auto](http://bkwld.github.io/tram/examples/to-from-auto.html)
 * [transforms](http://bkwld.github.io/tram/examples/transforms.html)
 * [wait-usage](http://bkwld.github.io/tram/examples/wait-usage.html)
 
