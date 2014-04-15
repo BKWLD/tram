@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.7.5-umd
+ * tram.js v0.7.6-umd
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
@@ -784,7 +784,10 @@
     proto.fallback = function (value) {
       var from = this.el.style[this.name] || this.convert(this.get(), this.type);
       value = this.convert(value, this.type);
-      if (this.auto && value == 'auto') value = getAuto.call(this);
+      if (this.auto) {
+        if (from == 'auto') from = this.convert(this.get(), this.type);
+        if (value == 'auto') value = getAuto.call(this);
+      }
       this.tween = new Tween({
           from: from
         , to: value
