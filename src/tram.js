@@ -13,6 +13,7 @@
     , typeLenPerc = /(em|cm|mm|in|pt|pc|px|%)$/
     , typeAngle = /(deg|rad|turn)$/
     , typeFancy = 'unitless'
+    , allowAuto = /^(width|height)$/
     , space = ' '
   ;
 
@@ -439,6 +440,7 @@
       this.span = this.duration + this.delay;
       this.active = false;
       this.nextStyle = null;
+      this.auto = allowAuto.test(this.name);
       this.unit = options.unit || this.unit || config.defaultUnit;
       this.angle = options.angle || this.angle || config.defaultAngle;
       // Animate using tween fallback if necessary, otherwise use transition.
@@ -463,15 +465,28 @@
     proto.transition = function (value) {
       // set new value to start transition
       this.active = true;
-      this.nextStyle = this.convert(value, this.type);
+      value = this.convert(value, this.type);
+      if (this.auto) {
+        // to transition from 'auto', we must always reset to computed value
+        this.update(this.get());
+        if (value == 'auto') value = getAuto.call(this);
+      }
+      this.nextStyle = value;
     };
 
     // Fallback tweening
     proto.fallback = function (value) {
       // start a new tween
+      value = this.convert(value, this.type);
+      if (this.auto && value == 'auto') value = getAuto.call(this);
+
+      // TODO
+      console.log('from', this.convert(this.get(), this.type));
+      console.log('to', value);
+
       this.tween = new Tween({
           from: this.convert(this.get(), this.type)
-        , to: this.convert(value, this.type)
+        , to: value
         , duration: this.duration
         , delay: this.delay
         , ease: this.ease
@@ -518,6 +533,7 @@
 
     // Convert value to expected type
     proto.convert = function (value, type) {
+      if (value == 'auto' && this.auto) return value;
       var warnType
         , number = typeof value == 'number'
         , string = typeof value == 'string'
@@ -569,6 +585,16 @@
     proto.redraw = function () {
       this.el.offsetHeight;
     };
+
+    // Calculate expected value for animating towards 'auto'
+    function getAuto() {
+      // calculate expected value
+      var oldVal = this.get();
+      this.update('auto');
+      var newVal = this.get();
+      this.update(oldVal);
+      return newVal;
+    }
 
     // Make sure ease exists
     function validEase(ease, current, safe) {

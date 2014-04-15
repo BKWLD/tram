@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>tram.js example</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="../support/styles/example.css">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../node_modules/jquery/dist/jquery.min.js"><\/script>')</script>
+  <script src="../dist/tram.js"></script>
+</head>
+<body>
+
+  <p>
+    Testing percentage values in fallback mode.
+  </p>
+
+  <div class="test"></div>
+
+  <script>
+
+    var test = $('.test');
+
+    tram(test)
+      .add('width 500ms', { fallback: true })
+      .set({ width: '50%' })
+      .start({ width: '100%' });
+
+  </script>
+</body>
+</html>
