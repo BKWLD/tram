@@ -774,16 +774,11 @@ window.tram = (function (jQuery) {
 
     // Fallback tweening
     proto.fallback = function (value) {
-      // start a new tween
+      var from = this.el.style[this.name] || this.convert(this.get(), this.type);
       value = this.convert(value, this.type);
       if (this.auto && value == 'auto') value = getAuto.call(this);
-
-      // TODO
-      console.log('from', this.convert(this.get(), this.type));
-      console.log('to', value);
-
       this.tween = new Tween({
-          from: this.convert(this.get(), this.type)
+          from: from
         , to: value
         , duration: this.duration
         , delay: this.delay
@@ -886,7 +881,6 @@ window.tram = (function (jQuery) {
 
     // Calculate expected value for animating towards 'auto'
     function getAuto() {
-      // calculate expected value
       var oldVal = this.get();
       this.update('auto');
       var newVal = this.get();
@@ -1136,13 +1130,13 @@ window.tram = (function (jQuery) {
         value = this.startRGB ? interpolate(this.startRGB, this.endRGB, position)
           : round(this.begin + (position * this.change));
         this.value = value + this.unit;
-        this.update.call(this.context, value);
+        this.update.call(this.context, this.value);
         return;
       }
       // we're done, set final value and destroy
       value = this.endHex || this.begin + this.change;
       this.value = value + this.unit;
-      this.update.call(this.context, value);
+      this.update.call(this.context, this.value);
       this.complete.call(this.context);
       this.destroy();
     };
