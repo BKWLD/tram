@@ -71,8 +71,8 @@ p {
 .row {
   clear: both;
   max-width: 700px;
-  *zoom: 1;
 }
+
 .row:after {
   content: "";
   display: table;
