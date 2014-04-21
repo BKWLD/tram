@@ -17,7 +17,7 @@
 <body>
 
   <p>
-    Transition height from pixels to 'auto'.
+    Transition pixels -> 'auto'.
   </p>
 
   <div class="test test1">
@@ -39,7 +39,7 @@
   </script>
 
   <p>
-    Transition width from 'auto' to pixels.
+    Transition 'auto' -> pixels.
   </p>
 
   <div class="test test2"></div>
@@ -50,8 +50,8 @@
     test2.width('auto');
 
     tram(test2)
-      .add('width 500ms ease')
-      .start({ width: 200 })
+      .add('width 1s ease')
+      .start({ width: 0 });
 
   </script>
 
