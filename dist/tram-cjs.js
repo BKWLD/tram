@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.7.6-commonjs
+ * tram.js v0.7.7-commonjs
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
@@ -755,8 +755,11 @@ module.exports = (function () {
       this.active = true;
       value = this.convert(value, this.type);
       if (this.auto) {
-        // when transitioning from 'auto', we must always reset to computed
-        this.update(this.get());
+        // when transitioning from 'auto', we must reset to computed
+        if (this.el.style[this.name] == 'auto') {
+          this.update(this.get());
+          this.redraw();
+        }
         if (value == 'auto') value = getAuto.call(this);
       }
       this.nextStyle = value;
