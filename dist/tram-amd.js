@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.7.7-amd
+ * tram.js v0.7.8-amd
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
@@ -393,9 +393,17 @@ define(['jquery'], function (jQuery) {
       this.queue = [];
       this.style = '';
       this.active = false;
+
+      // store inherited transitions from css styles
+      if (config.keepInherited && !config.fallback) {
+        var upstream = getStyle(this.el, 'transition');
+        if (upstream && upstream != 'all 0s ease 0s') this.upstream = upstream;
+      }
+
       // hide backface if supported, for better perf
-      if (support.backface && config.hideBackface)
+      if (support.backface && config.hideBackface) {
         setStyle(this.el, support.backface.css, 'hidden');
+      }
     };
 
     // Public chainable methods
@@ -589,6 +597,7 @@ define(['jquery'], function (jQuery) {
     function updateStyles() {
       // build transition string from active props
       var p, prop, result = [];
+      if (this.upstream) result.push(this.upstream);
       for (p in this.props) {
         prop = this.props[p];
         if (!prop.active) continue;
@@ -1295,6 +1304,7 @@ define(['jquery'], function (jQuery) {
   var config = tram.config = {
       defaultUnit: 'px' // default unit added to <length> types
     , defaultAngle: 'deg' // default unit added to <angle> types
+    , keepInherited: false // whether to keep inherited CSS transitions
     , hideBackface: true // always hide backface on elements
     , perspective: '' // optional default perspective value e.g. '1000px'
     , fallback: !support.transition // boolean to globally set fallback mode
