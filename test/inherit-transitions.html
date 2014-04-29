@@ -17,6 +17,12 @@
     transition: all 2s, background-color 0;
     transition: all 2s, background-color 0;
   }
+  .test2 {
+    -webkit-transition: none 0s ease 0s;
+    -o-transition: none 0s ease 0s;
+    transition: none 0s ease 0s;
+    transition: none 0s ease 0s;
+  }
 </style>
 <body>
 
@@ -25,6 +31,7 @@
   </p>
 
   <div class="test"></div>
+  <div class="test test2"></div>
 
   <script>
     tram.config.keepInherited = true;

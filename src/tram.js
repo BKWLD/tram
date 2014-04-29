@@ -13,6 +13,7 @@
     , typeLenPerc = /(em|cm|mm|in|pt|pc|px|%)$/
     , typeAngle = /(deg|rad|turn)$/
     , typeFancy = 'unitless'
+    , emptyTrans = /(all|none) 0s ease 0s/
     , allowAuto = /^(width|height)$/
     , space = ' '
   ;
@@ -99,7 +100,7 @@
       // store inherited transitions from css styles
       if (config.keepInherited && !config.fallback) {
         var upstream = getStyle(this.el, 'transition');
-        if (upstream && upstream != 'all 0s ease 0s') this.upstream = upstream;
+        if (upstream && !emptyTrans.test(upstream)) this.upstream = upstream;
       }
 
       // hide backface if supported, for better perf
