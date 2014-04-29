@@ -1,7 +1,7 @@
 {
   "name": "tram",
   "description": "Cross-browser CSS3 transitions in JavaScript",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "homepage": "https://github.com/bkwld/tram",
   "author": "Dan Rogers <dan@danro.net>",
   "license": "MIT",
