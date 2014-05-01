@@ -1007,8 +1007,8 @@
   var config = tram.config = {
       defaultUnit: 'px' // default unit added to <length> types
     , defaultAngle: 'deg' // default unit added to <angle> types
-    , keepInherited: false // whether to keep inherited CSS transitions
-    , hideBackface: true // always hide backface on elements
+    , keepInherited: false // optionally keep inherited CSS transitions
+    , hideBackface: false // optionally hide backface on all elements
     , perspective: '' // optional default perspective value e.g. '1000px'
     , fallback: !support.transition // boolean to globally set fallback mode
     , agentTests: [] // array of userAgent test strings for sniffing
