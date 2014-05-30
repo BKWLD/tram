@@ -79,6 +79,7 @@ module.exports = function(grunt) {
     uglify: {
       options: {
         banner: bannerFlag('-global'),
+        footer: '\n',
         mangle: true,
         compress: true,
         report: 'gzip'
