@@ -104,6 +104,7 @@
     });
 
     test('then(\'stop\') should remove the transition', 1, function () {
+      // No transition support
       if (!transition) return ok(true, '');
 
       _tram
@@ -120,6 +121,17 @@
           ok(!el.style[transition.dom], '');
         }, 0);
       }
+    });
+
+    test('destroy() should remove element data and references', 1, function() {
+      var victim = $('#victim')[0];
+      var _victim = tram(victim).start({ opacity: 1 }).destroy();
+
+      var empty = true;
+      for (var key in $.data(victim)) { empty = false; }
+      var reset = _victim.$el == null && _victim.el == null;
+
+      ok(empty && reset, '');
     });
 
   });
