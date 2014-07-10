@@ -110,10 +110,10 @@
     </style>
   </head>
   <body>  
-    <p><a style="float:right" href="https://github.com/bkwld/tram">[view on github]</a> v0.8.0</p>
-<h1>tram.js</h1>
+    <p><a style="float:right" href="https://github.com/bkwld/tram">[view on github]</a> v0.8.1</p>
+<h1 id="tram-js">tram.js</h1>
 <p>Cross-browser CSS3 transitions in JavaScript.</p>
-<h2>About</h2>
+<h2 id="about">About</h2>
 <p>The idea behind Tram is to take the performance and flexibility of CSS transitions and define them in JavaScript - offering a more powerful, expressive API with auto-stopping, sequencing, and cross-browser fallbacks.</p>
 <p>Tram currently depends on jQuery for a few reasons: (1) Per-element data API, (2) Cross-browser CSS getters/setters, and (3) scrollTop/Left offset helpers. Keep these features in mind when making custom jQuery builds or porting tram to your library.</p>
 <p>Available on npm: <code>npm install tram</code><br>Available on bower: <code>bower install tram</code>  </p>
@@ -123,7 +123,7 @@
 <li>min ~<code>16 kb</code></li>
 <li>gzip ~<code>4 kb</code></li>
 </ul>
-<h2>Examples</h2>
+<h2 id="examples">Examples</h2>
 <ul>
 <li><a href="http://bkwld.github.io/tram/examples/basic-opacity.html">basic-opacity</a></li>
 <li><a href="http://bkwld.github.io/tram/examples/scroll-top-left.html">scroll-top-left</a></li>
@@ -133,14 +133,14 @@
 <li><a href="http://bkwld.github.io/tram/examples/transforms.html">transforms</a></li>
 <li><a href="http://bkwld.github.io/tram/examples/wait-usage.html">wait-usage</a></li>
 </ul>
-<h2>How it works</h2>
+<h2 id="how-it-works">How it works</h2>
 <p>On first load, Tram will use feature detection to determine whether 
 the browser supports CSS transitions. If yes, Tram will manage styles
 and trust the browser to handle the frame by frame animation.
 If no, Tram will set styles on each frame, using its own tweening
 engine powered by <a href="http://paulirish.com/2011/requestanimationframe-for-smart-animating/" title="requestAnimationFrame">requestAnimationFrame</a> and <a href="http://updates.html5rocks.com/2012/05/requestAnimationFrame-API-now-with-sub-millisecond-precision" title="performance.now()">performance.now()</a>.</p>
 <p><em>Please keep your arms and legs inside the tram at all times.</em></p>
-<h3>Basic usage</h3>
+<h3 id="basic-usage">Basic usage</h3>
 <p>Tram can be loaded via AMD, CommonJS, browser globals, or all of the above (<a href="https://github.com/umdjs/umd">via UMD</a>).</p>
 <pre><code class="lang-js"><span class="keyword">var</span> tram = window.tram;
 <span class="comment">// or</span>
@@ -175,11 +175,11 @@ engine powered by <a href="http://paulirish.com/2011/requestanimationframe-for-s
 tram(element).stop({ opacity: <span class="keyword">true</span>, x: <span class="keyword">true</span> }); <span class="comment">// multiple properties</span>
 tram(element).stop(); <span class="comment">// stops all property transitions</span></code></pre>
 <p>That&#39;s about it. For more, check out the <a href="examples">examples</a> or refer to the docs below.</p>
-<h2>Methods</h2>
+<h2 id="methods">Methods</h2>
 <p>TODO document each method</p>
-<h2>Properties</h2>
+<h2 id="properties">Properties</h2>
 <p>Browser support for transitioning DOM properties is limited, so Tram attempts to cover the most common cross-browser properties, plus a few extras. This list was compiled using CSS animation specs <a href="http://oli.jp/2010/css-animatable-properties/" title="oli.jp">here</a> and <a href="http://www.w3.org/TR/css3-transitions/#properties-from-css-" title="w3.org">here</a>.</p>
-<h3>Supported property names / values</h3>
+<h3 id="supported-property-names-values">Supported property names / values</h3>
 <pre><code class="lang-js">'color'                <span class="comment">// color</span>
 'background'           <span class="comment">// color</span>
 'outline-color'        <span class="comment">// color</span>
@@ -231,7 +231,7 @@ tram(element).stop(); <span class="comment">// stops all property transitions</s
 <span class="comment">// 'clip'                 // [x, y, w, h] rectangle</span>
 <span class="comment">// 'crop'                 // [x, y, w, h] rectangle</span></code></pre>
 <p><strong>Note:</strong> <code>dash-style</code> names are required for <code>.add()</code>, but other methods like <code>.start()</code> and <code>.stop()</code> may use <code>camelCase</code>.</p>
-<h3>Transforms</h3>
+<h3 id="transforms">Transforms</h3>
 <p>TODO describe transform shortcuts w/ examples</p>
 <pre><code class="lang-js"><span class="string">'x'</span>                    <span class="comment">// length, percentage</span>
 <span class="string">'y'</span>                    <span class="comment">// length, percentage</span>
@@ -248,7 +248,7 @@ tram(element).stop(); <span class="comment">// stops all property transitions</s
 <span class="string">'skewX'</span>                <span class="comment">// angle</span>
 <span class="string">'skewY'</span>                <span class="comment">// angle</span>
 <span class="string">'perspective'</span>          <span class="comment">// length</span></code></pre>
-<h3>Easings</h3>
+<h3 id="easings">Easings</h3>
 <p>A useful site with demos of most of these is <a href="http://easings.net/">easings.net</a></p>
 <pre><code class="lang-js">// Defaults
 <span class="attribute">'ease</span>'
@@ -296,12 +296,12 @@ tram(element).stop(); <span class="comment">// stops all property transitions</s
 <span class="attribute">'ease</span>-<span class="keyword">in</span>-back'
 <span class="attribute">'ease</span>-<span class="keyword">out</span>-back'
 <span class="attribute">'ease</span>-<span class="keyword">in</span>-<span class="keyword">out</span>-back'</code></pre>
-<h2>TODO</h2>
+<h2 id="todo">TODO</h2>
 <ul>
 <li>Add .get(prop) method to return current value</li>
 <li>Support array values for props like &#39;background-position&#39;</li>
 </ul>
-<h2>Contributing</h2>
+<h2 id="contributing">Contributing</h2>
 <ol>
 <li><p>If you&#39;d like to contribute to this project, please submit all pull requests to the <code>dev</code> branch. Any pull requests sent to <code>master</code> will be closed. This is mostly to offset the convenience of having various dist/* files available on the master branch.</p>
 </li>
@@ -310,12 +310,12 @@ tram(element).stop(); <span class="comment">// stops all property transitions</s
 <li><p>Once you&#39;re ready to send a pull request, please view <code>test/suite.html</code> in your browser to confirm that all tests are passing.</p>
 </li>
 </ol>
-<h2>Thanks</h2>
+<h2 id="thanks">Thanks</h2>
 <p>Special thanks to the following open source authors + libraries.</p>
 <p>@ded - <a href="https://github.com/ded/morpheus">https://github.com/ded/morpheus</a><br>@rstacruz - <a href="https://github.com/rstacruz/jquery.transit">https://github.com/rstacruz/jquery.transit</a><br>@visionmedia - <a href="https://github.com/visionmedia/move.js">https://github.com/visionmedia/move.js</a><br>@jayferd - <a href="https://github.com/jayferd/pjs">https://github.com/jayferd/pjs</a>  </p>
-<h2>MIT License</h2>
+<h2 id="mit-license">MIT License</h2>
 <p>This code may be freely distributed under the <a href="http://danro.mit-license.org/">MIT license</a>.</p>
-<h3>Terms Of Use - Easing Equations</h3>
+<h3 id="terms-of-use-easing-equations">Terms Of Use - Easing Equations</h3>
 <p>Open source under the <a href="http://www.opensource.org/licenses/bsd-license.php">BSD License</a>.</p>
 <p>Copyright © 2001 Robert Penner
 All rights reserved.</p>

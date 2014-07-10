@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.8.0-umd
+ * tram.js v0.8.1-umd
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
@@ -321,7 +321,7 @@
 
   var doc = document
     , win = window
-    , store = 'bkwld-tram'
+    , dataKey = 'bkwld-tram'
     , unitRegex = /[\-\.0-9]/g
     , capsRegex = /[A-Z]/
     , typeNumber = 'number'
@@ -437,6 +437,7 @@
     chain('show', show);
     chain('hide', hide);
     chain('redraw', redraw);
+    chain('destroy', destroy);
 
     // Public add() - chainable
     function add(transition, options) {
@@ -613,6 +614,13 @@
       this.el.offsetHeight;
     }
 
+    // Public destroy() - chainable
+    function destroy() {
+      stop.call(this);
+      jQuery.removeData(this.el, dataKey);
+      this.$el = this.el = null;
+    }
+
     // Update transition styles
     function updateStyles() {
       // build transition string from active props
@@ -723,7 +731,7 @@
 
     // Retrieve instance from data or create a new one.
     function factory(el, options) {
-      var t = jQuery.data(el, store) || jQuery.data(el, store, new Transition.Bare());
+      var t = jQuery.data(el, dataKey) || jQuery.data(el, dataKey, new Transition.Bare());
       if (!t.el) t.init(el);
       if (options) return t.start(options);
       return t;
