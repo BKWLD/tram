@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.8.1-global
+ * tram.js v0.8.2-global
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
@@ -1311,15 +1311,14 @@ window.tram = (function (jQuery) {
 
   // Global tram config
   var config = tram.config = {
-      defaultUnit: 'px' // default unit added to <length> types
+      debug: false // debug mode with console warnings
+    , defaultUnit: 'px' // default unit added to <length> types
     , defaultAngle: 'deg' // default unit added to <angle> types
     , keepInherited: false // optionally keep inherited CSS transitions
     , hideBackface: false // optionally hide backface on all elements
     , perspective: '' // optional default perspective value e.g. '1000px'
     , fallback: !support.transition // boolean to globally set fallback mode
     , agentTests: [] // array of userAgent test strings for sniffing
-    // , remPixels: false // rems with pixel length fallback
-    // , remFontSize: 16 // used by remPixels option
   };
 
   // fallback() static - browser sniff to force fallback mode
@@ -1494,12 +1493,9 @@ window.tram = (function (jQuery) {
   }
 
   // Log warning message if supported
-  var warn = (function () {
-    var warn = 'warn';
-    var console = window.console;
-    if (console && console[warn]) return function (msg) { console[warn](msg); };
-    return noop;
-  }());
+  function warn(msg) {
+    config.debug && window && window.console.warn(msg);
+  }
 
   // Lo-Dash compact()
   // MIT license <http://lodash.com/license>

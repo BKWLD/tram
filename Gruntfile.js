@@ -81,8 +81,7 @@ module.exports = function(grunt) {
         banner: bannerFlag('-global'),
         footer: '\n',
         mangle: true,
-        compress: true,
-        report: 'gzip'
+        report: 'min'
       },
       global: {
         src: distFile + js,
