@@ -1,5 +1,5 @@
 /*!
- * tram.js v0.8.2-umd
+ * tram.js v0.8.3-umd
  * Cross-browser CSS3 transitions in JavaScript
  * https://github.com/bkwld/tram
  * MIT License
